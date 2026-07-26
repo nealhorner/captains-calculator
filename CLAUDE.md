@@ -10,7 +10,7 @@ Live at: https://captains-calculator.com
 
 | Layer              | Technology                                                    |
 |--------------------|---------------------------------------------------------------|
-| Framework          | React 17 + TypeScript 4.4 (CRA / react-scripts 4.0.3)       |
+| Framework          | React 17 + TypeScript 4.9 (Vite / @vitejs/plugin-react)      |
 | State Management   | Overmind (centralized, derived state, effects)                |
 | Graph / Flow       | react-flow-renderer 10.x, Dagre (auto-layout), elkjs         |
 | UI Library         | Mantine v4 (core, hooks, modals, notifications, dates)       |
@@ -83,9 +83,10 @@ Located at `src/state/recipes/ProductionNode.ts`. Encapsulates a single producti
 ## Commands
 
 ```bash
-npm start    # Dev server (CRA)
-npm run build   # Production build
-npm test     # Jest + React Testing Library
+yarn dev       # Dev server (Vite)
+yarn build     # Production build (outputs to dist/)
+yarn preview   # Serve the production build locally
+yarn test      # Vitest
 ```
 
 ## Conventions

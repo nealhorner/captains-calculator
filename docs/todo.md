@@ -21,12 +21,12 @@
 
 ### CRA to Vite Migration
 
-- [ ] Replace `react-scripts` with `vite` + `@vitejs/plugin-react`
-- [ ] Convert `tsconfig.json` to Vite-compatible config (keep `baseUrl: "./src"` via `vite-tsconfig-paths`)
-- [ ] Move `public/index.html` to root `index.html` (Vite convention)
-- [ ] Replace `react-scripts start/build/test` scripts with `vite` / `vite build` / `vitest`
-- [ ] Remove CRA-specific env var prefix (`REACT_APP_` -> `VITE_`)
-- [ ] Extract hardcoded Google Analytics ID (`public/index.html`) into an env variable
+- [x] Replace `react-scripts` with `vite` + `@vitejs/plugin-react`
+- [x] Convert `tsconfig.json` to Vite-compatible config (keep `baseUrl: "./src"` via `vite-tsconfig-paths`)
+- [x] Move `public/index.html` to root `index.html` (Vite convention)
+- [x] Replace `react-scripts start/build/test` scripts with `vite` / `vite build` / `vitest`
+- [x] Remove CRA-specific env var prefix (`REACT_APP_` -> `VITE_`)
+- [x] Extract hardcoded Google Analytics ID (`public/index.html`) into an env variable
 
 ### React 17 -> 18+
 
@@ -47,7 +47,7 @@
 
 The project has testing libraries installed (`@testing-library/react`, `jest-dom`, `user-event`) but **zero test files exist** in `src/`.
 
-- [ ] Set up Vitest (replaces Jest after Vite migration)
+- [x] Set up Vitest (replaces Jest after Vite migration)
 - [ ] Add unit tests for `ProductionNode` class (`src/state/recipes/ProductionNode.ts`) — it's the core domain logic
 - [ ] Add unit tests for key Overmind actions: `selectRecipe`, `linkRecipe`, `calculateGraph`, `deleteNode`
 - [ ] Add integration tests for the Editor flow (select product -> machine -> recipe -> link nodes)
