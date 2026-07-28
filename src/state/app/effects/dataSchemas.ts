@@ -93,24 +93,36 @@ export const recipeDatasetSchema = yup.array().of(recipeSchema).required();
 
 /* ******************
 ** Validation Runner
-** Bundled JSON is trusted at build time, so failures are logged rather than thrown -
-** this surfaces submodule/data-shape drift (see captain-of-data) without crashing the app.
+** Bundled JSON is still build-time data (not user input), but the app's branded ID
+** types (MachineId, RecipeId, etc.) assume every dataset is well-formed - loading a
+** dataset that fails validation is worse silently than failing loudly, so failures
+** are logged for context and then thrown to stop `loadJsonData` before state is mutated.
 ****************** */
 
-export const validateDataset = (datasetName: string, schema: yup.ArraySchema<any>, data: Record<string, unknown>): void => {
+export const validateDataset = (datasetName: string, schema: yup.ArraySchema<any>, data: Record<string, { id?: string }>): void => {
+
+    const entries = Object.entries(data);
+
+    const keyMismatchErrors = entries
+        .filter(([key, item]) => item?.id !== key)
+        .map(([key, item]) => `Record key "${key}" does not match item id "${item?.id}"`);
+
+    const validationErrors: string[] = [...keyMismatchErrors];
 
     try {
 
-        schema.validateSync(Object.values(data), { abortEarly: false, strict: true });
+        schema.validateSync(entries.map(([, item]) => item), { abortEarly: false, strict: true });
 
     } catch (error) {
 
-        if (error instanceof yup.ValidationError) {
-            console.error(`[dataSchemas] "${datasetName}" failed validation:`, error.errors);
-        } else {
-            throw error;
-        }
+        if (!(error instanceof yup.ValidationError)) throw error;
+        validationErrors.push(...error.errors);
 
+    }
+
+    if (validationErrors.length) {
+        console.error(`[dataSchemas] "${datasetName}" failed validation:`, validationErrors);
+        throw new Error(`"${datasetName}" dataset failed validation - see console for details`);
     }
 
 }
