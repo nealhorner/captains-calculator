@@ -39,8 +39,7 @@
     "web-vitals": "^2.1.0",
     "web-worker": "^1.2.0",
     "xstate": "^4.31.0",
-    "yup": "^0.32.11",
-    "zod": "^3.14.4"
+    "yup": "^0.32.11"
   },
   "scripts": {
     "start": "react-scripts start",
