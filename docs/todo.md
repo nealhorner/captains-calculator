@@ -35,7 +35,7 @@
 - [ ] Verify Overmind + Mantine compatibility with React 19 concurrent mode
 - [ ] Update `@types/react` and `@types/react-dom` to 19
 
-### TypeScript 4.4 -> 7.x
+### TypeScript 4.9 -> 7.x
 
 - [ ] Upgrade `typescript` to latest 7.x
 - [ ] Update `tsconfig.json` target from `es2015` to `es2020` or `esnext` (smaller output, modern features)
