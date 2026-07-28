@@ -28,18 +28,18 @@
 - [x] Remove CRA-specific env var prefix (`REACT_APP_` -> `VITE_`)
 - [x] Extract hardcoded Google Analytics ID (`public/index.html`) into an env variable
 
-### React 17 -> 18+
+### React 17 -> 19+
 
-- [ ] Upgrade `react` and `react-dom` to 18+
+- [ ] Upgrade `react` and `react-dom` to 19
 - [ ] Replace `ReactDOM.render()` with `createRoot()` in `src/index.tsx`
-- [ ] Verify Overmind + Mantine compatibility with React 18 concurrent mode
-- [ ] Update `@types/react` and `@types/react-dom` to 18+
+- [ ] Verify Overmind + Mantine compatibility with React 19 concurrent mode
+- [ ] Update `@types/react` and `@types/react-dom` to 19
 
-### TypeScript 4.4 -> 5.x
+### TypeScript 4.4 -> 7.x
 
-- [ ] Upgrade `typescript` to latest 5.x
+- [ ] Upgrade `typescript` to latest 7.x
 - [ ] Update `tsconfig.json` target from `es2015` to `es2020` or `esnext` (smaller output, modern features)
-- [ ] Audit and fix any new strict-mode errors introduced by TS 5
+- [ ] Audit and fix any new strict-mode errors introduced by TS 7
 
 ---
 
