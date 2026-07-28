@@ -30,10 +30,10 @@
 
 ### React 17 -> 19+
 
-- [ ] Upgrade `react` and `react-dom` to 19
-- [ ] Replace `ReactDOM.render()` with `createRoot()` in `src/index.tsx`
-- [ ] Verify Overmind + Mantine compatibility with React 19 concurrent mode
-- [ ] Update `@types/react` and `@types/react-dom` to 19
+- [x] Upgrade `react` and `react-dom` to 19
+- [x] Replace `ReactDOM.render()` with `createRoot()` in `src/index.tsx`
+- [x] Verify Overmind + Mantine compatibility with React 19 concurrent mode
+- [x] Update `@types/react` and `@types/react-dom` to 19
 
 ### TypeScript 4.9 -> 7.x
 
