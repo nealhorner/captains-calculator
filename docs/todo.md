@@ -6,11 +6,11 @@
 
 ## Phase 1 — Dead Weight Removal (Quick Wins)
 
-- [ ] **Remove `zod`** — installed but never imported anywhere. Yup handles all validation (`src/utils/forms.ts`).
-- [ ] **Remove `xstate` + `@xstate/react`** — installed but never imported. Overmind is the sole state manager.
-- [ ] **Remove `"install": "^0.13.0"`** from devDependencies — not a real package, likely an accidental `npm install` artifact.
-- [ ] **Remove `react-error-overlay` pin** — both the devDependency and the `resolutions` entry exist only as a CRA workaround. Goes away with the Vite migration.
-- [x] **Strip debug `console.log` calls** left in production code:
+- [x] **Remove `zod`** — installed but never imported anywhere. Yup handles all validation (`src/utils/forms.ts`).
+- [x] **Remove `xstate` + `@xstate/react`** — installed but never imported. Overmind is the sole state manager.
+- [x] **Remove `"install": "^0.13.0"`** from devDependencies — not a real package, likely an accidental `npm install` artifact.
+- [x] **Remove `react-error-overlay` pin** — both the devDependency and the `resolutions` entry exist only as a CRA workaround. Goes away with the Vite migration.
+- [ ] **Strip debug `console.log` calls** left in production code:
   - `src/components/calculator/Editor.tsx` — `console.log('onConnect')`
   - `src/components/calculator/RecipeNodeType.tsx` — `console.log(nodeId)`
 - [ ] **Resolve `@TODO` in `src/state/recipes/actions/linkRecipe.ts`** (line 32) — incomplete "Create New Node" logic.
