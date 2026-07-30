@@ -200,6 +200,10 @@ class ProductionNode {
         })
     }
 
+    static fromJSON(data: ProductionNode): ProductionNode {
+        return Object.assign(Object.create(ProductionNode.prototype), data)
+    }
+
     get nodeData(): RecipeNode[] {
         let mainNode = {
             id: this.id,

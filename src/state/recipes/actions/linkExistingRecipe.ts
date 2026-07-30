@@ -44,4 +44,6 @@ export const linkExistingRecipe: AsyncAction<LinkRecipeParams> = async ({ state,
 
     }
 
+    actions.recipes.saveGraphState()
+
 }

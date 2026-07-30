@@ -80,4 +80,6 @@ export const deleteNode: AsyncAction<string> = async ({ state, actions }, nodeId
 
     state.recipes.nodes = remainingNodes
 
+    actions.recipes.saveGraphState()
+
 }

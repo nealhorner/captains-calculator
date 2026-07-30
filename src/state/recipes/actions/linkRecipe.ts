@@ -67,4 +67,6 @@ export const linkRecipe: AsyncAction<LinkRecipeParams> = async ({ state, actions
 
     state.recipes.nodes[newNode.id] = newNode
 
+    actions.recipes.saveGraphState()
+
 }
