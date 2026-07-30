@@ -43,13 +43,14 @@
 
 ---
 
-## Phase 3 — Test Coverage (Currently Zero)
+## Phase 3 — Test Coverage
 
-The project has testing libraries installed (`@testing-library/react`, `jest-dom`, `user-event`) but **zero test files exist** in `src/`.
+The project has testing libraries installed (`@testing-library/react`, `jest-dom`, `user-event`); test coverage is still minimal but no longer zero — see `src/state/recipes/actions/linkRecipe.test.ts`.
 
 - [x] Set up Vitest (replaces Jest after Vite migration)
 - [ ] Add unit tests for `ProductionNode` class (`src/state/recipes/ProductionNode.ts`) — it's the core domain logic
-- [ ] Add unit tests for key Overmind actions: `selectRecipe`, `linkRecipe`, `calculateGraph`, `deleteNode`
+- [ ] Add unit tests for key Overmind actions: `selectRecipe`, `calculateGraph`, `deleteNode`
+- [x] Add unit tests for key Overmind action: `linkRecipe`
 - [ ] Add integration tests for the Editor flow (select product -> machine -> recipe -> link nodes)
 - [ ] Add smoke tests for each route/screen rendering without crashing
 
