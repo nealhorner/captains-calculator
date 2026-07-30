@@ -13,7 +13,7 @@
 - [x] **Strip debug `console.log` calls** left in production code:
   - `src/components/calculator/Editor.tsx` — `console.log('onConnect')`
   - `src/components/calculator/RecipeNodeType.tsx` — `console.log(nodeId)`
-- [ ] **Resolve `@TODO` in `src/state/recipes/actions/linkRecipe.ts`** (line 32) — incomplete "Create New Node" logic.
+- [x] **Resolve `@TODO` in `src/state/recipes/actions/linkRecipe.ts`** (line 32) — incomplete "Create New Node" logic.
 
 ---
 
