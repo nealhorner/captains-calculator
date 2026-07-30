@@ -8,7 +8,7 @@ type LinkRecipeParams = {
     direction: 'input' | 'output';
 }
 
-export const linkExistingRecipe: AsyncAction<LinkRecipeParams> = async ({ state, actions }, { currentNodeId, existingNodeId, productId, direction }) => {
+export const linkExistingRecipe: AsyncAction<LinkRecipeParams> = async ({ state }, { currentNodeId, existingNodeId, productId, direction }) => {
 
     // Create New Node
     let existingNode = state.recipes.nodes[existingNodeId]
@@ -43,7 +43,5 @@ export const linkExistingRecipe: AsyncAction<LinkRecipeParams> = async ({ state,
         }
 
     }
-
-    actions.recipes.saveGraphState()
 
 }
