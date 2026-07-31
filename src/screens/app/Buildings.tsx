@@ -9,94 +9,104 @@ import { CategoryTabs } from 'components/ui/CategoryTabs';
 import AnimatedList, { AnimateListItem } from '../../components/ui/AnimatedList';
 
 const Buildings: React.FC = () => {
+  const { itemsList } = useAppState((state) => state.machines);
+  const { currentItemId: currentCategoryId, currentItem: currentCategory } = useAppState(
+    (state) => state.categories,
+  );
 
-    const { itemsList } = useAppState(state => state.machines)
-    const { currentItemId: currentCategoryId, currentItem: currentCategory } = useAppState(state => state.categories)
+  let filteredItems = itemsList.filter((items) => {
+    if (currentCategoryId === null) return true;
+    return currentCategoryId === items.category_id;
+  });
 
-
-    let filteredItems = itemsList.filter(items => {
-        if (currentCategoryId === null) return true;
-        return currentCategoryId === items.category_id
-    })
-
-    return (
-        <PageLayout
-            header={<PageHeader
-                title={`Buildings & Machines`}
-            />}
-        >
-
-            {currentCategoryId === null ? (
-                <Box>
-                    <CategoryTabs />
-                </Box>
-            ) : (
-                <Box>
-                    <CategoryTabs />
-                    <Text size="xl" weight="bold" mb="md">{currentCategoryId === null ? 'All Items' : currentCategory?.name}</Text>
-                    <AnimatedList>
-                        <Grid>
-                            {filteredItems.map((i, key) => {
-                                return (
-                                    <Grid.Col md={12} key={key}>
-                                        <AnimateListItem itemKey={i.id} >
-
-                                            <Box>
-                                                <Card
-                                                    component={Link}
-                                                    to={`/buildings/${i.id}`}
-                                                    shadow="xs"
-                                                    sx={(theme) => ({
-                                                        '&:hover': {
-                                                            backgroundColor: theme.colorScheme === 'light' ? theme.colors.gray[2] : theme.colors.dark[9],
-                                                        },
-                                                    })}
-                                                >
-                                                    <Group position='apart'>
-                                                        <Stack justify="space-between">
-                                                            <Text weight={500} size="lg">{i.name}</Text>
-                                                            <Group spacing={2}>
-                                                                <NeedsBage need="workers" value={i.workers} />
-                                                                {i.maintenance_cost_units === 'maintenance_i' && (
-                                                                    <NeedsBage need="maintenance1" value={i.maintenance_cost_quantity} />
-                                                                )}
-                                                                {i.maintenance_cost_units === 'maintenance_iI' && (
-                                                                    <NeedsBage need="maintenance2" value={i.maintenance_cost_quantity} />
-                                                                )}
-                                                                <NeedsBage need="electricity" value={i.electricity_consumed} />
-                                                                <NeedsBage need="unity" value={i.unity_cost} />
-                                                                <NeedsBage need="computing" value={i.computing_consumed} suffix="tf" />
-                                                            </Group>
-                                                        </Stack>
-                                                        <Box
-                                                            p="sm"
-                                                            sx={theme => ({
-                                                                borderRadius: theme.radius.md,
-                                                                border: `1px solid ${theme.colors.gray[2]}`,
-                                                                background: theme.colors.gray[0]
-                                                            })}
-                                                        >
-                                                            <Image
-                                                                height={43}
-                                                                radius="md"
-                                                                src={`/assets/buildings/${i.icon}`} alt={i.name}
-                                                            />
-                                                        </Box>
-                                                    </Group>
-                                                </Card>
-                                            </Box>
-
-                                        </AnimateListItem>
-                                    </Grid.Col>
-                                )
-                            })}
-                        </Grid>
-                    </AnimatedList>
-                </Box>
-            )}
-
-        </PageLayout>
-    )
-}
+  return (
+    <PageLayout header={<PageHeader title={`Buildings & Machines`} />}>
+      {currentCategoryId === null ? (
+        <Box>
+          <CategoryTabs />
+        </Box>
+      ) : (
+        <Box>
+          <CategoryTabs />
+          <Text size="xl" weight="bold" mb="md">
+            {currentCategoryId === null ? 'All Items' : currentCategory?.name}
+          </Text>
+          <AnimatedList>
+            <Grid>
+              {filteredItems.map((i, key) => {
+                return (
+                  <Grid.Col md={12} key={key}>
+                    <AnimateListItem itemKey={i.id}>
+                      <Box>
+                        <Card
+                          component={Link}
+                          to={`/buildings/${i.id}`}
+                          shadow="xs"
+                          sx={(theme) => ({
+                            '&:hover': {
+                              backgroundColor:
+                                theme.colorScheme === 'light'
+                                  ? theme.colors.gray[2]
+                                  : theme.colors.dark[9],
+                            },
+                          })}
+                        >
+                          <Group position="apart">
+                            <Stack justify="space-between">
+                              <Text weight={500} size="lg">
+                                {i.name}
+                              </Text>
+                              <Group spacing={2}>
+                                <NeedsBage need="workers" value={i.workers} />
+                                {i.maintenance_cost_units === 'maintenance_i' && (
+                                  <NeedsBage
+                                    need="maintenance1"
+                                    value={i.maintenance_cost_quantity}
+                                  />
+                                )}
+                                {i.maintenance_cost_units === 'maintenance_iI' && (
+                                  <NeedsBage
+                                    need="maintenance2"
+                                    value={i.maintenance_cost_quantity}
+                                  />
+                                )}
+                                <NeedsBage need="electricity" value={i.electricity_consumed} />
+                                <NeedsBage need="unity" value={i.unity_cost} />
+                                <NeedsBage
+                                  need="computing"
+                                  value={i.computing_consumed}
+                                  suffix="tf"
+                                />
+                              </Group>
+                            </Stack>
+                            <Box
+                              p="sm"
+                              sx={(theme) => ({
+                                borderRadius: theme.radius.md,
+                                border: `1px solid ${theme.colors.gray[2]}`,
+                                background: theme.colors.gray[0],
+                              })}
+                            >
+                              <Image
+                                height={43}
+                                radius="md"
+                                src={`/assets/buildings/${i.icon}`}
+                                alt={i.name}
+                              />
+                            </Box>
+                          </Group>
+                        </Card>
+                      </Box>
+                    </AnimateListItem>
+                  </Grid.Col>
+                );
+              })}
+            </Grid>
+          </AnimatedList>
+        </Box>
+      )}
+    </PageLayout>
+  );
+};
 
 export default Buildings;

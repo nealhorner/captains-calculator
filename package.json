@@ -34,7 +34,11 @@
     "build": "vite build",
     "preview": "vite preview",
     "test": "vitest",
-    "typecheck": "tsc --noEmit"
+    "test:ci": "vitest run",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint src --ext .ts,.tsx",
+    "format": "prettier --write .",
+    "format:check": "prettier --check ."
   },
   "browserslist": {
     "production": [
@@ -61,6 +65,7 @@
     "eslint": "^8.57.0",
     "eslint-config-react-app": "^7.0.1",
     "jsdom": "^29.1.1",
+    "prettier": "^3.9.6",
     "sass": "^1.48.0",
     "typescript": "^4.9.5",
     "vite": "^5.4.21",
