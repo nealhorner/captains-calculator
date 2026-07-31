@@ -37,9 +37,9 @@
 
 ### TypeScript 4.9 -> 7.x
 
-- [ ] Upgrade `typescript` to latest 7.x
-- [ ] Update `tsconfig.json` target from `es2015` to `es2020` or `esnext` (smaller output, modern features)
-- [ ] Audit and fix any new strict-mode errors introduced by TS 7
+- [x] Upgrade `typescript` to latest 7.x
+- [x] Update `tsconfig.json` target from `es2015` to `es2020` or `esnext` (smaller output, modern features)
+- [x] Audit and fix any new strict-mode errors introduced by TS 7
 
 ---
 
