@@ -7,5 +7,7 @@ export const downloadTextFile = (filename: string, content: string, mimeType: st
     document.body.appendChild(anchor)
     anchor.click()
     document.body.removeChild(anchor)
-    URL.revokeObjectURL(url)
+    // Defer revocation so browsers that read the blob asynchronously after
+    // the click (rather than synchronously) aren't interrupted mid-download.
+    setTimeout(() => URL.revokeObjectURL(url), 0)
 }
