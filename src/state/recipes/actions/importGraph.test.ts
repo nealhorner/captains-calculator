@@ -1,0 +1,104 @@
+import { describe, expect, it, vi } from 'vitest'
+
+import { importGraph } from './importGraph'
+import { buildExportedGraph, EXPORT_FORMAT } from '../importExport'
+import { buildTestWorld } from '../testFixtures'
+import ProductionNode from '../ProductionNode'
+
+const buildContext = (world: ReturnType<typeof buildTestWorld>) => ({
+    state: {
+        recipes: {
+            items: world.recipes,
+            nodes: {} as { [key: string]: ProductionNode },
+            currentNodeId: 'something-stale'
+        },
+        machines: { items: world.machines },
+        categories: { items: world.categories },
+        products: { items: world.products }
+    },
+    actions: {
+        recipes: {
+            getInputSources: vi.fn().mockReturnValue({}),
+            getOutputTargets: vi.fn().mockReturnValue({})
+        }
+    }
+} as any)
+
+describe('importGraph action', () => {
+
+    it('rejects data that is not a valid exported graph', () => {
+        const world = buildTestWorld()
+        const context = buildContext(world)
+
+        const result = importGraph(context, { not: 'a graph' })
+
+        expect(result).toEqual({ imported: 0, skipped: 0, errors: [expect.any(String)] })
+        expect(context.state.recipes.nodes).toEqual({})
+    })
+
+    it('round-trips a linked two-node graph exactly', () => {
+        const world = buildTestWorld()
+        const { smelterNode, casterNode } = world
+
+        const exported = buildExportedGraph([smelterNode, casterNode])
+
+        const context = buildContext(world)
+        const result = importGraph(context, exported)
+
+        expect(result).toEqual({ imported: 2, skipped: 0, errors: [] })
+        expect(context.state.recipes.currentNodeId).toBeNull()
+
+        const importedNodes = context.state.recipes.nodes
+        expect(Object.keys(importedNodes).sort()).toEqual([casterNode.id, smelterNode.id].sort())
+
+        const rebuiltSmelter = importedNodes[smelterNode.id]
+        const rebuiltCaster = importedNodes[casterNode.id]
+
+        // Real ProductionNode instances, not plain objects, so instance
+        // methods (addImport/canExport/etc, used elsewhere in the app)
+        // keep working after import.
+        expect(rebuiltSmelter).toBeInstanceOf(ProductionNode)
+        expect(rebuiltCaster).toBeInstanceOf(ProductionNode)
+
+        expect(rebuiltSmelter.machinesCount).toBe(smelterNode.machinesCount)
+        expect(rebuiltSmelter.duration).toBe(smelterNode.duration)
+        expect(rebuiltSmelter.outputs).toEqual(smelterNode.outputs)
+
+        expect(rebuiltCaster.inputs.molten_steel.imported).toBe(12)
+        expect(rebuiltCaster.inputs.molten_steel.maxed).toBe(true)
+        expect(rebuiltCaster.inputs.molten_steel.imports).toEqual([{ source: smelterNode.id, quantity: 12 }])
+        expect(rebuiltSmelter.outputs.molten_steel.exports).toEqual([{ target: casterNode.id, quantity: 12 }])
+    })
+
+    it('skips nodes whose recipe no longer exists and reports it', () => {
+        const world = buildTestWorld()
+        const { smelterNode, casterNode } = world
+
+        const exported = buildExportedGraph([smelterNode, casterNode])
+        exported.nodes[0].recipeId = 'deleted_recipe' as any
+
+        const context = buildContext(world)
+        const result = importGraph(context, exported)
+
+        expect(result.imported).toBe(1)
+        expect(result.skipped).toBe(1)
+        expect(result.errors).toHaveLength(1)
+        expect(result.errors[0]).toContain('deleted_recipe')
+
+        expect(Object.keys(context.state.recipes.nodes)).toEqual([exported.nodes[1].id])
+    })
+
+    it('replaces the existing graph rather than merging into it', () => {
+        const world = buildTestWorld()
+        const context = buildContext(world)
+
+        context.state.recipes.nodes = { 'stale-node-id': {} as ProductionNode }
+
+        const exported = buildExportedGraph([world.smelterNode])
+        importGraph(context, exported)
+
+        expect(context.state.recipes.nodes['stale-node-id']).toBeUndefined()
+        expect(Object.keys(context.state.recipes.nodes)).toEqual([world.smelterNode.id])
+    })
+
+})
