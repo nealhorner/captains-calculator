@@ -29,8 +29,6 @@ export const linkRecipe: AsyncAction<LinkRecipeParams> = async ({ state, actions
         targets
     }
 
-    // @TODO
-
     // Create New Node
     let newNode = new ProductionNode(nodeParams)
 
@@ -66,5 +64,7 @@ export const linkRecipe: AsyncAction<LinkRecipeParams> = async ({ state, actions
     }
 
     state.recipes.nodes[newNode.id] = newNode
+
+    actions.recipes.saveGraphState()
 
 }

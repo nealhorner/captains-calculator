@@ -19,6 +19,7 @@ export const NodeRecipeLink: React.FC<RecipeSelectProps> = ({ direction, current
     const allNodes = useAppState(state=>state.recipes.nodesList)
     const linkRecipe = useActions().recipes.linkRecipe
     const linkExistingRecipe = useActions().recipes.linkExistingRecipe
+    const saveGraphState = useActions().recipes.saveGraphState
 
     // const checkIfAvailable = (recipe: Recipe): boolean => {
     //     if (direction === 'output') {
@@ -46,13 +47,14 @@ export const NodeRecipeLink: React.FC<RecipeSelectProps> = ({ direction, current
         onSelect()
     }
 
-    const handleLinkExistingNode = (existingNodeId: string) => {
-        linkExistingRecipe({
+    const handleLinkExistingNode = async (existingNodeId: string) => {
+        await linkExistingRecipe({
             currentNodeId,
             existingNodeId,
             direction,
             productId: product.id,
         })
+        saveGraphState()
         onSelect()
     }
 

@@ -45,6 +45,7 @@ export const importGraph: Action<unknown, ImportGraphResult> = ({ state, actions
 
     state.recipes.nodes = newNodes
     state.recipes.currentNodeId = null
+    actions.recipes.saveGraphState()
 
     return {
         imported: Object.keys(newNodes).length,

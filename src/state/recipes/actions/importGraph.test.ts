@@ -19,7 +19,8 @@ const buildContext = (world: ReturnType<typeof buildTestWorld>) => ({
     actions: {
         recipes: {
             getInputSources: vi.fn().mockReturnValue({}),
-            getOutputTargets: vi.fn().mockReturnValue({})
+            getOutputTargets: vi.fn().mockReturnValue({}),
+            saveGraphState: vi.fn()
         }
     }
 } as any)
@@ -34,6 +35,7 @@ describe('importGraph action', () => {
 
         expect(result).toEqual({ imported: 0, skipped: 0, errors: [expect.any(String)] })
         expect(context.state.recipes.nodes).toEqual({})
+        expect(context.actions.recipes.saveGraphState).not.toHaveBeenCalled()
     })
 
     it('round-trips a linked two-node graph exactly', () => {
@@ -47,6 +49,7 @@ describe('importGraph action', () => {
 
         expect(result).toEqual({ imported: 2, skipped: 0, errors: [] })
         expect(context.state.recipes.currentNodeId).toBeNull()
+        expect(context.actions.recipes.saveGraphState).toHaveBeenCalledTimes(1)
 
         const importedNodes = context.state.recipes.nodes
         expect(Object.keys(importedNodes).sort()).toEqual([casterNode.id, smelterNode.id].sort())

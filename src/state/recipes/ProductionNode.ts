@@ -43,6 +43,20 @@ export type RecipeIODictOutput= {
     [index: string]: RecipeIOExportProduct
 }
 
+export type SerializedProductionNode = {
+    id: string;
+    recipe: Recipe;
+    machine: Machine;
+    category: Category;
+    inputs: RecipeIODictInput;
+    outputs: RecipeIODictOutput;
+    sources: ProductRecipes;
+    targets: ProductRecipes;
+    duration: number;
+    machinesCount: number;
+    updated: number;
+}
+
 class ProductionNode {
 
     id: string;
@@ -198,6 +212,13 @@ class ProductionNode {
             outputs: this.outputs,
             duration: this.duration
         })
+    }
+
+    static fromJSON(data: SerializedProductionNode): ProductionNode {
+        if (!data || typeof data.id !== 'string' || !data.recipe || !data.machine || !data.category || !data.inputs || !data.outputs) {
+            throw new Error('Invalid persisted production node')
+        }
+        return Object.assign(Object.create(ProductionNode.prototype), data)
     }
 
     get nodeData(): RecipeNode[] {
