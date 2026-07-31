@@ -23,5 +23,6 @@ export const selectRecipe: Action<RecipeId|null> = async ({state,actions}, recip
         }
         let node = new ProductionNode(nodeParams)
         state.recipes.nodes[node.id] = node
+        actions.recipes.saveGraphState()
     }
 }

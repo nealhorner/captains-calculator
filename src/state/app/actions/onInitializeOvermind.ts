@@ -13,6 +13,9 @@ export const onInitializeOvermind: AsyncAction = pipe(
     async ({actions}: Context) => {
         actions.loadJsonData()
     },
+    async ({actions}: Context) => {
+        actions.recipes.loadGraphState()
+    },
     async ({state,actions}: Context) => {
         state.loading = false;
     }
