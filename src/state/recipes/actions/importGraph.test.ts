@@ -129,6 +129,42 @@ describe('importGraph action', () => {
         expect(Object.keys(context.state.recipes.nodes)).toEqual([world.smelterNode.id])
     })
 
+    it('does not mistake a node id for an inherited Object property', () => {
+        const world = buildTestWorld()
+        const context = buildContext(world)
+
+        const exported = buildExportedGraph([world.smelterNode])
+        exported.nodes[0].id = 'constructor'
+
+        const result = importGraph(context, exported)
+
+        expect(result).toEqual({ imported: 1, skipped: 0, errors: [] })
+        expect(context.state.recipes.nodes['constructor']).toBeInstanceOf(ProductionNode)
+    })
+
+    it('treats a link to a non-existent inherited-property-named node as dangling', () => {
+        const world = buildTestWorld()
+        const context = buildContext(world)
+
+        const exported = buildExportedGraph([world.casterNode])
+        // The export claims molten_steel was imported from a node called
+        // "constructor" — a node that was never actually included in the
+        // export. A naive `newNodes["constructor"]` lookup would be truthy
+        // (inherited from Object.prototype) even though no such node exists.
+        exported.nodes[0].inputs.molten_steel.imports = [{ source: 'constructor', quantity: 12 }]
+        exported.nodes[0].inputs.molten_steel.imported = 12
+        exported.nodes[0].inputs.molten_steel.maxed = true
+
+        const result = importGraph(context, exported)
+
+        expect(result).toEqual({ imported: 1, skipped: 0, errors: [] })
+
+        const rebuiltCaster = context.state.recipes.nodes[world.casterNode.id]
+        expect(rebuiltCaster.inputs.molten_steel.imports).toEqual([])
+        expect(rebuiltCaster.inputs.molten_steel.imported).toBe(0)
+        expect(rebuiltCaster.inputs.molten_steel.maxed).toBe(false)
+    })
+
     it('replaces the existing graph rather than merging into it', () => {
         const world = buildTestWorld()
         const context = buildContext(world)

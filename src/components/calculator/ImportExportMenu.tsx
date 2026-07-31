@@ -58,7 +58,7 @@ export const ImportExportMenu = () => {
             color: 'green',
             title: 'Import Complete',
             message: result.skipped
-                ? `Imported ${result.imported} node(s), skipped ${result.skipped} (recipe no longer available).`
+                ? `Imported ${result.imported} node(s), skipped ${result.skipped}. ${result.errors.join(' ')}`
                 : `Imported ${result.imported} node(s).`
         })
     }

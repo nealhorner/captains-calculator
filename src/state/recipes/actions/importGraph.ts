@@ -15,12 +15,15 @@ export const importGraph: Action<unknown, ImportGraphResult> = ({ state, actions
     }
 
     const errors: string[] = []
-    const newNodes: { [key: string]: ProductionNode } = {}
+    // A Map (rather than a plain object) so a node id that collides with an
+    // inherited property name (e.g. "constructor") can't be mistaken for an
+    // existing entry.
+    const newNodes: Map<string, ProductionNode> = new Map()
     let skipped = 0
 
     data.nodes.forEach(exportedNode => {
 
-        if (newNodes[exportedNode.id]) {
+        if (newNodes.has(exportedNode.id)) {
             skipped++
             errors.push(`Skipped a duplicate node id "${exportedNode.id}" in the import file.`)
             return
@@ -47,13 +50,13 @@ export const importGraph: Action<unknown, ImportGraphResult> = ({ state, actions
         node.inputs = exportedNode.inputs
         node.outputs = exportedNode.outputs
 
-        newNodes[node.id] = node
+        newNodes.set(node.id, node)
 
     })
 
     // If nothing could be imported, leave the existing chain untouched
     // rather than replacing it with an empty graph.
-    if (Object.keys(newNodes).length === 0) {
+    if (newNodes.size === 0) {
         return { imported: 0, skipped, errors }
     }
 
@@ -61,14 +64,14 @@ export const importGraph: Action<unknown, ImportGraphResult> = ({ state, actions
     // referenced by a surviving node's imports/exports. Strip those
     // dangling links so the rebuilt graph never points at a node that
     // doesn't exist.
-    Object.values(newNodes).forEach(node => {
+    newNodes.forEach(node => {
 
         Object.values(node.inputs).forEach(input => {
             const droppedQuantity = input.imports
-                .filter(imp => !newNodes[imp.source])
+                .filter(imp => !newNodes.has(imp.source))
                 .reduce((total, imp) => total + imp.quantity, 0)
             if (droppedQuantity > 0) {
-                input.imports = input.imports.filter(imp => newNodes[imp.source])
+                input.imports = input.imports.filter(imp => newNodes.has(imp.source))
                 input.imported -= droppedQuantity
                 input.maxed = input.imported >= input.quantity
             }
@@ -76,10 +79,10 @@ export const importGraph: Action<unknown, ImportGraphResult> = ({ state, actions
 
         Object.values(node.outputs).forEach(output => {
             const droppedQuantity = output.exports
-                .filter(exp => !newNodes[exp.target])
+                .filter(exp => !newNodes.has(exp.target))
                 .reduce((total, exp) => total + exp.quantity, 0)
             if (droppedQuantity > 0) {
-                output.exports = output.exports.filter(exp => newNodes[exp.target])
+                output.exports = output.exports.filter(exp => newNodes.has(exp.target))
                 output.exported -= droppedQuantity
                 output.maxed = output.exported >= output.quantity
             }
@@ -87,12 +90,12 @@ export const importGraph: Action<unknown, ImportGraphResult> = ({ state, actions
 
     })
 
-    state.recipes.nodes = newNodes
+    state.recipes.nodes = Object.fromEntries(newNodes)
     state.recipes.currentNodeId = null
     actions.recipes.saveGraphState()
 
     return {
-        imported: Object.keys(newNodes).length,
+        imported: newNodes.size,
         skipped,
         errors
     }
