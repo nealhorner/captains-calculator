@@ -29,8 +29,6 @@ export const linkRecipe: AsyncAction<LinkRecipeParams> = async ({ state, actions
         targets
     }
 
-    // @TODO
-
     // Create New Node
     let newNode = new ProductionNode(nodeParams)
 
