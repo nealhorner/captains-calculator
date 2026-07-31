@@ -3,16 +3,7 @@ import PageLayout from 'components/layout/page/PageLayout';
 import React from 'react';
 
 const Recipes: React.FC = () => {
-
-    return (
-        <PageLayout
-            header={<PageHeader
-                title={`Welcome`}
-            />}
-        >
-
-        </PageLayout>
-    )
-}
+  return <PageLayout header={<PageHeader title={`Welcome`} />}></PageLayout>;
+};
 
 export default Recipes;

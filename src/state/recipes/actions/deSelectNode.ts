@@ -1,5 +1,5 @@
-import { Action } from "state/_types";
+import { Action } from 'state/_types';
 
-export const deSelectNode: Action= async ({state}) => {
-    state.recipes.currentNodeId = null
-}
+export const deSelectNode: Action = async ({ state }) => {
+  state.recipes.currentNodeId = null;
+};
