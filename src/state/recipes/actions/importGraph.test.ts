@@ -89,6 +89,44 @@ describe('importGraph action', () => {
         expect(result.errors[0]).toContain('deleted_recipe')
 
         expect(Object.keys(context.state.recipes.nodes)).toEqual([exported.nodes[1].id])
+
+        // The surviving caster node imported molten_steel from the now-skipped
+        // smelter — that dangling link must be stripped, not left pointing at
+        // a node id that no longer exists in the graph.
+        const survivingCaster = context.state.recipes.nodes[casterNode.id]
+        expect(survivingCaster.inputs.molten_steel.imports).toEqual([])
+        expect(survivingCaster.inputs.molten_steel.imported).toBe(0)
+        expect(survivingCaster.inputs.molten_steel.maxed).toBe(false)
+    })
+
+    it('does not wipe the existing graph when every node is skipped', () => {
+        const world = buildTestWorld()
+        const context = buildContext(world)
+        context.state.recipes.nodes = { [world.smelterNode.id]: world.smelterNode }
+
+        const exported = buildExportedGraph([world.casterNode])
+        exported.nodes[0].recipeId = 'deleted_recipe' as any
+
+        const result = importGraph(context, exported)
+
+        expect(result).toEqual({ imported: 0, skipped: 1, errors: [expect.any(String)] })
+        expect(context.state.recipes.nodes).toEqual({ [world.smelterNode.id]: world.smelterNode })
+        expect(context.actions.recipes.saveGraphState).not.toHaveBeenCalled()
+    })
+
+    it('skips duplicate node ids instead of silently overwriting', () => {
+        const world = buildTestWorld()
+        const context = buildContext(world)
+
+        const exported = buildExportedGraph([world.smelterNode])
+        exported.nodes.push({ ...exported.nodes[0] })
+
+        const result = importGraph(context, exported)
+
+        expect(result.imported).toBe(1)
+        expect(result.skipped).toBe(1)
+        expect(result.errors[0]).toContain('duplicate')
+        expect(Object.keys(context.state.recipes.nodes)).toEqual([world.smelterNode.id])
     })
 
     it('replaces the existing graph rather than merging into it', () => {

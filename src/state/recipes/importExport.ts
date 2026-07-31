@@ -34,9 +34,22 @@ export const buildExportedGraph = (nodes: ProductionNode[]): ExportedGraph => ({
     }))
 })
 
+const isExportedNode = (node: any): node is ExportedNode => {
+    return !!node
+        && typeof node === 'object'
+        && typeof node.id === 'string'
+        && typeof node.recipeId === 'string'
+        && typeof node.machinesCount === 'number'
+        && typeof node.duration === 'number'
+        && !!node.inputs && typeof node.inputs === 'object'
+        && !!node.outputs && typeof node.outputs === 'object'
+}
+
 export const isExportedGraph = (data: any): data is ExportedGraph => {
     return !!data
         && typeof data === 'object'
         && data.format === EXPORT_FORMAT
+        && data.version === EXPORT_FORMAT_VERSION
         && Array.isArray(data.nodes)
+        && data.nodes.every(isExportedNode)
 }

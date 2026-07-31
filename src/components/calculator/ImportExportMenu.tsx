@@ -28,29 +28,28 @@ export const ImportExportMenu = () => {
         fileInputRef.current?.click()
     }
 
+    const notifyImportFailed = (message: string) => {
+        showNotification({
+            icon: <Icon icon={Icons.failCircle} />,
+            color: 'red',
+            title: 'Import Failed',
+            message
+        })
+    }
+
     const runImport = (text: string) => {
         let data: unknown
         try {
             data = JSON.parse(text)
         } catch {
-            showNotification({
-                icon: <Icon icon={Icons.failCircle} />,
-                color: 'red',
-                title: 'Import Failed',
-                message: 'That file is not valid JSON.'
-            })
+            notifyImportFailed('That file is not valid JSON.')
             return
         }
 
         const result = importGraph(data)
 
         if (result.imported === 0 && result.errors.length) {
-            showNotification({
-                icon: <Icon icon={Icons.failCircle} />,
-                color: 'red',
-                title: 'Import Failed',
-                message: result.errors[0]
-            })
+            notifyImportFailed(result.errors[0])
             return
         }
 
@@ -71,6 +70,7 @@ export const ImportExportMenu = () => {
 
         const reader = new FileReader()
         reader.onload = () => runImport(String(reader.result ?? ''))
+        reader.onerror = () => notifyImportFailed('The file could not be read.')
         reader.readAsText(file)
     }
 

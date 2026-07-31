@@ -59,6 +59,13 @@ describe('isExportedGraph', () => {
         ['an object missing format', { version: 1, nodes: [] }],
         ['an object with the wrong format', { format: 'some-other-app', version: 1, nodes: [] }],
         ['an object whose nodes is not an array', { format: EXPORT_FORMAT, version: 1, nodes: 'nope' }],
+        ['an object with an unsupported version', { format: EXPORT_FORMAT, version: 999, nodes: [] }],
+        ['a node missing required fields', { format: EXPORT_FORMAT, version: EXPORT_FORMAT_VERSION, nodes: [{ id: 'a' }] }],
+        ['a node with a non-numeric machinesCount', {
+            format: EXPORT_FORMAT,
+            version: EXPORT_FORMAT_VERSION,
+            nodes: [{ id: 'a', recipeId: 'r', machinesCount: 'lots', duration: 60, inputs: {}, outputs: {} }]
+        }],
     ])('rejects %s', (_label, value) => {
         expect(isExportedGraph(value)).toBe(false)
     })
