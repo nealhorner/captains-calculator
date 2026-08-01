@@ -1,7 +1,9 @@
 {
   "compilerOptions": {
-    "baseUrl": "./src",
-    "target": "es2015",
+    "paths": {
+      "*": ["./src/*"]
+    },
+    "target": "es2020",
     "types": ["vite/client"],
     "lib": ["dom", "dom.iterable", "esnext"],
     "allowJs": true,
@@ -12,7 +14,7 @@
     "forceConsistentCasingInFileNames": true,
     "noFallthroughCasesInSwitch": true,
     "module": "esnext",
-    "moduleResolution": "node",
+    "moduleResolution": "bundler",
     "resolveJsonModule": true,
     "isolatedModules": true,
     "noEmit": true,
