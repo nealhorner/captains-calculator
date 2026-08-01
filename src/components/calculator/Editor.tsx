@@ -142,9 +142,7 @@ export const Editor: React.FC<EditorProps> = ({ nodesData, edgesData }) => {
   // }
 
   const onConnect = async (params: Connection) => {
-    setEdges((eds) =>
-      addEdge({ ...params, style: { stroke: generateDarkColorHex() } }, eds),
-    );
+    setEdges((eds) => addEdge({ ...params, style: { stroke: generateDarkColorHex() } }, eds));
   };
 
   const onInit = async (reactFlowInstance: ReactFlowInstance<RecipeNode, Edge<any>>) => {
