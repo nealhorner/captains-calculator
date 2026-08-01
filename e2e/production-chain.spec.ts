@@ -48,12 +48,14 @@ test('changing the target volume re-sizes the chain', async ({ page }) => {
 
   const volume = page.getByLabel('Target output');
   const initial = Number(await volume.inputValue());
+  const doubled = initial * 2;
 
-  // One building's worth by default; ask for double and the count follows.
-  await volume.fill(String(initial * 2));
+  await volume.fill(String(doubled));
   await volume.blur();
 
-  await expect(page.getByText(/2 × /)).toBeVisible();
+  // The summary is driven by the target, so it has to follow the new volume.
+  await expect(page.getByText('Targets (60s)', { exact: true })).toBeVisible();
+  await expect(page.locator('td', { hasText: String(doubled) }).first()).toBeVisible();
 });
 
 test('reloading the page keeps the production chain and its target', async ({ page }) => {

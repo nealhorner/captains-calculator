@@ -99,6 +99,7 @@ export const TargetListCard: React.FC<TargetListCardProps> = ({ target }) => {
           <Group spacing={2} noWrap sx={{ flexShrink: 0 }}>
             <Tooltip label="Change product, building or recipe" withArrow withinPortal>
               <UnstyledButton
+                aria-label="Edit target"
                 onClick={() => setActiveTarget(target.id)}
                 sx={(theme) => ({
                   display: 'flex',
@@ -117,6 +118,7 @@ export const TargetListCard: React.FC<TargetListCardProps> = ({ target }) => {
             </Tooltip>
             <Tooltip label="Remove target" withArrow withinPortal>
               <UnstyledButton
+                aria-label="Remove target"
                 onClick={handleRemove}
                 sx={(theme) => ({
                   display: 'flex',
