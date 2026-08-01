@@ -1,4 +1,4 @@
-import { EdgeProps, useNodes } from 'react-flow-renderer';
+import { EdgeProps, useNodes } from '@xyflow/react';
 import {
   getSmartEdge,
   pathfindingAStarDiagonal,
@@ -15,7 +15,7 @@ export const RecipeEdgeType = ({
   style = {},
   markerStart,
   markerEnd,
-}: EdgeProps<any>) => {
+}: EdgeProps) => {
   const nodes = useNodes();
 
   const getSmartEdgeResponse = getSmartEdge({
@@ -33,7 +33,7 @@ export const RecipeEdgeType = ({
     },
   });
 
-  if (!getSmartEdgeResponse) return null;
+  if (!getSmartEdgeResponse || getSmartEdgeResponse instanceof Error) return null;
 
   const { svgPathString } = getSmartEdgeResponse;
 

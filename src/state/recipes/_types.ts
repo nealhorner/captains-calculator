@@ -1,6 +1,7 @@
 import { ProductId, Recipe, RecipeId } from 'state/app/effects/loadJsonData';
 import ProductionNode from './ProductionNode';
-import { Edge, Node } from 'react-flow-renderer';
+import { Edge } from '@xyflow/react';
+import { RecipeNode } from 'components/calculator/Editor';
 
 export type RecipesState = {
   itemsList: Recipe[];
@@ -17,9 +18,9 @@ export type RecipesState = {
   currentNodeId: RecipeId | null;
   currentNode: ProductionNode | null;
   nodesList: ProductionNode[];
-  nodesData: Node<ProductionNode>[];
+  nodesData: RecipeNode[];
   edgesData: Edge<any>[];
-  graphData: Node<ProductionNode>[];
+  graphData: RecipeNode[];
 };
 
 export type ProductRecipes = {

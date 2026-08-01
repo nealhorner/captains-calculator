@@ -1,5 +1,5 @@
 import Elk, { ElkNode, ElkPrimitiveEdge } from 'elkjs';
-import { Node, Edge } from 'react-flow-renderer';
+import { Node, Edge } from '@xyflow/react';
 
 /* From https://github.com/wbkd/react-flow/issues/5#issuecomment-954001434 */
 /* 

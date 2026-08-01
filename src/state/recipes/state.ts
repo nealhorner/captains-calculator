@@ -1,5 +1,5 @@
 import { derived } from 'overmind';
-import { Edge, Node } from 'react-flow-renderer';
+import { Edge, Node } from '@xyflow/react';
 
 import { RecipesState } from 'state/_types';
 

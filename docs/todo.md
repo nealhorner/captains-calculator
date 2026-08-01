@@ -78,10 +78,10 @@ This is a large migration. Mantine v7 is a near-full rewrite.
 
 ### react-flow-renderer -> @xyflow/react
 
-- [ ] Rename `react-flow-renderer` (deprecated) to `@xyflow/react` (v11+)
-- [ ] Update custom node/edge type APIs (`RecipeNodeType.tsx`, `RecipeEdgeType.tsx`)
-- [ ] Verify `@tisoap/react-flow-smart-edge` compatibility or find alternative
-- [ ] Update Dagre layout integration for new React Flow API
+- [x] Rename `react-flow-renderer` (deprecated) to `@xyflow/react` (v11+) — installed `@xyflow/react@12.11.2` (the current major; smart-edge itself now requires `>=12`)
+- [x] Update custom node/edge type APIs (`RecipeNodeType.tsx`, `RecipeEdgeType.tsx`)
+- [x] Verify `@tisoap/react-flow-smart-edge` compatibility or find alternative — upgraded to `4.13.1`, which targets `@xyflow/react` directly
+- [x] Update Dagre layout integration for new React Flow API — sizing now reads `node.measured` instead of the old `node.width`/`node.height`
 
 ### Other Dependency Upgrades
 
