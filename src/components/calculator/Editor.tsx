@@ -1,5 +1,6 @@
 import React from 'react';
-import ReactFlow, {
+import {
+  ReactFlow,
   MiniMap,
   Controls,
   ControlButton,
@@ -13,7 +14,8 @@ import ReactFlow, {
   EdgeTypes,
   Edge,
   Node,
-} from 'react-flow-renderer';
+} from '@xyflow/react';
+import '@xyflow/react/dist/style.css';
 import dagre from 'dagre';
 
 import { useAppState } from 'state';
@@ -41,7 +43,8 @@ export type RecipeNodeData = {
   machinesCount: number;
   pinnedMachinesCount: number | null;
   buildingsRequired: number;
-};
+  // v12 constrains node data to an indexable type.
+} & Record<string, unknown>;
 export type RecipeNode = Node<RecipeNodeData>;
 
 // Fallbacks for the first layout pass, before React Flow has measured anything.
@@ -70,8 +73,8 @@ const computeLayout = (nodes: Node<any>[], edges: Edge<any>[]): Map<string, Plac
 
   nodes.forEach((node) => {
     dagreGraph.setNode(node.id, {
-      width: node.width || DEFAULT_NODE_WIDTH,
-      height: node.height || DEFAULT_NODE_HEIGHT,
+      width: node.measured?.width || DEFAULT_NODE_WIDTH,
+      height: node.measured?.height || DEFAULT_NODE_HEIGHT,
     });
   });
 
@@ -87,8 +90,8 @@ const computeLayout = (nodes: Node<any>[], edges: Edge<any>[]): Map<string, Plac
     const laid = dagreGraph.node(node.id);
     if (!laid) return;
     placements.set(node.id, {
-      x: laid.x - (node.width || DEFAULT_NODE_WIDTH) / 2,
-      y: laid.y - (node.height || DEFAULT_NODE_HEIGHT) / 2,
+      x: laid.x - (node.measured?.width || DEFAULT_NODE_WIDTH) / 2,
+      y: laid.y - (node.measured?.height || DEFAULT_NODE_HEIGHT) / 2,
     });
   });
 
@@ -96,7 +99,7 @@ const computeLayout = (nodes: Node<any>[], edges: Edge<any>[]): Map<string, Plac
 };
 
 /** Lays every node out from scratch, discarding any manual arrangement. */
-const layoutAll = <T,>(nodes: Node<T>[], edges: Edge<any>[]): Node<T>[] => {
+const layoutAll = (nodes: RecipeNode[], edges: Edge<any>[]): RecipeNode[] => {
   const placements = computeLayout(nodes, edges);
   return nodes.map((node) => ({
     ...node,
@@ -120,7 +123,7 @@ export const Editor: React.FC<EditorProps> = ({ nodesData, edgesData }) => {
   const [nodes, setNodes, onNodesChange] = useNodesState(nodesData);
   const [edges, setEdges, onEdgesChange] = useEdgesState(edgesData);
 
-  const instanceRef = React.useRef<ReactFlowInstance<RecipeNodeData> | null>(null);
+  const instanceRef = React.useRef<ReactFlowInstance<RecipeNode, Edge<any>> | null>(null);
 
   /**
    * The editor only remounts when the set of nodes changes (see the key in
@@ -160,7 +163,7 @@ export const Editor: React.FC<EditorProps> = ({ nodesData, edgesData }) => {
     setEdges((eds) => addEdge(params, eds));
   };
 
-  const onInit = async (reactFlowInstance: ReactFlowInstance<RecipeNodeData>) => {
+  const onInit = async (reactFlowInstance: ReactFlowInstance<RecipeNode, Edge<any>>) => {
     instanceRef.current = reactFlowInstance;
     reactFlowInstance.setCenter(0, 0);
     reactFlowInstance.setNodes(

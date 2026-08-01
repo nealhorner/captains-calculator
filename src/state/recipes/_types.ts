@@ -1,6 +1,7 @@
 import { MachineId, ProductId, Recipe, RecipeId } from 'state/app/effects/loadJsonData';
 import ProductionNode from './ProductionNode';
-import { Edge, Node } from 'react-flow-renderer';
+import { Edge } from '@xyflow/react';
+import { RecipeNode } from 'components/calculator/Editor';
 
 /**
  * One product the user wants the factory to produce, and how much of it per 60
@@ -41,7 +42,7 @@ export type RecipesState = {
     [key: string]: ProductionNode;
   };
   nodesList: ProductionNode[];
-  nodesData: Node<ProductionNode>[];
+  nodesData: RecipeNode[];
   edgesData: Edge<any>[];
 };
 

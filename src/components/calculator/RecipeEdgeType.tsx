@@ -1,32 +1,25 @@
-import { EdgeProps, useNodes, getBezierPath } from 'react-flow-renderer';
+import { BezierEdge, EdgeProps, useNodes } from '@xyflow/react';
 import {
   getSmartEdge,
   pathfindingAStarDiagonal,
   svgDrawSmoothLinePath,
 } from '@tisoap/react-flow-smart-edge';
 
-/**
- * Routes an edge around the nodes when it can, and falls back to a plain curve
- * when it cannot.
- *
- * The fallback matters: `getSmartEdge` gives up and returns null whenever its
- * pathfinding fails — which happens readily with large nodes or a crowded graph
- * — and without a fallback the connection simply vanishes from the canvas.
- */
-export const RecipeEdgeType = ({
-  sourceX,
-  sourceY,
-  targetX,
-  targetY,
-  sourcePosition,
-  targetPosition,
-  style = {},
-  markerStart,
-  markerEnd,
-}: EdgeProps<any>) => {
+export const RecipeEdgeType = (props: EdgeProps) => {
+  const {
+    sourceX,
+    sourceY,
+    targetX,
+    targetY,
+    sourcePosition,
+    targetPosition,
+    style = {},
+    markerStart,
+    markerEnd,
+  } = props;
   const nodes = useNodes();
 
-  const smartEdge = getSmartEdge({
+  const getSmartEdgeResponse = getSmartEdge({
     sourcePosition,
     targetPosition,
     sourceX,
@@ -35,30 +28,29 @@ export const RecipeEdgeType = ({
     targetY,
     nodes,
     options: {
-      nodePadding: 20,
+      nodePadding: 40,
       drawEdge: svgDrawSmoothLinePath,
       generatePath: pathfindingAStarDiagonal,
     },
   });
 
-  const path =
-    smartEdge?.svgPathString ??
-    getBezierPath({
-      sourceX,
-      sourceY,
-      targetX,
-      targetY,
-      sourcePosition,
-      targetPosition,
-    });
+  if (!getSmartEdgeResponse || getSmartEdgeResponse instanceof Error) {
+    // Pathfinding failed (e.g. no clear route between overlapping nodes) —
+    // fall back to a plain bezier edge instead of silently dropping the edge.
+    return <BezierEdge {...props} />;
+  }
+
+  const { svgPathString } = getSmartEdgeResponse;
 
   return (
-    <path
-      style={style}
-      className="react-flow__edge-path"
-      d={path}
-      markerEnd={markerEnd}
-      markerStart={markerStart}
-    />
+    <>
+      <path
+        style={style}
+        className="react-flow__edge-path"
+        d={svgPathString}
+        markerEnd={markerEnd}
+        markerStart={markerStart}
+      />
+    </>
   );
 };

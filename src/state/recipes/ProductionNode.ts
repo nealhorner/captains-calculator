@@ -1,6 +1,6 @@
 import { Category, Machine, Product, Recipe, RecipeId, RecipeProduct } from 'state/app/effects';
 import { ProductRecipes } from 'state/_types';
-import { Edge } from 'react-flow-renderer';
+import { Edge } from '@xyflow/react';
 
 import { RecipeNode } from 'components/calculator/Editor';
 import { EPSILON } from 'utils/numbers';
@@ -318,7 +318,7 @@ class ProductionNode {
       outputs[output.id] = { ...output, exports: output.exports.map((e) => ({ ...e })) };
     });
 
-    let mainNode = {
+    let mainNode: RecipeNode = {
       id: this.id,
       type: 'RecipeNode',
       data: {
@@ -333,7 +333,7 @@ class ProductionNode {
         machinesCount: this.machinesCount,
         pinnedMachinesCount: this.pinnedMachinesCount,
         buildingsRequired: this.buildingsRequired,
-      },
+      } as RecipeNode['data'],
       position: { x: 0, y: 0 },
     };
 

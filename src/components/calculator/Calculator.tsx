@@ -1,5 +1,5 @@
 import React from 'react';
-import { ReactFlowProvider } from 'react-flow-renderer';
+import { ReactFlowProvider } from '@xyflow/react';
 
 import { EditorLayout } from './EditorLayout';
 import PageLayoutBlank from '../../components/layout/page/PageLayoutBlank';
