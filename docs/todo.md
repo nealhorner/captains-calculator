@@ -19,6 +19,10 @@
 
 ## Phase 2 — Build System & Core Upgrades (Critical)
 
+### Package Manager Migration
+
+- [ ] Migrate off `yarn` to `pnpm` (or `npm`) — regenerate lockfile, update `package.json` scripts/engines, update CI workflow (`.github/workflows/`), and update any docs/README referencing `yarn` commands
+
 ### CRA to Vite Migration
 
 - [x] Replace `react-scripts` with `vite` + `@vitejs/plugin-react`
@@ -148,6 +152,35 @@ This is a large migration. Mantine v7 is a near-full rewrite.
 - [ ] Test keyboard navigation through the React Flow graph editor
 - [ ] Add meaningful alt text or `role="img"` + `aria-label` to background images in `Editor.tsx`
 - [ ] Audit Mantine component usage for missing ARIA attributes (only 18 ARIA instances found across codebase)
+
+---
+
+## Phase 8 — Untracked Gaps (from follow-up audit, 2026-08-01)
+
+### Crash Risk
+
+- [ ] Wrap `JSON.parse(settings)` in `src/state/app/effects/loadLocaStorageSettings.ts` in a try/catch — unlike the sibling `loadGraphState.ts`, corrupted or manually-edited `app-settings` localStorage throws uncaught on every app boot, causing a full white-screen crash with no recovery
+- [ ] React Error Boundary — see Phase 5's "Add a React Error Boundary" item (canonical, not duplicated here)
+
+### CI
+
+- [ ] Add `yarn typecheck` to `.github/workflows/ci.yml` — CI currently runs `format:check`, `lint`, and `test:ci` but never type-checks, so TS errors can merge to `main` silently mid-migration
+
+### Data Integrity
+
+- [ ] Validate imported JSON chains against the real `RecipeIODictInput`/`RecipeIODictOutput` shapes in `src/state/recipes/actions/importGraph.ts` / `importExport.ts` — current validation only checks `typeof === 'object'`, so a malformed export can pass validation and fail later
+- [ ] Add a schema/version field to the values stored under the `production-graph` and `app-settings` localStorage keys (the export format already has one) so a future state-shape change has a migration path instead of silently loading stale/incompatible data
+
+### Repo Hygiene
+
+- [ ] Remove or relocate `notes.txt` (41KB) and `parse.js` (11KB, hardcoded local paths) from repo root — unreferenced scratch/migration leftovers
+- [ ] Add a `LICENSE` file and `CONTRIBUTING.md` — app is publicly hosted at captains-calculator.com with neither
+
+### Untracked Categories
+
+- [ ] Add error-tracking/monitoring (e.g. Sentry) for production crash visibility — today `console.error` is the only mechanism
+- [ ] Evaluate i18n needs — all UI strings are hardcoded English with no i18n framework in place
+- [ ] Evaluate mobile/responsive support for the three-panel Editor layout — `useMediaQuery` is used in `FieldRenderer.tsx` only; the core editor has no mobile adaptation
 
 ---
 
