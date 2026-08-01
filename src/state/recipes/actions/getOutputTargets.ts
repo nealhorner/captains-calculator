@@ -7,7 +7,7 @@ export const getOutputTargets: Action<RecipeId,ProductRecipes> = ({state},recipe
         let product = state.products.items[output.id]
         let recipeTargets = product.recipes.input.length ? product.recipes.input.map(recipeId => state.recipes.items[recipeId]) : []
         if (outputRecipes[output.id]) {
-            return recipeTargets.length ? { ...outputRecipes, [output.id]: [...outputRecipes[output.id], recipeTargets] } : outputRecipes
+            return recipeTargets.length ? { ...outputRecipes, [output.id]: [...outputRecipes[output.id], ...recipeTargets] } : outputRecipes
         } else {
             return recipeTargets.length ? { ...outputRecipes, [output.id]: recipeTargets } : outputRecipes
         }

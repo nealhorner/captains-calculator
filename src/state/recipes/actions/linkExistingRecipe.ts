@@ -1,47 +1,32 @@
 import { AsyncAction } from "state/_types";
 import { ProductId } from '../../app/effects/loadJsonData';
 
-type LinkRecipeParams = {
+export type LinkExistingRecipeParams = {
     currentNodeId: string;
     existingNodeId: string;
     productId: ProductId;
     direction: 'input' | 'output';
 }
 
-export const linkExistingRecipe: AsyncAction<LinkRecipeParams> = async ({ state, actions }, { currentNodeId, existingNodeId, productId, direction }) => {
+/**
+ * Links two nodes that are both already in the graph. Records topology only —
+ * `recalculate` resolves the flow quantities for the whole chain.
+ */
+export const linkExistingRecipe: AsyncAction<LinkExistingRecipeParams> = async ({ state, actions }, { currentNodeId, existingNodeId, productId, direction }) => {
 
-    // Create New Node
+    let currentNode = state.recipes.nodes[currentNodeId]
     let existingNode = state.recipes.nodes[existingNodeId]
 
-    // Link Current Node
-    let currentNode = state.recipes.nodes[currentNodeId]
+    if (!currentNode || !existingNode || currentNodeId === existingNodeId) return
 
-    // New Node Exports
-
-    if (direction==='input') {
-
-        let existingNodeExportedProduct = existingNode.outputs[productId]
-        let existingNodeExportedQuantity = existingNode.machine.isMine || existingNode.machine.isStorage ? currentNode.inputs[productId].quantity : existingNodeExportedProduct.quantity
-
-        let currentNodeImports = currentNode.addImport(productId, existingNode.id, existingNodeExportedQuantity)
-
-        if (currentNodeImports) {
-            existingNode.addExport(productId, currentNodeId, currentNodeImports)
-        }
-
+    if (direction === 'input') {
+        currentNode.addImportLink(productId, existingNode.id)
+        existingNode.addExportLink(productId, currentNodeId)
+    } else {
+        existingNode.addImportLink(productId, currentNodeId)
+        currentNode.addExportLink(productId, existingNode.id)
     }
 
-    if (direction==='output') {
-
-        let currentNodeExportedProduct = currentNode.outputs[productId]
-        let currentNodeExportedQuantity = currentNode.machine.isMine || currentNode.machine.isStorage ? existingNode.inputs[productId].quantity : currentNodeExportedProduct.quantity
-
-        let existingNodeImports = existingNode.addImport(productId, currentNodeId, currentNodeExportedQuantity)
-
-        if (existingNodeImports) {
-            currentNode.addExport(productId, existingNodeId, existingNodeImports)
-        }
-
-    }
+    actions.recipes.recalculate()
 
 }

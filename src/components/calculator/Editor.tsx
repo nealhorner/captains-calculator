@@ -1,24 +1,49 @@
 import React from 'react';
-import ReactFlow, { MiniMap, Controls, Position, NodeTypes, useNodesState, useEdgesState, addEdge, ReactFlowInstance, Connection, EdgeTypes, Edge, Node } from 'react-flow-renderer';
+import ReactFlow, { MiniMap, Controls, ControlButton, Position, NodeTypes, useNodesState, useEdgesState, addEdge, ReactFlowInstance, Connection, EdgeTypes, Edge, Node } from 'react-flow-renderer';
 import dagre from 'dagre';
 
 import { useAppState } from 'state';
 import ProductionNode from 'state/recipes/ProductionNode';
 
-import { generateDarkColorHex, generateLightColorHex } from 'utils/colors';
+import { colorFromKey, generateDarkColorHex } from 'utils/colors';
 
 import { RecipeNodeType } from './RecipeNodeType';
 import { RecipeEdgeType } from './RecipeEdgeType';
 import { Box, Loader, useMantineTheme } from '@mantine/core';
 import { AnimatePresence, motion } from 'framer-motion';
+import { Icon } from '@iconify/react';
+import Icons from 'components/ui/Icons';
 
-export type RecipeNodeData = ProductionNode
+/** The plain snapshot a graph node renders — see `ProductionNode.nodeData`. */
+export type RecipeNodeData = {
+    id: string;
+    recipe: ProductionNode['recipe'];
+    machine: ProductionNode['machine'];
+    category: ProductionNode['category'];
+    inputs: ProductionNode['inputs'];
+    outputs: ProductionNode['outputs'];
+    sources: ProductionNode['sources'];
+    targets: ProductionNode['targets'];
+    machinesCount: number;
+    pinnedMachinesCount: number | null;
+    buildingsRequired: number;
+}
 export type RecipeNode = Node<RecipeNodeData>
 
-const dagreGraph = new dagre.graphlib.Graph();
-dagreGraph.setDefaultEdgeLabel(() => ({}));
+// Fallbacks for the first layout pass, before React Flow has measured anything.
+// Without them dagre is handed `undefined` and returns NaN positions.
+const DEFAULT_NODE_WIDTH = 280
+const DEFAULT_NODE_HEIGHT = 320
 
-const getLayoutedElements = (nodes: Node<any>[], edges: Edge<any>[]) => {
+type Placement = { x: number; y: number }
+
+/** Runs dagre over the whole graph and returns where each node would go. */
+const computeLayout = (nodes: Node<any>[], edges: Edge<any>[]): Map<string, Placement> => {
+
+    // A fresh graph each time: a long-lived one keeps nodes from previous
+    // layouts, so deleted targets would go on influencing the arrangement.
+    const dagreGraph = new dagre.graphlib.Graph();
+    dagreGraph.setDefaultEdgeLabel(() => ({}));
 
     dagreGraph.setGraph({
         rankdir: 'LR',
@@ -31,7 +56,10 @@ const getLayoutedElements = (nodes: Node<any>[], edges: Edge<any>[]) => {
     });
 
     nodes.forEach((node) => {
-        dagreGraph.setNode(node.id, { width: node.width, height: node.height });
+        dagreGraph.setNode(node.id, {
+            width: node.width || DEFAULT_NODE_WIDTH,
+            height: node.height || DEFAULT_NODE_HEIGHT
+        });
     });
 
     edges.forEach((edge) => {
@@ -40,89 +68,77 @@ const getLayoutedElements = (nodes: Node<any>[], edges: Edge<any>[]) => {
 
     dagre.layout(dagreGraph);
 
+    const placements = new Map<string, Placement>()
+
     nodes.forEach((node) => {
-
-        const nodeWithPosition = dagreGraph.node(node.id);
-
-        node.targetPosition = Position.Right
-        node.sourcePosition = Position.Left
-
-        node.position = {
-            x: nodeWithPosition.x - (!!node.width ? node.width / 2 : 0),
-            y: nodeWithPosition.y - (!!node.height ? node.height / 2 : 0)
-        };
-
-        return node;
+        const laid = dagreGraph.node(node.id);
+        if (!laid) return
+        placements.set(node.id, {
+            x: laid.x - (node.width || DEFAULT_NODE_WIDTH) / 2,
+            y: laid.y - (node.height || DEFAULT_NODE_HEIGHT) / 2
+        })
     });
 
-    return { nodes, edges };
+    return placements
 };
+
+/** Lays every node out from scratch, discarding any manual arrangement. */
+const layoutAll = <T,>(nodes: Node<T>[], edges: Edge<any>[]): Node<T>[] => {
+    const placements = computeLayout(nodes, edges)
+    return nodes.map(node => ({
+        ...node,
+        targetPosition: Position.Right,
+        sourcePosition: Position.Left,
+        position: placements.get(node.id) ?? node.position
+    }))
+}
 
 const nodeTypes: NodeTypes = { RecipeNode: RecipeNodeType }
 const edgeTypes: EdgeTypes = { smart: RecipeEdgeType }
 
 type EditorProps = {
-    nodesData: Node<ProductionNode>[];
+    nodesData: RecipeNode[];
     edgesData: Edge<any>[];
 }
 
 export const Editor: React.FC<EditorProps> = ({ nodesData, edgesData }) => {
-
-    // const { fitView, getEdges, setNodes } = useReactFlow();
-    //const selectNode = useActions().recipes.selectNode
-    // const reaction = useReaction()
-    // const [graph, setGraph] = React.useState<Array<Node>>()
 
     const [loading, setLoading] = React.useState(true)
 
     const [nodes, setNodes, onNodesChange] = useNodesState(nodesData);
     const [edges, setEdges, onEdgesChange] = useEdgesState(edgesData);
 
-    // const [nodes, setNodes] = React.useState<Node<RecipeNodeData>[]>([]);
-    // const [edges, setEdges] = React.useState([]);
+    const instanceRef = React.useRef<ReactFlowInstance<RecipeNodeData> | null>(null)
 
-    // React.useEffect(() => reaction(
-    //     (state) => state.recipes.nodesList,
-    //     (nodesList) => {
-    //         console.log('ReactionRan')
-    //         if (nodesList.length) {
-    //             let nodes = nodesList.map(node => {
-    //                 return {
-    //                     id: node.id,
-    //                     type: 'RecipeNode',
-    //                     data: node,
-    //                     position: { x: 0, y: 0 }
-    //                 }
-    //             })
-    //             createGraphLayout(nodes, [])
-    //                 .then(graph => {
-    //                     setNodes(graph)
-    //                 })
-    //         }
-    //     },
-    //     {
-    //         immediate: false
-    //     }
-    // ))
+    /**
+     * The editor only remounts when the set of nodes changes (see the key in
+     * `EditorWrapper`), so this covers the common case: the chain was re-sized
+     * and every node needs fresh numbers while staying exactly where it is.
+     */
+    React.useEffect(() => {
+        setNodes(current => current.map(node => {
+            const fresh = nodesData.find(item => item.id === node.id)
+            return fresh ? { ...node, data: fresh.data } : node
+        }))
+    }, [nodesData, setNodes]);
 
-    // const handleNodesChange = (nodes: NodeChange[]) => {
-    //     console.log('handleNodesChange', nodes)
-    //     //fitView({ padding: 1 , includeHiddenNodes: true});
-    // }
+    React.useEffect(() => {
+        setEdges(current => {
+            const existing = new Map(current.map(edge => [edge.id, edge]))
+            return edgesData.map(item => {
+                const previous = existing.get(item.id)
+                return previous ? { ...previous, ...item } : item
+            })
+        })
+    }, [edgesData, setEdges]);
 
-    // const onNodesChange = React.useCallback(
-    //     (changes) => console.log(changes),
-    //     [setNodes]
-    // );
-
-    // const onEdgesChange = React.useCallback(
-    //     (changes) => setEdges((eds) => applyEdgeChanges(changes, eds)),
-    //     [setEdges]
-    // );
-
-    // const onConnectEnd = async () => {
-    //     console.log('onConnectEnd')
-    // }
+    /** Re-runs the automatic arrangement, discarding manual positioning. */
+    const handleRelayout = React.useCallback(() => {
+        setNodes(current => layoutAll(current, edges))
+        window.setTimeout(() => {
+            instanceRef.current?.fitView({ padding: 0.2, includeHiddenNodes: false, duration: 200 })
+        }, 0)
+    }, [edges, setNodes]);
 
     const onConnect = async (params: Connection) => {
         // @ts-ignore
@@ -131,22 +147,14 @@ export const Editor: React.FC<EditorProps> = ({ nodesData, edgesData }) => {
     }
 
     const onInit = async (reactFlowInstance: ReactFlowInstance<RecipeNodeData>) => {
+        instanceRef.current = reactFlowInstance
         reactFlowInstance.setCenter(0, 0)
-        let data = getLayoutedElements(
-            reactFlowInstance.getNodes(),
-            reactFlowInstance.getEdges()
-        );
-        reactFlowInstance.setNodes(data.nodes)
-        reactFlowInstance.setEdges(data.edges)
+        reactFlowInstance.setNodes(
+            layoutAll(reactFlowInstance.getNodes(), reactFlowInstance.getEdges())
+        )
         reactFlowInstance.fitView({ padding: 0.2, includeHiddenNodes: false, duration: 100 });
-        //await new Promise(resolve=>setTimeout(resolve,1000))
         setLoading(false)
-
     };
-
-    // const onNodeClick = (e: any, node: Node<RecipeNodeData>) => {
-    //     selectNode(node.data.id)
-    // }
 
     return (
         <React.Fragment>
@@ -195,7 +203,6 @@ export const Editor: React.FC<EditorProps> = ({ nodesData, edgesData }) => {
                 edges={edges}
                 onNodesChange={onNodesChange}
                 onEdgesChange={onEdgesChange}
-                //onNodeClick={onNodeClick}
                 onConnect={onConnect}
                 onInit={onInit}
                 nodeTypes={nodeTypes}
@@ -207,7 +214,11 @@ export const Editor: React.FC<EditorProps> = ({ nodesData, edgesData }) => {
                 nodesConnectable={true}
             >
                 <MiniMap />
-                <Controls />
+                <Controls>
+                    <ControlButton onClick={handleRelayout} title="Tidy up layout">
+                        <Icon icon={Icons.layout} />
+                    </ControlButton>
+                </Controls>
             </ReactFlow>
         </React.Fragment>
     )
@@ -217,10 +228,30 @@ export const Editor: React.FC<EditorProps> = ({ nodesData, edgesData }) => {
 export const EditorWrapper = () => {
 
     const theme = useMantineTheme();
-    let { nodesData, edgesData } = useAppState(state => state.recipes)
+    const { nodesData, edgesData } = useAppState(state => state.recipes)
+
+    // Colour each edge from its own id rather than at random, and only rebuild
+    // the styled list when the edges or the theme actually change — otherwise
+    // every re-size would hand the editor a new array and recolour the graph.
+    const styledEdges = React.useMemo(() => edgesData.map((edge: Edge<any>) => ({
+        ...edge,
+        style: {
+            stroke: colorFromKey(edge.id, theme.colorScheme === 'light' ? 'light' : 'dark'),
+            strokeWidth: 3
+        }
+    })), [edgesData, theme.colorScheme])
+
+    // Keyed on which nodes exist, not how many nodes and edges there are. Re-sizing
+    // the chain — a new target volume, a pinned building count, an extra link
+    // between nodes that already exist — leaves the key alone, so the editor keeps
+    // running and positions survive; only adding or removing a node remounts it.
+    //
+    // A remount is what makes React Flow measure a new node and therefore draw the
+    // edges touching it, so it cannot simply be dropped.
+    const key = nodesData.map((node: RecipeNode) => node.id).sort().join('|')
 
     if (!nodesData.length) return null
 
-    return <Editor key={`editor-${nodesData.length}-${edgesData.length}`} nodesData={nodesData} edgesData={edgesData.map(e=>({...e,style: {stroke: theme.colorScheme === 'light' ? generateDarkColorHex() : generateLightColorHex(), strokeWidth: 3}}))} />
+    return <Editor key={key} nodesData={nodesData} edgesData={styledEdges} />
 
 }

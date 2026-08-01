@@ -1,12 +1,16 @@
-import { Box, Image, Stack, Table, Alert, ScrollArea, Divider } from '@mantine/core';
+import { Box, Image, Stack, Table, Alert, ScrollArea, Divider, Text, Tooltip } from '@mantine/core';
 
 import { useAppState } from 'state';
 import { needMap } from 'components/ui/NeedsBadge';
+import { EPSILON, formatCount, formatRate } from 'utils/numbers';
+import { dictValues } from 'utils/objects';
+import ProductionNode, { RecipeIOExportProduct, RecipeIOImportProduct } from 'state/recipes/ProductionNode';
+import { ChainTarget } from 'state/_types';
 import React from 'react';
 
 export const ResultsSummary = () => {
 
-    const { nodesList } = useAppState(state => state.recipes)
+    const { nodesList, targetsList, nodes: allNodes } = useAppState(state => state.recipes)
     const { items: allProducts } = useAppState(state => state.products)
 
     let needs: { [index: string]: { label: string, icon: string, total: number, color: string } } = {
@@ -49,40 +53,48 @@ export const ResultsSummary = () => {
     }
 
     let costs: { [index: string]: { label: string, icon: string, total: number } } = {}
-    let buildings: { [index: string]: { id: string, label: string, icon: string, total: number } } = {}
+    let buildings: { [index: string]: { id: string, label: string, icon: string, total: number, utilised: number } } = {}
     let inputs: { [index: string]: { id: string, label: string, icon: string, total: number } } = {}
     let outputs: { [index: string]: { id: string, label: string, icon: string, total: number } } = {}
+    // What the chain cannot supply itself and must be fed from outside.
+    let rawInputs: { [index: string]: { id: string, label: string, icon: string, total: number } } = {}
 
-    nodesList.forEach(recipe => {
+    nodesList.forEach((recipe: ProductionNode) => {
 
         let machine = recipe.machine
+        // You can only build whole buildings, so construction-side figures use
+        // the rounded-up count while running costs use the fractional one.
+        let built = recipe.buildingsRequired
+        let running = recipe.machinesCount
 
         if (!buildings.hasOwnProperty(machine.id)) {
             buildings[machine.id] = {
                 id: machine.id,
                 label: machine.name,
                 icon: machine.icon,
-                total: 0
+                total: 0,
+                utilised: 0
             }
         }
 
         if (buildings.hasOwnProperty(machine.id)) {
-            buildings[machine.id].total += 1
+            buildings[machine.id].total += built
+            buildings[machine.id].utilised += running
         }
 
         // Needs
 
-        needs.workers.total += machine.workers
-        needs.electricity.total += machine.electricity_consumed
+        needs.workers.total += machine.workers * built
+        needs.electricity.total += machine.electricity_consumed * running
         if (machine.maintenance_cost_units === 'maintenance_i') {
-            needs.maintenance1.total += machine.maintenance_cost_quantity
+            needs.maintenance1.total += machine.maintenance_cost_quantity * built
         }
         if (machine.maintenance_cost_units === 'maintenance_ii') {
-            needs.maintenance2.total += machine.maintenance_cost_quantity
+            needs.maintenance2.total += machine.maintenance_cost_quantity * built
         }
 
-        needs.unity.total += machine.unity_cost
-        needs.computing.total += machine.computing_consumed
+        needs.unity.total += machine.unity_cost * built
+        needs.computing.total += machine.computing_consumed * running
 
         // Costs
         machine.build_costs.forEach(product => {
@@ -95,11 +107,11 @@ export const ResultsSummary = () => {
                 }
             }
             if (costs.hasOwnProperty(product.id)) {
-                costs[product.id].total += product.quantity
+                costs[product.id].total += product.quantity * built
             }
         })
 
-        Object.values(recipe.outputs).forEach(output => {
+        dictValues<RecipeIOExportProduct>(recipe.outputs).forEach(output => {
             if (!machine.isFarm && !machine.isStorage && !machine.isMine) {
                 if (!outputs.hasOwnProperty(output.id)) {
                     outputs[output.id] = {
@@ -110,12 +122,12 @@ export const ResultsSummary = () => {
                     }
                 }
                 if (outputs.hasOwnProperty(output.id)) {
-                    outputs[output.id].total += output.quantity
+                    outputs[output.id].total += output.rate
                 }
             }
         })
 
-        Object.values(recipe.inputs).forEach(input => {
+        dictValues<RecipeIOImportProduct>(recipe.inputs).forEach(input => {
             if (!machine.isFarm && !machine.isStorage && !machine.isMine) {
                 if (!inputs.hasOwnProperty(input.id)) {
                     inputs[input.id] = {
@@ -126,12 +138,41 @@ export const ResultsSummary = () => {
                     }
                 }
                 if (inputs.hasOwnProperty(input.id)) {
-                    inputs[input.id].total += input.quantity
+                    inputs[input.id].total += input.rate
                 }
+            }
+
+            // Anything no node in the graph supplies has to come from elsewhere.
+            if (input.deficit > EPSILON) {
+                if (!rawInputs.hasOwnProperty(input.id)) {
+                    rawInputs[input.id] = {
+                        id: input.id,
+                        label: input.name,
+                        icon: input.icon,
+                        total: 0
+                    }
+                }
+                rawInputs[input.id].total += input.deficit
             }
         })
 
     })
+
+    // Per-target progress: what was asked for against what the chain makes.
+    let targetRows = targetsList
+        .filter((target: ChainTarget) => target.productId && target.nodeId && allNodes[target.nodeId])
+        .map((target: ChainTarget) => {
+            let node = allNodes[target.nodeId!]
+            let product = allProducts[target.productId!]
+            let output = node.outputs[target.productId!]
+            return {
+                id: target.id,
+                label: product ? product.name : target.productId!,
+                icon: product ? product.icon : '',
+                target: target.quantity,
+                achieved: output ? output.rate : 0
+            }
+        })
 
     const renderBuildings = () => {
         return (
@@ -174,7 +215,14 @@ export const ResultsSummary = () => {
                                         </Box>
                                     </td>
                                     <td>{building.label}</td>
-                                    <td align='right'>x<strong>{building.total}</strong></td>
+                                    <td align='right'>
+                                        x<strong>{building.total}</strong>
+                                        {Math.abs(building.utilised - building.total) > EPSILON && (
+                                            <Tooltip label={`${formatCount(building.utilised)} buildings' worth of throughput`} withArrow withinPortal>
+                                                <Text component="span" size="xs" color="dimmed">{` (${formatCount(building.utilised)} used)`}</Text>
+                                            </Tooltip>
+                                        )}
+                                    </td>
                                 </tr>
                             )
                         }
@@ -285,7 +333,7 @@ export const ResultsSummary = () => {
                                         </Box>
                                     </td>
                                     <td>{need.label}</td>
-                                    <td align='right'>x<strong>{need.total}</strong>
+                                    <td align='right'>x<strong>{formatRate(need.total)}</strong>
                                     </td>
                                 </tr>
                             )
@@ -311,7 +359,7 @@ export const ResultsSummary = () => {
             >
                 <thead>
                     <tr>
-                        <th colSpan={3}>Total Outputs (60s)</th>
+                        <th colSpan={3}>Gross Outputs (60s)</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -338,7 +386,7 @@ export const ResultsSummary = () => {
                                         </Box>
                                     </td>
                                     <td>{item.label}</td>
-                                    <td align='right'>x<strong>{item.total}</strong></td>
+                                    <td align='right'>x<strong>{formatRate(item.total)}</strong></td>
                                 </tr>
                             )
                         }
@@ -363,7 +411,7 @@ export const ResultsSummary = () => {
             >
                 <thead>
                     <tr>
-                        <th colSpan={3}>Total Inputs (60s)</th>
+                        <th colSpan={3}>Gross Inputs (60s)</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -390,11 +438,124 @@ export const ResultsSummary = () => {
                                         </Box>
                                     </td>
                                     <td>{item.label}</td>
-                                    <td align='right'>x<strong>{item.total}</strong></td>
+                                    <td align='right'>x<strong>{formatRate(item.total)}</strong></td>
                                 </tr>
                             )
                         }
                         return null
+                    })}
+                </tbody>
+            </Table>
+        )
+    }
+
+    /** What each target asked for against what the chain actually produces. */
+    const renderTargets = () => {
+        return (
+            <Table
+                horizontalSpacing={4}
+                verticalSpacing={4}
+                sx={{
+                    '& .fitwidth': {
+                        width: 1,
+                        whiteSpace: 'nowrap'
+                    }
+                }}
+            >
+                <thead>
+                    <tr>
+                        <th colSpan={3}>Targets (60s)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {targetRows.map((item: typeof targetRows[number], k: number) => {
+                        let short = item.achieved < item.target - EPSILON
+                        return (
+                            <tr key={`target-${item.id}-${k}`}>
+                                <td className='fitwidth'>
+                                    <Box
+                                        p={6}
+                                        sx={theme => ({
+                                            borderRadius: theme.radius.sm,
+                                            border: `1px solid ${theme.colorScheme === 'light' ? theme.colors.gray[4] : theme.colors.dark[9]}`,
+                                            background: theme.colors.dark[5]
+                                        })}
+                                    >
+                                        <Image
+                                            height={12}
+                                            width={12}
+                                            src={`/assets/products/${item.icon}`} alt={item.label}
+                                            sx={{ display: 'block', objectFit: 'contain' }}
+                                        />
+                                    </Box>
+                                </td>
+                                <td>{item.label}</td>
+                                <td align='right'>
+                                    <Tooltip
+                                        label={short
+                                            ? `Producing ${formatRate(item.achieved)} of ${formatRate(item.target)} — short by ${formatRate(item.target - item.achieved)}`
+                                            : `Target met`}
+                                        withArrow
+                                        withinPortal
+                                    >
+                                        <Text component="span" size="sm" color={short ? 'red' : undefined}>
+                                            <strong>{formatRate(item.achieved)}</strong>
+                                            {short && ` / ${formatRate(item.target)}`}
+                                        </Text>
+                                    </Tooltip>
+                                </td>
+                            </tr>
+                        )
+                    })}
+                </tbody>
+            </Table>
+        )
+    }
+
+    /** Products the chain cannot make itself, i.e. what it must be fed. */
+    const renderRawInputs = () => {
+        return (
+            <Table
+                horizontalSpacing={4}
+                verticalSpacing={4}
+                sx={{
+                    '& .fitwidth': {
+                        width: 1,
+                        whiteSpace: 'nowrap'
+                    }
+                }}
+            >
+                <thead>
+                    <tr>
+                        <th colSpan={3}>Raw Inputs (60s)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {Object.keys(rawInputs).map((itemId, k) => {
+                        let item = rawInputs[itemId]
+                        return (
+                            <tr key={`raw-${itemId}-${k}`}>
+                                <td className='fitwidth'>
+                                    <Box
+                                        p={6}
+                                        sx={theme => ({
+                                            borderRadius: theme.radius.sm,
+                                            border: `1px solid ${theme.colorScheme === 'light' ? theme.colors.gray[4] : theme.colors.dark[9]}`,
+                                            background: theme.colors.dark[5]
+                                        })}
+                                    >
+                                        <Image
+                                            height={12}
+                                            width={12}
+                                            src={`/assets/products/${item.icon}`} alt={item.label}
+                                            sx={{ display: 'block', objectFit: 'contain' }}
+                                        />
+                                    </Box>
+                                </td>
+                                <td>{item.label}</td>
+                                <td align='right'>x<strong>{formatRate(item.total)}</strong></td>
+                            </tr>
+                        )
                     })}
                 </tbody>
             </Table>
@@ -420,17 +581,19 @@ export const ResultsSummary = () => {
 
                     <Stack spacing="xs">
 
-                        {nodesList.length ? ( 
+                        {nodesList.length ? (
                             <React.Fragment>
+                                {!!targetRows.length && renderTargets()}
                                 {renderBuildings()}
                                 {renderCosts()}
                                 {renderNeeds()}
+                                {!!Object.keys(rawInputs).length && renderRawInputs()}
                                 {!!Object.keys(outputs).length && renderTotalOutputs()}
                                 {!!Object.keys(inputs).length && renderTotalInputs()}
                             </React.Fragment>
                         ) : (
                             <Alert>
-                                Customize your production chain on the left to see a summary below.
+                                Add a target product on the left to see a summary here.
                             </Alert>
                         )}
 

@@ -65,6 +65,15 @@ export const changeEmptyPropsDeep = (source: GenericDictionary, target: GenericD
     return target;
 }
 
+/**
+ * `Object.values` over a dictionary, keeping the value type. Overmind's state
+ * proxies widen dictionary values to `unknown` through the plain `Object.values`
+ * signature, so reads of state dictionaries go through this instead.
+ */
+export const dictValues = <T>(dict: { [key: string]: T }): T[] => {
+    return Object.values(dict) as T[]
+}
+
 export const sortArray = (a: string, b: string) => {
     const nameA = a.toUpperCase();
     const nameB = b.toUpperCase();

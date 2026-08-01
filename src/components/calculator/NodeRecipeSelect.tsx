@@ -3,7 +3,7 @@ import { Text, Alert } from '@mantine/core';
 import { useActions, useAppState } from "state";
 import {  Recipe, RecipeId } from "state/app/effects";
 import RecipeListCard from "./RecipeListCard";
-import { RecipeIOExport, RecipeIOExportProduct, RecipeIOImport, RecipeIOImportProduct } from "state/recipes/ProductionNode";
+import ProductionNode, { RecipeIOExport, RecipeIOExportProduct, RecipeIOImport, RecipeIOImportProduct } from "state/recipes/ProductionNode";
 
 type RecipeSelectProps = {
     direction: 'input' | 'output';
@@ -64,6 +64,12 @@ export const NodeRecipeLink: React.FC<RecipeSelectProps> = ({ direction, current
         )
     }
 
+    // Recipes the graph already runs, which `linkRecipe` will reuse instead of
+    // adding a second building for.
+    let existingRecipeIds = new Set(
+        recipes.filter(recipe => allNodes.some((node: ProductionNode) => node.recipe.id === recipe.id)).map(recipe => recipe.id)
+    )
+
     let existingNodes = allNodes.filter(node=>{
         
         let isNotCurrentNode = node.id !== currentNodeId
@@ -84,7 +90,7 @@ export const NodeRecipeLink: React.FC<RecipeSelectProps> = ({ direction, current
                     isNotAlreadyLinked = false
                 }
             })
-            if (nodeProduct.maxed) {
+            if (nodeProduct.satisfied) {
                isNotMaxedOut = false
             }
         }
@@ -100,7 +106,7 @@ export const NodeRecipeLink: React.FC<RecipeSelectProps> = ({ direction, current
                     isNotAlreadyLinked = false
                 }
             })
-            if (nodeProduct.maxed) {
+            if (nodeProduct.satisfied) {
                 isNotMaxedOut = false
             }
         }
@@ -121,6 +127,12 @@ export const NodeRecipeLink: React.FC<RecipeSelectProps> = ({ direction, current
                 />
             })}
             <Text>New Target</Text>
+            {existingRecipeIds.size ? (
+                <Text size="xs" color="dimmed">
+                    Recipes already in your chain are reused rather than duplicated, so their demand
+                    is combined.
+                </Text>
+            ) : null}
             {recipes.map((item, key) => {
                 return <RecipeListCard
                     key={key}

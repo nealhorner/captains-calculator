@@ -11,16 +11,17 @@ import { MachineId } from "state/app/effects";
 
 export const BuildingSelectDrawer = () => {
 
-    const currentProduct = useAppState(state=>state.products.currentItem)
-    const { itemsList, currentItem } = useAppState(state => state.machines)
+    const allProducts = useAppState(state => state.products.items)
+    const activeTarget = useAppState(state => state.recipes.activeTarget)
+    const { itemsList, items } = useAppState(state => state.machines)
 
-    const selectMachine = useActions().machines.selectMachine
-    const selectRecipe = useActions().recipes.selectRecipe
-    const delectRecipesItem = useActions().recipes.delectRecipesItem
-    const resetNodes = useActions().recipes.resetNodes
-    
+    const setTargetMachine = useActions().recipes.setTargetMachine
+
     const [opened, setOpened] = React.useState(false)
     const [filter,setFilter] = React.useState('')
+
+    const currentProduct = activeTarget?.productId ? allProducts[activeTarget.productId] : null
+    const currentItem = activeTarget?.machineId ? items[activeTarget.machineId] : null
 
     const handleFilterChange = (e: ChangeEvent<HTMLInputElement>) => {
         setFilter(e.target.value)
@@ -28,10 +29,7 @@ export const BuildingSelectDrawer = () => {
 
     const handleSelectMachine = (id: MachineId) => {
         setFilter('')
-        selectRecipe(null)
-        delectRecipesItem(null)
-        resetNodes()
-        selectMachine(id)
+        setTargetMachine(id)
         setOpened(false)
     }
 
