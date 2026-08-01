@@ -19,6 +19,10 @@
 
 ## Phase 2 — Build System & Core Upgrades (Critical)
 
+### Package Manager Migration
+
+- [ ] Migrate off `yarn` to `pnpm` (or `npm`) — regenerate lockfile, update `package.json` scripts/engines, update CI workflow (`.github/workflows/`), and update any docs/README referencing `yarn` commands
+
 ### CRA to Vite Migration
 
 - [x] Replace `react-scripts` with `vite` + `@vitejs/plugin-react`
