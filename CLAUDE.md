@@ -10,7 +10,7 @@ Live at: https://captains-calculator.com
 
 | Layer            | Technology                                                        |
 | ---------------- | ----------------------------------------------------------------- |
-| Framework        | React 17 + TypeScript 4.9 (Vite / @vitejs/plugin-react)           |
+| Framework        | React 19 + TypeScript 6.0 (Vite / @vitejs/plugin-react)           |
 | State Management | Overmind (centralized, derived state, effects)                    |
 | Graph / Flow     | react-flow-renderer 10.x, Dagre (auto-layout), elkjs              |
 | UI Library       | Mantine v4 (core, hooks, modals, notifications, dates)            |

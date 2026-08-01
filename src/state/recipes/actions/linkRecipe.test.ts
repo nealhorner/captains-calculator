@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 
 import { linkRecipe } from './linkRecipe';
-import ProductionNode from '../ProductionNode';
+import ProductionNode from 'state/recipes/ProductionNode';
 import {
   loadMachineData,
   loadProductData,

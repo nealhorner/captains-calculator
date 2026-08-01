@@ -33,8 +33,8 @@ export const TestProviders: React.FC<{
     <StateProvider value={overmind}>
       <ColorSchemeProvider
         colorScheme={colorScheme}
-        toggleColorScheme={() =>
-          setColorScheme((current) => (current === 'light' ? 'dark' : 'light'))
+        toggleColorScheme={(value) =>
+          setColorScheme(value ?? (colorScheme === 'light' ? 'dark' : 'light'))
         }
       >
         <MantineProvider theme={{ colorScheme }} withNormalizeCSS withGlobalStyles>
