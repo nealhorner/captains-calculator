@@ -153,7 +153,7 @@ This is a large migration. Mantine v7 is a near-full rewrite.
 ### Crash Risk
 
 - [ ] Wrap `JSON.parse(settings)` in `src/state/app/effects/loadLocaStorageSettings.ts` in a try/catch — unlike the sibling `loadGraphState.ts`, corrupted or manually-edited `app-settings` localStorage throws uncaught on every app boot, causing a full white-screen crash with no recovery
-- [ ] Add a React Error Boundary (see Phase 5) — currently zero `ErrorBoundary`/`componentDidCatch` usage anywhere in `src`, so any uncaught render/state error takes down the whole app
+- [ ] React Error Boundary — see Phase 5's "Add a React Error Boundary" item (canonical, not duplicated here)
 
 ### CI
 
@@ -162,7 +162,7 @@ This is a large migration. Mantine v7 is a near-full rewrite.
 ### Data Integrity
 
 - [ ] Validate imported JSON chains against the real `RecipeIODictInput`/`RecipeIODictOutput` shapes in `src/state/recipes/actions/importGraph.ts` / `importExport.ts` — current validation only checks `typeof === 'object'`, so a malformed export can pass validation and fail later
-- [ ] Add a schema/version field to the `production-graph` and `app-settings` localStorage keys (the export format already has one) so a future state-shape change has a migration path instead of silently loading stale/incompatible data
+- [ ] Add a schema/version field to the values stored under the `production-graph` and `app-settings` localStorage keys (the export format already has one) so a future state-shape change has a migration path instead of silently loading stale/incompatible data
 
 ### Repo Hygiene
 
