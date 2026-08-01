@@ -4,21 +4,21 @@ $size: 15px;
 $time: 1;
 
 @keyframes fadeIn {
-    0% {
-      opacity: 0;
-    }
-    100% {
-      opacity: 1;
-    }
+  0% {
+    opacity: 0;
   }
-  
-  @keyframes fadeOut {
-    0% {
-      opacity: 1;
-    }
-    100% {
-      opacity: 0;
-    }
+  100% {
+    opacity: 1;
+  }
+}
+
+@keyframes fadeOut {
+  0% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
 }
 
 .dank-loader-wrapper {
@@ -61,19 +61,25 @@ $time: 1;
 
   @for $i from 1 through 18 {
     &.outer-#{$i} {
-      animation-delay: -1 * ( math.div($time, 18) * $i) + s;
+      animation-delay: -1 * (math.div($time, 18) * $i) + s;
     }
   }
 
   @for $i from 1 through 6 {
     &.inner-#{$i} {
-      animation-delay: -1* (math.div($time, 6) * $i) + s;
+      animation-delay: -1 * (math.div($time, 6) * $i) + s;
     }
   }
 }
 
 @keyframes blink {
-  0% { opacity: 0.1; }
-  30% { opacity: 1; }
-  100% { opacity: 0.1; }
+  0% {
+    opacity: 0.1;
+  }
+  30% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0.1;
+  }
 }

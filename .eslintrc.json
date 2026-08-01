@@ -1,8 +1,5 @@
 {
-  "extends": [
-    "react-app",
-    "react-app/jest"
-  ],
+  "extends": ["react-app", "react-app/jest"],
   "globals": {
     "vi": "readonly"
   }

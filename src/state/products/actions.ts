@@ -1,1 +1,1 @@
-export * from './actions/selectProduct'
+export * from './actions/selectProduct';
