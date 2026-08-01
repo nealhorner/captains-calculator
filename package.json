@@ -24,6 +24,7 @@
     "react-router-dom": "^6.30.4",
     "use-react-router-breadcrumbs": "^3.0.2",
     "web-vitals": "^2.1.0",
+    "web-worker": "^1.2.0",
     "yup": "^0.32.11"
   },
   "resolutions": {
