@@ -6,6 +6,7 @@ import { ProductSelectDrawer } from 'components/calculator/ProductSelectDrawer';
 import { BuildingSelectDrawer } from 'components/calculator/BuildingSelectDrawer';
 import { RecipeSelectDrawer } from 'components/calculator/RecipeSelectDrawer';
 import { NodeDrawer } from 'components/calculator/NodeDrawer';
+import { ImportExportMenu } from 'components/calculator/ImportExportMenu';
 
 export const SetupBar = () => {
   const { currentItem: currentProduct } = useAppState((state) => state.products);
@@ -14,7 +15,9 @@ export const SetupBar = () => {
 
   return (
     <Box>
-      <Divider label="Production Chain Setup" mb="sm" />
+      <Divider label="Import / Export" mb="sm" />
+      <ImportExportMenu />
+      <Divider label="Production Chain Setup" my="sm" />
       <Stack>
         <ProductSelectDrawer />
         {currentProduct && <BuildingSelectDrawer />}

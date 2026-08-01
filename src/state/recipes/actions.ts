@@ -10,5 +10,7 @@ export * from './actions/calculateGraph';
 export * from './actions/resetNodes';
 export * from './actions/linkExistingRecipe';
 export * from './actions/deleteNode';
+export * from './actions/exportGraph';
+export * from './actions/importGraph';
 export * from './actions/saveGraphState';
 export * from './actions/loadGraphState';
