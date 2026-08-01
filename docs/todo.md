@@ -13,7 +13,7 @@
 - [x] **Strip debug `console.log` calls** left in production code:
   - `src/components/calculator/Editor.tsx` — `console.log('onConnect')`
   - `src/components/calculator/RecipeNodeType.tsx` — `console.log(nodeId)`
-- [ ] **Resolve `@TODO` in `src/state/recipes/actions/linkRecipe.ts`** (line 32) — incomplete "Create New Node" logic.
+- [x] **Resolve `@TODO` in `src/state/recipes/actions/linkRecipe.ts`** (line 32) — incomplete "Create New Node" logic.
 
 ---
 
@@ -37,19 +37,21 @@
 
 ### TypeScript 4.9 -> 7.x
 
-- [ ] Upgrade `typescript` to latest 7.x
-- [ ] Update `tsconfig.json` target from `es2015` to `es2020` or `esnext` (smaller output, modern features)
-- [ ] Audit and fix any new strict-mode errors introduced by TS 7
+- [x] Upgrade `typescript` to `6.0.3` (staging step towards 7.x — see below)
+- [ ] Upgrade `typescript` to latest 7.x — blocked: `eslint-plugin-jest` (via `eslint-config-react-app`) eagerly requires `@typescript-eslint/type-utils`, which crashes on TS 7's restructured API (`ts.TypeFlags` missing). `typescript-eslint`'s own peer-dep range excludes `typescript@7` until they ship a new API in 7.1 (~Oct 2026). Revisit once that lands.
+- [x] Update `tsconfig.json` target from `es2015` to `es2020` or `esnext` (smaller output, modern features)
+- [x] Audit and fix any new strict-mode errors introduced by TS 6 (`baseUrl` → `paths`, `moduleResolution: node` → `bundler`, framer-motion type shim — all still needed for the eventual TS 7 jump too)
 
 ---
 
-## Phase 3 — Test Coverage (Currently Zero)
+## Phase 3 — Test Coverage
 
-The project has testing libraries installed (`@testing-library/react`, `jest-dom`, `user-event`) but **zero test files exist** in `src/`.
+The project has testing libraries installed (`@testing-library/react`, `jest-dom`, `user-event`); test coverage is still minimal but no longer zero — see `src/state/recipes/actions/linkRecipe.test.ts`.
 
 - [x] Set up Vitest (replaces Jest after Vite migration)
 - [ ] Add unit tests for `ProductionNode` class (`src/state/recipes/ProductionNode.ts`) — it's the core domain logic
-- [ ] Add unit tests for key Overmind actions: `selectRecipe`, `linkRecipe`, `calculateGraph`, `deleteNode`
+- [ ] Add unit tests for key Overmind actions: `selectRecipe`, `calculateGraph`, `deleteNode`
+- [x] Add unit tests for key Overmind action: `linkRecipe`
 - [ ] Add integration tests for the Editor flow (select product -> machine -> recipe -> link nodes)
 - [ ] Add smoke tests for each route/screen rendering without crashing
 

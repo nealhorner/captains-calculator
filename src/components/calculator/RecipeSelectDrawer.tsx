@@ -1,104 +1,117 @@
-import React from "react";
-import { Box, Button, Drawer, Text, Stack, Card, Group, Image } from "@mantine/core";
+import React from 'react';
+import { Box, Button, Drawer, Text, Stack, Card, Group, Image } from '@mantine/core';
 
 import { useAppState, useActions } from 'state';
-import RecipeListCard from "./RecipeListCard";
-import { DrawerBody, DrawerBodyScrollArea } from "components/ui/DrawerBody";
-import { RecipeId } from "state/app/effects";
+import RecipeListCard from './RecipeListCard';
+import { DrawerBody, DrawerBodyScrollArea } from 'components/ui/DrawerBody';
+import { RecipeId } from 'state/app/effects';
 
 export const RecipeSelectDrawer = () => {
+  const allProducts = useAppState((state) => state.products.items);
+  const allMachines = useAppState((state) => state.machines.items);
+  const activeTarget = useAppState((state) => state.recipes.activeTarget);
 
-    const allProducts = useAppState(state => state.products.items)
-    const allMachines = useAppState(state => state.machines.items)
-    const activeTarget = useAppState(state => state.recipes.activeTarget)
+  const { itemsList, items } = useAppState((state) => state.recipes);
 
-    const { itemsList, items } = useAppState(state => state.recipes)
+  const setTargetRecipe = useActions().recipes.setTargetRecipe;
 
-    const setTargetRecipe = useActions().recipes.setTargetRecipe
+  const [opened, setOpened] = React.useState(false);
 
-    const [opened, setOpened] = React.useState(false)
+  const currentProduct = activeTarget?.productId ? allProducts[activeTarget.productId] : null;
+  const currentMachine = activeTarget?.machineId ? allMachines[activeTarget.machineId] : null;
+  const currentItem = activeTarget?.recipeId ? items[activeTarget.recipeId] : null;
 
-    const currentProduct = activeTarget?.productId ? allProducts[activeTarget.productId] : null
-    const currentMachine = activeTarget?.machineId ? allMachines[activeTarget.machineId] : null
-    const currentItem = activeTarget?.recipeId ? items[activeTarget.recipeId] : null
+  const handleSelectRecipe = (id: RecipeId) => {
+    setTargetRecipe(id);
+    setOpened(false);
+  };
 
-    const handleSelectRecipe = (id: RecipeId) => {
-        setTargetRecipe(id)
-        setOpened(false)
-    }
+  if (!currentMachine || !currentProduct) return null;
 
-    if (!currentMachine || !currentProduct) return null;
-
-    let filteredItems = itemsList.filter(recipe => {
-        return currentMachine.recipes.indexOf(recipe.id as RecipeId) >= 0 && recipe.outputs.find(product => product.id === currentProduct.id)
-    })
-
-    const renderBody = () => {
-        return (
-            <DrawerBody>
-                <DrawerBodyScrollArea>
-                    <Box p="md">
-                        <Stack spacing="xs">
-                            {filteredItems.map((i, k) => <RecipeListCard key={k} item={i} active={currentItem?.id === i.id} available={true} onSelect={() => handleSelectRecipe(i.id)} />)}
-                        </Stack>
-                    </Box>
-                </DrawerBodyScrollArea>
-            </DrawerBody>
-        )
-    }
-
+  let filteredItems = itemsList.filter((recipe) => {
     return (
-        <>
-            <Drawer
-                opened={opened}
-                onClose={() => setOpened(false)}
-                title="Select Recipe"
-                padding={0}
-                size="xl"
-                overlayBlur={3}
-                position="left"
-            >
-                {renderBody()}
-            </Drawer>
-
-            <Box>
-                <Text weight="bold" mb="xs">3. Production Recipe</Text>
-                {currentItem ? (
-                    <Card
-                        onClick={() => setOpened(true)}
-                        shadow="xs"
-                        p="xs"
-                        sx={(theme) => ({
-                            cursor: 'pointer',
-                            '&:hover': {
-                                backgroundColor: theme.colorScheme === 'light' ? theme.colors.gray[6] : theme.colors.dark[9],
-                            },
-                        })}
-                    >
-                        <Group position='apart'>
-                            <Text weight={500} size="sm">{currentItem.name}</Text>
-                            <Box
-                                p="xs"
-                                sx={theme => ({
-                                    borderRadius: theme.radius.sm,
-                                    background: theme.colors.dark[3]
-                                })}
-                            >
-                                <Image
-                                    height={24}
-                                    radius="md"
-                                    src={`/assets/products/${currentProduct.icon}`} alt={currentProduct.name}
-                                />
-                            </Box>
-                        </Group>
-
-
-                    </Card>
-                ) : (
-                    <Button onClick={() => setOpened(true)}>Click To Select</Button>
-                )}
-            </Box>
-        </>
+      currentMachine.recipes.indexOf(recipe.id as RecipeId) >= 0 &&
+      recipe.outputs.find((product) => product.id === currentProduct.id)
     );
+  });
 
-}
+  const renderBody = () => {
+    return (
+      <DrawerBody>
+        <DrawerBodyScrollArea>
+          <Box p="md">
+            <Stack spacing="xs">
+              {filteredItems.map((i, k) => (
+                <RecipeListCard
+                  key={k}
+                  item={i}
+                  active={currentItem?.id === i.id}
+                  available={true}
+                  onSelect={() => handleSelectRecipe(i.id)}
+                />
+              ))}
+            </Stack>
+          </Box>
+        </DrawerBodyScrollArea>
+      </DrawerBody>
+    );
+  };
+
+  return (
+    <>
+      <Drawer
+        opened={opened}
+        onClose={() => setOpened(false)}
+        title="Select Recipe"
+        padding={0}
+        size="xl"
+        overlayBlur={3}
+        position="left"
+      >
+        {renderBody()}
+      </Drawer>
+
+      <Box>
+        <Text weight="bold" mb="xs">
+          3. Production Recipe
+        </Text>
+        {currentItem ? (
+          <Card
+            onClick={() => setOpened(true)}
+            shadow="xs"
+            p="xs"
+            sx={(theme) => ({
+              cursor: 'pointer',
+              '&:hover': {
+                backgroundColor:
+                  theme.colorScheme === 'light' ? theme.colors.gray[6] : theme.colors.dark[9],
+              },
+            })}
+          >
+            <Group position="apart">
+              <Text weight={500} size="sm">
+                {currentItem.name}
+              </Text>
+              <Box
+                p="xs"
+                sx={(theme) => ({
+                  borderRadius: theme.radius.sm,
+                  background: theme.colors.dark[3],
+                })}
+              >
+                <Image
+                  height={24}
+                  radius="md"
+                  src={`/assets/products/${currentProduct.icon}`}
+                  alt={currentProduct.name}
+                />
+              </Box>
+            </Group>
+          </Card>
+        ) : (
+          <Button onClick={() => setOpened(true)}>Click To Select</Button>
+        )}
+      </Box>
+    </>
+  );
+};

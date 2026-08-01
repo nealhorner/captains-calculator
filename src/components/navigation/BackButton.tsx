@@ -1,43 +1,41 @@
-import React from "react";
-import { Button, useMantineColorScheme } from "@mantine/core";
-import { matchRoutes, useLocation, useNavigate } from "react-router-dom";
-import { Icon } from "@iconify/react"
+import React from 'react';
+import { Button, useMantineColorScheme } from '@mantine/core';
+import { matchRoutes, useLocation, useNavigate } from 'react-router-dom';
+import { Icon } from '@iconify/react';
 
-import Icons from "components/ui/Icons"
-import NavContext from "./NavContext";
+import Icons from 'components/ui/Icons';
+import NavContext from './NavContext';
 
 export const BackButton = () => {
+  const { routes } = React.useContext(NavContext);
+  const navigate = useNavigate();
+  const location = useLocation();
+  const matchedRoutes = matchRoutes(routes, location);
+  const { colorScheme } = useMantineColorScheme();
 
-    const { routes } = React.useContext(NavContext);
-    const navigate = useNavigate();
-    const location = useLocation()
-    const matchedRoutes = matchRoutes(routes, location)
-    const { colorScheme } = useMantineColorScheme();
-    
-    const parentRoutes = matchedRoutes?.filter((match)=>{
-        let isIndexRoute = !!match.route.index
-        let isCurrentRoute = match.pathname === location.pathname
-        return !isIndexRoute && !isCurrentRoute
-    })
+  const parentRoutes = matchedRoutes?.filter((match) => {
+    let isIndexRoute = !!match.route.index;
+    let isCurrentRoute = match.pathname === location.pathname;
+    return !isIndexRoute && !isCurrentRoute;
+  });
 
-    const parentRoute = parentRoutes?.pop()
+  const parentRoute = parentRoutes?.pop();
 
-    if (!parentRoute) return null;
+  if (!parentRoute) return null;
 
-    const handleBack = () => {
-        navigate(parentRoute.pathname)
-    }
+  const handleBack = () => {
+    navigate(parentRoute.pathname);
+  };
 
-    return (
-        <Button
-            onClick={handleBack}
-            color={colorScheme==='light'?'dark':'gray'}
-            variant="light"
-            size="sm"
-            px={8}
-        >
-            <Icon icon={Icons.back} width={19} />
-        </Button>
-    )
-
-}
+  return (
+    <Button
+      onClick={handleBack}
+      color={colorScheme === 'light' ? 'dark' : 'gray'}
+      variant="light"
+      size="sm"
+      px={8}
+    >
+      <Icon icon={Icons.back} width={19} />
+    </Button>
+  );
+};

@@ -8,19 +8,19 @@ Live at: https://captains-calculator.com
 
 ## Tech Stack
 
-| Layer              | Technology                                                    |
-|--------------------|---------------------------------------------------------------|
-| Framework          | React 17 + TypeScript 4.9 (Vite / @vitejs/plugin-react)      |
-| State Management   | Overmind (centralized, derived state, effects)                |
-| Graph / Flow       | react-flow-renderer 10.x, Dagre (auto-layout), elkjs         |
-| UI Library         | Mantine v4 (core, hooks, modals, notifications, dates)       |
-| Styling            | SASS + Mantine CSS-in-JS (Emotion), custom Euclid Circular B font |
-| Forms              | Formik + Yup                                                 |
-| Animations         | Framer Motion 3.x                                            |
-| Routing            | React Router v6                                              |
-| Icons              | @iconify/react                                               |
-| Edge Rendering     | @tisoap/react-flow-smart-edge                                |
-| Persistence        | localStorage (settings/theme)                                |
+| Layer            | Technology                                                        |
+| ---------------- | ----------------------------------------------------------------- |
+| Framework        | React 17 + TypeScript 4.9 (Vite / @vitejs/plugin-react)           |
+| State Management | Overmind (centralized, derived state, effects)                    |
+| Graph / Flow     | react-flow-renderer 10.x, Dagre (auto-layout), elkjs              |
+| UI Library       | Mantine v4 (core, hooks, modals, notifications, dates)            |
+| Styling          | SASS + Mantine CSS-in-JS (Emotion), custom Euclid Circular B font |
+| Forms            | Formik + Yup                                                      |
+| Animations       | Framer Motion 3.x                                                 |
+| Routing          | React Router v6                                                   |
+| Icons            | @iconify/react                                                    |
+| Edge Rendering   | @tisoap/react-flow-smart-edge                                     |
+| Persistence      | localStorage (settings/theme)                                     |
 
 ## Project Structure
 

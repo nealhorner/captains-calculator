@@ -8,6 +8,7 @@ import { ProductSelectDrawer } from 'components/calculator/ProductSelectDrawer';
 import { BuildingSelectDrawer } from 'components/calculator/BuildingSelectDrawer';
 import { RecipeSelectDrawer } from 'components/calculator/RecipeSelectDrawer';
 import { TargetListCard } from 'components/calculator/TargetListCard';
+import { ImportExportMenu } from 'components/calculator/ImportExportMenu';
 import Icons from 'components/ui/Icons';
 
 /**
@@ -16,83 +17,81 @@ import Icons from 'components/ui/Icons';
  * while a target is being built up or edited.
  */
 export const SetupBar = () => {
+  // Select the module rather than the derived directly: Overmind only
+  // re-renders reliably when the component tracks the underlying dictionary,
+  // so subscribing this way is what makes a removed target disappear.
+  const { targets, targetsList, activeTarget } = useAppState((state) => state.recipes);
 
-    // Select the module rather than the derived directly: Overmind only
-    // re-renders reliably when the component tracks the underlying dictionary,
-    // so subscribing this way is what makes a removed target disappear.
-    const { targets, targetsList, activeTarget } = useAppState(state => state.recipes)
+  const createTarget = useActions().recipes.createTarget;
+  const setActiveTarget = useActions().recipes.setActiveTarget;
 
-    const createTarget = useActions().recipes.createTarget
-    const setActiveTarget = useActions().recipes.setActiveTarget
+  const isEditing = !!activeTarget;
+  // Reading `targets` keeps this component subscribed to additions and removals.
+  const currentTargets = Object.keys(targets)
+    .map((id) => targetsList.find((t: ChainTarget) => t.id === id)!)
+    .filter(Boolean);
+  const otherTargets = currentTargets.filter(
+    (target: ChainTarget) => target.id !== activeTarget?.id,
+  );
 
-    const isEditing = !!activeTarget
-    // Reading `targets` keeps this component subscribed to additions and removals.
-    const currentTargets = Object.keys(targets).map(id => targetsList.find((t: ChainTarget) => t.id === id)!).filter(Boolean)
-    const otherTargets = currentTargets.filter((target: ChainTarget) => target.id !== activeTarget?.id)
+  return (
+    <Box>
+      <ImportExportMenu />
 
-    return (
-        <Box>
+      <Divider label="Production Targets" my="sm" />
 
-            <Divider label="Production Targets" mb="sm" />
+      {isEditing ? (
+        <Stack spacing="md">
+          <Stack spacing="sm">
+            <ProductSelectDrawer />
+            {activeTarget?.productId && <BuildingSelectDrawer />}
+            {activeTarget?.machineId && <RecipeSelectDrawer />}
+          </Stack>
 
-            {isEditing ? (
-                <Stack spacing="md">
+          <Button
+            variant="light"
+            onClick={() => setActiveTarget(null)}
+            disabled={!activeTarget?.recipeId}
+          >
+            {activeTarget?.recipeId ? 'Done' : 'Choose a recipe to continue'}
+          </Button>
 
-                    <Stack spacing="sm">
-                        <ProductSelectDrawer />
-                        {activeTarget?.productId && <BuildingSelectDrawer />}
-                        {activeTarget?.machineId && <RecipeSelectDrawer />}
-                    </Stack>
+          {!!otherTargets.length && (
+            <Box>
+              <Divider label="Other Targets" mb="sm" />
+              <Stack spacing="xs">
+                {otherTargets.map((target: ChainTarget) => (
+                  <TargetListCard key={target.id} target={target} />
+                ))}
+              </Stack>
+            </Box>
+          )}
+        </Stack>
+      ) : (
+        <Stack spacing="sm">
+          {currentTargets.length ? (
+            <Stack spacing="xs">
+              {currentTargets.map((target: ChainTarget) => (
+                <TargetListCard key={target.id} target={target} />
+              ))}
+            </Stack>
+          ) : (
+            <Alert>
+              <Text size="sm">
+                Add a product you want to produce, set how much of it you need per 60 seconds, and
+                the chain will be sized to match.
+              </Text>
+            </Alert>
+          )}
 
-                    <Button
-                        variant="light"
-                        onClick={() => setActiveTarget(null)}
-                        disabled={!activeTarget?.recipeId}
-                    >
-                        {activeTarget?.recipeId ? 'Done' : 'Choose a recipe to continue'}
-                    </Button>
-
-                    {!!otherTargets.length && (
-                        <Box>
-                            <Divider label="Other Targets" mb="sm" />
-                            <Stack spacing="xs">
-                                {otherTargets.map((target: ChainTarget) => (
-                                    <TargetListCard key={target.id} target={target} />
-                                ))}
-                            </Stack>
-                        </Box>
-                    )}
-
-                </Stack>
-            ) : (
-                <Stack spacing="sm">
-
-                    {currentTargets.length ? (
-                        <Stack spacing="xs">
-                            {currentTargets.map((target: ChainTarget) => (
-                                <TargetListCard key={target.id} target={target} />
-                            ))}
-                        </Stack>
-                    ) : (
-                        <Alert>
-                            <Text size="sm">
-                                Add a product you want to produce, set how much of it you need per
-                                60 seconds, and the chain will be sized to match.
-                            </Text>
-                        </Alert>
-                    )}
-
-                    <Button onClick={() => createTarget()}>
-                        <Group spacing={6} noWrap>
-                            <Icon icon={Icons.add} width={14} />
-                            <span>Add Target Product</span>
-                        </Group>
-                    </Button>
-
-                </Stack>
-            )}
-
-        </Box>
-    )
-
-}
+          <Button onClick={() => createTarget()}>
+            <Group spacing={6} noWrap>
+              <Icon icon={Icons.add} width={14} />
+              <span>Add Target Product</span>
+            </Group>
+          </Button>
+        </Stack>
+      )}
+    </Box>
+  );
+};

@@ -1,4 +1,4 @@
-import { EPSILON } from "utils/numbers"
+import { EPSILON } from 'utils/numbers';
 
 /**
  * Production chain solver.
@@ -13,66 +13,66 @@ import { EPSILON } from "utils/numbers"
  */
 
 export type SolverNodeKind =
-    /** A regular production building. Sized from the demand on its outputs. */
-    | 'normal'
-    /** A mine or other well with a zero-quantity output. Supplies whatever is asked of it. */
-    | 'infinite'
-    /** Storage. Its quantity is buffer capacity, not a rate, so demand passes straight through. */
-    | 'passthrough'
+  /** A regular production building. Sized from the demand on its outputs. */
+  | 'normal'
+  /** A mine or other well with a zero-quantity output. Supplies whatever is asked of it. */
+  | 'infinite'
+  /** Storage. Its quantity is buffer capacity, not a rate, so demand passes straight through. */
+  | 'passthrough';
 
 export type SolverNode = {
-    id: string;
-    /** Raw per-machine input quantities, keyed by product id. */
-    recipeInputs: { [productId: string]: number };
-    /** Raw per-machine output quantities, keyed by product id. */
-    recipeOutputs: { [productId: string]: number };
-    /**
-     * Link topology only — which nodes supply each input product. Demand is
-     * split evenly between them.
-     */
-    imports: { [productId: string]: { source: string }[] };
-    kind: SolverNodeKind;
-    /** When the user has typed a count by hand, it wins over the derived one. */
-    pinnedMachinesCount: number | null;
-}
+  id: string;
+  /** Raw per-machine input quantities, keyed by product id. */
+  recipeInputs: { [productId: string]: number };
+  /** Raw per-machine output quantities, keyed by product id. */
+  recipeOutputs: { [productId: string]: number };
+  /**
+   * Link topology only — which nodes supply each input product. Demand is
+   * split evenly between them.
+   */
+  imports: { [productId: string]: { source: string }[] };
+  kind: SolverNodeKind;
+  /** When the user has typed a count by hand, it wins over the derived one. */
+  pinnedMachinesCount: number | null;
+};
 
 export type SolverDemand = {
-    nodeId: string;
-    productId: string;
-    quantity: number;
-}
+  nodeId: string;
+  productId: string;
+  quantity: number;
+};
 
 export type SolverNodeSolution = {
-    machinesCount: number;
-    /** Per-product output rate the node actually produces, per 60s. */
-    outputRates: { [productId: string]: number };
-    /** Per-product rate the node needs on its inputs, per 60s. */
-    inputRates: { [productId: string]: number };
-    /** How much of each output is drawn by downstream consumers. */
-    exportedRates: { [productId: string]: number };
-    /** How much of each input is actually supplied by linked sources. */
-    importedRates: { [productId: string]: number };
-    /** Resolved per-link flows, so each edge can be labelled. */
-    importFlows: { [productId: string]: { source: string; quantity: number }[] };
-}
+  machinesCount: number;
+  /** Per-product output rate the node actually produces, per 60s. */
+  outputRates: { [productId: string]: number };
+  /** Per-product rate the node needs on its inputs, per 60s. */
+  inputRates: { [productId: string]: number };
+  /** How much of each output is drawn by downstream consumers. */
+  exportedRates: { [productId: string]: number };
+  /** How much of each input is actually supplied by linked sources. */
+  importedRates: { [productId: string]: number };
+  /** Resolved per-link flows, so each edge can be labelled. */
+  importFlows: { [productId: string]: { source: string; quantity: number }[] };
+};
 
 export type SolverResult = {
-    nodes: { [nodeId: string]: SolverNodeSolution };
-    /**
-     * Supplier links that were skipped to break a cycle, as `${consumerId}->${sourceId}:${productId}`.
-     * Their flow is still reported on the edge, it is just not propagated upstream.
-     */
-    brokenEdges: string[];
-}
+  nodes: { [nodeId: string]: SolverNodeSolution };
+  /**
+   * Supplier links that were skipped to break a cycle, as `${consumerId}->${sourceId}:${productId}`.
+   * Their flow is still reported on the edge, it is just not propagated upstream.
+   */
+  brokenEdges: string[];
+};
 
 const emptySolution = (): SolverNodeSolution => ({
-    machinesCount: 0,
-    outputRates: {},
-    inputRates: {},
-    exportedRates: {},
-    importedRates: {},
-    importFlows: {}
-})
+  machinesCount: 0,
+  outputRates: {},
+  inputRates: {},
+  exportedRates: {},
+  importedRates: {},
+  importFlows: {},
+});
 
 /**
  * Finds the supplier links that have to be ignored for a cycle to be solvable.
@@ -80,42 +80,38 @@ const emptySolution = (): SolverNodeSolution => ({
  * is a back edge.
  */
 const findBackEdges = (nodes: SolverNode[], roots: string[]): Set<string> => {
+  const byId = new Map(nodes.map((node) => [node.id, node]));
+  const finished = new Set<string>();
+  const onPath = new Set<string>();
+  const brokenEdges = new Set<string>();
 
-    const byId = new Map(nodes.map(node => [node.id, node]))
-    const finished = new Set<string>()
-    const onPath = new Set<string>()
-    const brokenEdges = new Set<string>()
+  const visit = (nodeId: string) => {
+    const node = byId.get(nodeId);
+    if (!node || finished.has(nodeId)) return;
 
-    const visit = (nodeId: string) => {
+    onPath.add(nodeId);
 
-        const node = byId.get(nodeId)
-        if (!node || finished.has(nodeId)) return
+    Object.keys(node.imports).forEach((productId) => {
+      node.imports[productId].forEach(({ source }) => {
+        if (onPath.has(source)) {
+          brokenEdges.add(`${nodeId}->${source}:${productId}`);
+          return;
+        }
+        visit(source);
+      });
+    });
 
-        onPath.add(nodeId)
+    onPath.delete(nodeId);
+    finished.add(nodeId);
+  };
 
-        Object.keys(node.imports).forEach(productId => {
-            node.imports[productId].forEach(({ source }) => {
-                if (onPath.has(source)) {
-                    brokenEdges.add(`${nodeId}->${source}:${productId}`)
-                    return
-                }
-                visit(source)
-            })
-        })
+  // Roots first, so back edges are identified relative to the direction demand
+  // actually flows.
+  roots.forEach(visit);
+  nodes.forEach((node) => visit(node.id));
 
-        onPath.delete(nodeId)
-        finished.add(nodeId)
-
-    }
-
-    // Roots first, so back edges are identified relative to the direction demand
-    // actually flows.
-    roots.forEach(visit)
-    nodes.forEach(node => visit(node.id))
-
-    return brokenEdges
-
-}
+  return brokenEdges;
+};
 
 /**
  * Orders nodes so that a node is only sized once every one of its consumers has
@@ -125,222 +121,208 @@ const findBackEdges = (nodes: SolverNode[], roots: string[]): Set<string> => {
  * drains.
  */
 const orderConsumersFirst = (
-    nodes: SolverNode[],
-    roots: string[]
+  nodes: SolverNode[],
+  roots: string[],
 ): { order: string[]; brokenEdges: Set<string> } => {
+  const brokenEdges = findBackEdges(nodes, roots);
+  const ids = nodes.map((node) => node.id);
+  const known = new Set(ids);
 
-    const brokenEdges = findBackEdges(nodes, roots)
-    const ids = nodes.map(node => node.id)
-    const known = new Set(ids)
+  // For each supplier, the set of nodes drawing from it.
+  const consumersOf = new Map<string, Set<string>>();
+  // For each consumer, the set of nodes it draws from.
+  const suppliersOf = new Map<string, Set<string>>();
 
-    // For each supplier, the set of nodes drawing from it.
-    const consumersOf = new Map<string, Set<string>>()
-    // For each consumer, the set of nodes it draws from.
-    const suppliersOf = new Map<string, Set<string>>()
+  ids.forEach((id) => {
+    consumersOf.set(id, new Set());
+    suppliersOf.set(id, new Set());
+  });
 
-    ids.forEach(id => {
-        consumersOf.set(id, new Set())
-        suppliersOf.set(id, new Set())
-    })
+  nodes.forEach((node) => {
+    Object.keys(node.imports).forEach((productId) => {
+      node.imports[productId].forEach(({ source }) => {
+        if (!known.has(source) || source === node.id) return;
+        if (brokenEdges.has(`${node.id}->${source}:${productId}`)) return;
+        consumersOf.get(source)!.add(node.id);
+        suppliersOf.get(node.id)!.add(source);
+      });
+    });
+  });
 
-    nodes.forEach(node => {
-        Object.keys(node.imports).forEach(productId => {
-            node.imports[productId].forEach(({ source }) => {
-                if (!known.has(source) || source === node.id) return
-                if (brokenEdges.has(`${node.id}->${source}:${productId}`)) return
-                consumersOf.get(source)!.add(node.id)
-                suppliersOf.get(node.id)!.add(source)
-            })
-        })
-    })
+  const remaining = new Map(ids.map((id) => [id, consumersOf.get(id)!.size]));
 
-    const remaining = new Map(ids.map(id => [id, consumersOf.get(id)!.size]))
+  // Seed with the nodes nothing draws from: the targets and any dead ends.
+  // Roots go first so demand is placed before anything else is sized.
+  const queue = [
+    ...roots.filter((id) => known.has(id) && remaining.get(id) === 0),
+    ...ids.filter((id) => remaining.get(id) === 0 && !roots.includes(id)),
+  ];
 
-    // Seed with the nodes nothing draws from: the targets and any dead ends.
-    // Roots go first so demand is placed before anything else is sized.
-    const queue = [
-        ...roots.filter(id => known.has(id) && remaining.get(id) === 0),
-        ...ids.filter(id => remaining.get(id) === 0 && !roots.includes(id))
-    ]
+  const order: string[] = [];
+  const emitted = new Set<string>();
 
-    const order: string[] = []
-    const emitted = new Set<string>()
+  const emit = (id: string) => {
+    if (emitted.has(id)) return;
+    emitted.add(id);
+    order.push(id);
+    suppliersOf.get(id)!.forEach((source) => {
+      const left = (remaining.get(source) ?? 0) - 1;
+      remaining.set(source, left);
+      if (left <= 0) queue.push(source);
+    });
+  };
 
-    const emit = (id: string) => {
-        if (emitted.has(id)) return
-        emitted.add(id)
-        order.push(id)
-        suppliersOf.get(id)!.forEach(source => {
-            const left = (remaining.get(source) ?? 0) - 1
-            remaining.set(source, left)
-            if (left <= 0) queue.push(source)
-        })
-    }
+  while (queue.length) {
+    emit(queue.shift()!);
+  }
 
-    while (queue.length) {
-        emit(queue.shift()!)
-    }
+  // Defensive: anything still held up by a cycle we failed to break is emitted
+  // in declaration order rather than dropped.
+  ids.forEach(emit);
 
-    // Defensive: anything still held up by a cycle we failed to break is emitted
-    // in declaration order rather than dropped.
-    ids.forEach(emit)
-
-    return { order, brokenEdges }
-
-}
+  return { order, brokenEdges };
+};
 
 export const solveChain = (nodes: SolverNode[], demands: SolverDemand[]): SolverResult => {
+  const byId = new Map(nodes.map((node) => [node.id, node]));
 
-    const byId = new Map(nodes.map(node => [node.id, node]))
+  // 1. Seed demand from the targets. Summing here is what makes a supplier
+  //    shared between two targets size itself for their combined draw.
+  const demand = new Map<string, Map<string, number>>();
 
-    // 1. Seed demand from the targets. Summing here is what makes a supplier
-    //    shared between two targets size itself for their combined draw.
-    const demand = new Map<string, Map<string, number>>()
+  const addDemand = (nodeId: string, productId: string, quantity: number) => {
+    if (!byId.has(nodeId) || quantity <= 0) return;
+    let forNode = demand.get(nodeId);
+    if (!forNode) {
+      forNode = new Map();
+      demand.set(nodeId, forNode);
+    }
+    forNode.set(productId, (forNode.get(productId) ?? 0) + quantity);
+  };
 
-    const addDemand = (nodeId: string, productId: string, quantity: number) => {
-        if (!byId.has(nodeId) || quantity <= 0) return
-        let forNode = demand.get(nodeId)
-        if (!forNode) {
-            forNode = new Map()
-            demand.set(nodeId, forNode)
-        }
-        forNode.set(productId, (forNode.get(productId) ?? 0) + quantity)
+  demands.forEach(({ nodeId, productId, quantity }) => addDemand(nodeId, productId, quantity));
+
+  // 2. Order the nodes, consumers before suppliers.
+  const roots = demands.map((d) => d.nodeId).filter((id) => byId.has(id));
+  const { order, brokenEdges } = orderConsumersFirst(nodes, roots);
+
+  const solutions: { [nodeId: string]: SolverNodeSolution } = {};
+  nodes.forEach((node) => {
+    solutions[node.id] = emptySolution();
+  });
+
+  // 3 & 4. Size each node from the demand placed on it, then push its input
+  //        demand back onto its suppliers.
+  order.forEach((nodeId) => {
+    const node = byId.get(nodeId);
+    if (!node) return;
+
+    const solution = solutions[nodeId];
+    const required = demand.get(nodeId) ?? new Map<string, number>();
+    const outputIds = Object.keys(node.recipeOutputs);
+    const inputIds = Object.keys(node.recipeInputs);
+
+    if (node.kind === 'infinite') {
+      // A mine supplies exactly what is asked of it. Its output quantity is
+      // zero in the data, so there is nothing to divide by.
+      solution.machinesCount = node.pinnedMachinesCount ?? 1;
+      outputIds.forEach((productId) => {
+        solution.outputRates[productId] = required.get(productId) ?? 0;
+      });
+    } else if (node.kind === 'passthrough') {
+      // Storage moves product without transforming it: whatever is drawn
+      // from an output must be fed into the matching input.
+      solution.machinesCount = node.pinnedMachinesCount ?? 1;
+      outputIds.forEach((productId) => {
+        solution.outputRates[productId] = required.get(productId) ?? 0;
+      });
+      inputIds.forEach((productId) => {
+        solution.inputRates[productId] = required.get(productId) ?? 0;
+      });
+    } else {
+      if (node.pinnedMachinesCount !== null) {
+        solution.machinesCount = node.pinnedMachinesCount;
+      } else {
+        // One recipe run yields every output at once, so the binding
+        // output sets the count and the rest come out as surplus.
+        let derived = 0;
+        required.forEach((quantity, productId) => {
+          const perMachine = node.recipeOutputs[productId];
+          if (perMachine === undefined || perMachine <= 0) return;
+          derived = Math.max(derived, quantity / perMachine);
+        });
+        // A node nothing depends on yet still shows as a single building.
+        solution.machinesCount = derived > 0 ? derived : 1;
+      }
+
+      outputIds.forEach((productId) => {
+        solution.outputRates[productId] = node.recipeOutputs[productId] * solution.machinesCount;
+      });
+      inputIds.forEach((productId) => {
+        solution.inputRates[productId] = node.recipeInputs[productId] * solution.machinesCount;
+      });
     }
 
-    demands.forEach(({ nodeId, productId, quantity }) => addDemand(nodeId, productId, quantity))
+    // Split each input's demand evenly across its linked suppliers.
+    inputIds.forEach((productId) => {
+      const suppliers = node.imports[productId] ?? [];
+      const needed = solution.inputRates[productId] ?? 0;
 
-    // 2. Order the nodes, consumers before suppliers.
-    const roots = demands.map(d => d.nodeId).filter(id => byId.has(id))
-    const { order, brokenEdges } = orderConsumersFirst(nodes, roots)
+      solution.importFlows[productId] = [];
+      solution.importedRates[productId] = 0;
 
-    const solutions: { [nodeId: string]: SolverNodeSolution } = {}
-    nodes.forEach(node => { solutions[node.id] = emptySolution() })
+      if (!suppliers.length || needed <= 0) return;
 
-    // 3 & 4. Size each node from the demand placed on it, then push its input
-    //        demand back onto its suppliers.
-    order.forEach(nodeId => {
+      const flow = needed / suppliers.length;
 
-        const node = byId.get(nodeId)
-        if (!node) return
+      suppliers.forEach(({ source }) => {
+        solution.importFlows[productId].push({ source, quantity: flow });
+        solution.importedRates[productId] += flow;
 
-        const solution = solutions[nodeId]
-        const required = demand.get(nodeId) ?? new Map<string, number>()
-        const outputIds = Object.keys(node.recipeOutputs)
-        const inputIds = Object.keys(node.recipeInputs)
+        // A back edge's flow is reported but not propagated, so a cycle
+        // cannot feed itself and diverge.
+        if (brokenEdges.has(`${nodeId}->${source}:${productId}`)) return;
 
-        if (node.kind === 'infinite') {
+        addDemand(source, productId, flow);
+      });
+    });
+  });
 
-            // A mine supplies exactly what is asked of it. Its output quantity is
-            // zero in the data, so there is nothing to divide by.
-            solution.machinesCount = node.pinnedMachinesCount ?? 1
-            outputIds.forEach(productId => {
-                solution.outputRates[productId] = required.get(productId) ?? 0
-            })
+  // 5. Roll each node's draw on its suppliers back up as their exported rate.
+  order.forEach((nodeId) => {
+    const solution = solutions[nodeId];
+    Object.keys(solution.importFlows).forEach((productId) => {
+      solution.importFlows[productId].forEach(({ source, quantity }) => {
+        const supplier = solutions[source];
+        if (!supplier) return;
+        supplier.exportedRates[productId] = (supplier.exportedRates[productId] ?? 0) + quantity;
+      });
+    });
+  });
 
-        } else if (node.kind === 'passthrough') {
+  // An infinite or pass-through node's output rate is defined by what is drawn
+  // from it, which is only fully known once every consumer has been sized.
+  nodes.forEach((node) => {
+    if (node.kind !== 'infinite' && node.kind !== 'passthrough') return;
+    const solution = solutions[node.id];
+    Object.keys(node.recipeOutputs).forEach((productId) => {
+      const drawn = solution.exportedRates[productId] ?? 0;
+      solution.outputRates[productId] = Math.max(solution.outputRates[productId] ?? 0, drawn);
+    });
+    if (node.kind === 'passthrough') {
+      Object.keys(node.recipeInputs).forEach((productId) => {
+        solution.inputRates[productId] = Math.max(
+          solution.inputRates[productId] ?? 0,
+          solution.outputRates[productId] ?? 0,
+        );
+      });
+    }
+  });
 
-            // Storage moves product without transforming it: whatever is drawn
-            // from an output must be fed into the matching input.
-            solution.machinesCount = node.pinnedMachinesCount ?? 1
-            outputIds.forEach(productId => {
-                solution.outputRates[productId] = required.get(productId) ?? 0
-            })
-            inputIds.forEach(productId => {
-                solution.inputRates[productId] = required.get(productId) ?? 0
-            })
-
-        } else {
-
-            if (node.pinnedMachinesCount !== null) {
-                solution.machinesCount = node.pinnedMachinesCount
-            } else {
-                // One recipe run yields every output at once, so the binding
-                // output sets the count and the rest come out as surplus.
-                let derived = 0
-                required.forEach((quantity, productId) => {
-                    const perMachine = node.recipeOutputs[productId]
-                    if (perMachine === undefined || perMachine <= 0) return
-                    derived = Math.max(derived, quantity / perMachine)
-                })
-                // A node nothing depends on yet still shows as a single building.
-                solution.machinesCount = derived > 0 ? derived : 1
-            }
-
-            outputIds.forEach(productId => {
-                solution.outputRates[productId] = node.recipeOutputs[productId] * solution.machinesCount
-            })
-            inputIds.forEach(productId => {
-                solution.inputRates[productId] = node.recipeInputs[productId] * solution.machinesCount
-            })
-
-        }
-
-        // Split each input's demand evenly across its linked suppliers.
-        inputIds.forEach(productId => {
-
-            const suppliers = node.imports[productId] ?? []
-            const needed = solution.inputRates[productId] ?? 0
-
-            solution.importFlows[productId] = []
-            solution.importedRates[productId] = 0
-
-            if (!suppliers.length || needed <= 0) return
-
-            const flow = needed / suppliers.length
-
-            suppliers.forEach(({ source }) => {
-
-                solution.importFlows[productId].push({ source, quantity: flow })
-                solution.importedRates[productId] += flow
-
-                // A back edge's flow is reported but not propagated, so a cycle
-                // cannot feed itself and diverge.
-                if (brokenEdges.has(`${nodeId}->${source}:${productId}`)) return
-
-                addDemand(source, productId, flow)
-
-            })
-
-        })
-
-    })
-
-    // 5. Roll each node's draw on its suppliers back up as their exported rate.
-    order.forEach(nodeId => {
-        const solution = solutions[nodeId]
-        Object.keys(solution.importFlows).forEach(productId => {
-            solution.importFlows[productId].forEach(({ source, quantity }) => {
-                const supplier = solutions[source]
-                if (!supplier) return
-                supplier.exportedRates[productId] = (supplier.exportedRates[productId] ?? 0) + quantity
-            })
-        })
-    })
-
-    // An infinite or pass-through node's output rate is defined by what is drawn
-    // from it, which is only fully known once every consumer has been sized.
-    nodes.forEach(node => {
-        if (node.kind !== 'infinite' && node.kind !== 'passthrough') return
-        const solution = solutions[node.id]
-        Object.keys(node.recipeOutputs).forEach(productId => {
-            const drawn = solution.exportedRates[productId] ?? 0
-            solution.outputRates[productId] = Math.max(solution.outputRates[productId] ?? 0, drawn)
-        })
-        if (node.kind === 'passthrough') {
-            Object.keys(node.recipeInputs).forEach(productId => {
-                solution.inputRates[productId] = Math.max(
-                    solution.inputRates[productId] ?? 0,
-                    solution.outputRates[productId] ?? 0
-                )
-            })
-        }
-    })
-
-    return { nodes: solutions, brokenEdges: Array.from(brokenEdges) }
-
-}
+  return { nodes: solutions, brokenEdges: Array.from(brokenEdges) };
+};
 
 /** True when `supplied` covers `needed`, tolerant of accumulated float error. */
 export const meetsRate = (supplied: number, needed: number): boolean => {
-    return supplied >= needed - EPSILON
-}
+  return supplied >= needed - EPSILON;
+};

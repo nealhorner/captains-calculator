@@ -1,1 +1,1 @@
-export * from "./actions/selectCategory"
+export * from './actions/selectCategory';

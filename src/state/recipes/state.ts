@@ -1,33 +1,35 @@
 import { derived } from 'overmind';
 import { Edge, Node } from 'react-flow-renderer';
 
-import { RecipesState } from "state/_types";
+import { RecipesState } from 'state/_types';
 
 export const state: RecipesState = {
-    itemsList: derived( (state: RecipesState) => Object.values(state.items) ),
-    items: {},
-    currentItemId: null,
-    get currentItem() {
-        return this.currentItemId ? this.items[this.currentItemId] : null
-    },
-    selectedRecipeIds: [],
-    selectedRecipies: derived( (state: RecipesState) => state.selectedRecipeIds.map(id=>state.items[id]) ),
-    targets: {},
-    targetsList: derived( (state: RecipesState) => Object.values(state.targets) ),
-    activeTargetId: null,
-    get activeTarget() {
-        return this.activeTargetId ? this.targets[this.activeTargetId] ?? null : null
-    },
-    nodes: {},
-    nodesList: derived( (state: RecipesState) => Object.values(state.nodes) ),
-    nodesData: derived( (state: RecipesState) => {
-        return Object.values(state.nodes).reduce((edges,node)=>{
-            return [ ...edges, ...node.nodeData ]
-        },[] as Node<any>[]) 
-    }),
-    edgesData: derived( (state: RecipesState) => {
-        return Object.values(state.nodes).reduce((edges,node)=>{
-            return [ ...edges, ...node.edgeData ]
-        },[] as Edge<any>[])
-    })
-}
+  itemsList: derived((state: RecipesState) => Object.values(state.items)),
+  items: {},
+  currentItemId: null,
+  get currentItem() {
+    return this.currentItemId ? this.items[this.currentItemId] : null;
+  },
+  selectedRecipeIds: [],
+  selectedRecipies: derived((state: RecipesState) =>
+    state.selectedRecipeIds.map((id) => state.items[id]),
+  ),
+  targets: {},
+  targetsList: derived((state: RecipesState) => Object.values(state.targets)),
+  activeTargetId: null,
+  get activeTarget() {
+    return this.activeTargetId ? (this.targets[this.activeTargetId] ?? null) : null;
+  },
+  nodes: {},
+  nodesList: derived((state: RecipesState) => Object.values(state.nodes)),
+  nodesData: derived((state: RecipesState) => {
+    return Object.values(state.nodes).reduce((edges, node) => {
+      return [...edges, ...node.nodeData];
+    }, [] as Node<any>[]);
+  }),
+  edgesData: derived((state: RecipesState) => {
+    return Object.values(state.nodes).reduce((edges, node) => {
+      return [...edges, ...node.edgeData];
+    }, [] as Edge<any>[]);
+  }),
+};

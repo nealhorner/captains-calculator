@@ -1,0 +1,108 @@
+import { describe, it, expect } from 'vitest';
+
+import { buildTestWorld } from '../testFixtures';
+import { buildTestContext } from '../testContext';
+
+const setup = () => buildTestContext(buildTestWorld());
+
+describe('linkRecipe', () => {
+  it('creates a new node and links it as an input source', async () => {
+    const { state, actions } = setup();
+
+    const caster = actions.createProductionNode({ recipeId: 'cast_steel' });
+
+    await actions.linkRecipe({
+      currentNodeId: caster.id,
+      newNodeId: 'smelt_steel',
+      productId: 'molten_steel',
+      direction: 'input',
+    });
+
+    const nodes = Object.values(state.recipes.nodes);
+    expect(nodes).toHaveLength(2);
+
+    const smelter = nodes.find((n) => n.id !== caster.id)!;
+    expect(smelter.recipe.id).toBe('smelt_steel');
+
+    // The link records topology only; the solver owns the quantities.
+    expect(caster.inputs['molten_steel'].imports.map((i: { source: string }) => i.source)).toEqual([
+      smelter.id,
+    ]);
+    expect(
+      smelter.outputs['molten_steel'].exports.map((e: { target: string }) => e.target),
+    ).toEqual([caster.id]);
+  });
+
+  it('creates a new node and links it as an output target', async () => {
+    const { state, actions } = setup();
+
+    const smelter = actions.createProductionNode({ recipeId: 'smelt_steel' });
+
+    await actions.linkRecipe({
+      currentNodeId: smelter.id,
+      newNodeId: 'cast_steel',
+      productId: 'molten_steel',
+      direction: 'output',
+    });
+
+    const caster = Object.values(state.recipes.nodes).find((n) => n.id !== smelter.id)!;
+    expect(caster.recipe.id).toBe('cast_steel');
+
+    expect(
+      smelter.outputs['molten_steel'].exports.map((e: { target: string }) => e.target),
+    ).toEqual([caster.id]);
+    expect(caster.inputs['molten_steel'].imports.map((i: { source: string }) => i.source)).toEqual([
+      smelter.id,
+    ]);
+  });
+
+  it('reuses an existing node for the same recipe instead of duplicating it', async () => {
+    const { state, actions } = setup();
+
+    const caster = actions.createProductionNode({ recipeId: 'cast_steel' });
+    const smelter = actions.createProductionNode({ recipeId: 'smelt_steel' });
+
+    await actions.linkRecipe({
+      currentNodeId: caster.id,
+      newNodeId: 'smelt_steel',
+      productId: 'molten_steel',
+      direction: 'input',
+    });
+
+    expect(Object.keys(state.recipes.nodes)).toHaveLength(2);
+    expect(caster.inputs['molten_steel'].imports.map((i: { source: string }) => i.source)).toEqual([
+      smelter.id,
+    ]);
+  });
+
+  it('solves the flow between linked nodes once a target sets demand', async () => {
+    const { state, actions } = setup();
+
+    const caster = actions.createProductionNode({ recipeId: 'cast_steel' });
+
+    await actions.linkRecipe({
+      currentNodeId: caster.id,
+      newNodeId: 'smelt_steel',
+      productId: 'molten_steel',
+      direction: 'input',
+    });
+
+    const smelter = Object.values(state.recipes.nodes).find((n) => n.id !== caster.id)!;
+
+    state.recipes.targets['t1'] = {
+      id: 't1',
+      productId: 'steel' as any,
+      machineId: 'caster' as any,
+      recipeId: 'cast_steel' as any,
+      quantity: 24,
+      nodeId: caster.id,
+    };
+    actions.recalculate();
+
+    // 24 steel needs 2 casters, needing 24 molten steel, needing 2 smelters.
+    expect(caster.machinesCount).toBeCloseTo(2, 6);
+    expect(smelter.machinesCount).toBeCloseTo(2, 6);
+    expect(caster.inputs['molten_steel'].imported).toBeCloseTo(24, 6);
+    expect(caster.inputs['molten_steel'].satisfied).toBe(true);
+  });
+});
