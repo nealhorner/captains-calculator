@@ -38,14 +38,16 @@ export const CategoryTabs: React.FC<CategoryTabsProps> = () => {
       label: 'Categories',
       icon: `all.png`,
     },
-    ...catOrderArray.map((catId) => {
-      let cat = categories[catId];
-      return {
-        id: cat.id,
-        label: cat.name,
-        icon: `${cat.id}.png`,
-      };
-    }),
+    ...catOrderArray
+      .filter((catId) => categories[catId])
+      .map((catId) => {
+        let cat = categories[catId];
+        return {
+          id: cat.id,
+          label: cat.name,
+          icon: `${cat.id}.png`,
+        };
+      }),
   ];
 
   const onChange = (active: number, tabKey: CategoryId | 'all') => {

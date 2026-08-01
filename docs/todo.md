@@ -50,14 +50,17 @@
 
 ## Phase 3 — Test Coverage
 
-The project has testing libraries installed (`@testing-library/react`, `jest-dom`, `user-event`); test coverage is still minimal but no longer zero — see `src/state/recipes/actions/linkRecipe.test.ts`.
+The project has testing libraries installed (`@testing-library/react`, `jest-dom`, `user-event`) and now has real coverage across unit, integration, and E2E layers.
 
 - [x] Set up Vitest (replaces Jest after Vite migration)
-- [ ] Add unit tests for `ProductionNode` class (`src/state/recipes/ProductionNode.ts`) — it's the core domain logic
-- [ ] Add unit tests for key Overmind actions: `selectRecipe`, `calculateGraph`, `deleteNode`
+- [x] Add unit tests for `ProductionNode` class (`src/state/recipes/ProductionNode.ts`) — see `ProductionNode.test.ts`
+- [x] Add unit tests for key Overmind actions: `selectRecipe`, `calculateGraph`, `deleteNode`
 - [x] Add unit tests for key Overmind action: `linkRecipe`
-- [ ] Add integration tests for the Editor flow (select product -> machine -> recipe -> link nodes)
-- [ ] Add smoke tests for each route/screen rendering without crashing
+- [x] Add integration tests for the Editor flow (select product -> machine -> recipe -> link nodes) — see `src/state/recipes/editorFlow.test.ts`
+- [x] Add smoke tests for each route/screen rendering without crashing — see `App.test.tsx` and `src/screens/app/screens.test.tsx`
+- [x] Add Playwright E2E tests covering the main production-chain workflow (product -> building -> recipe -> results summary, plus localStorage persistence across reload) — see `e2e/production-chain.spec.ts`, run with `yarn test:e2e`
+
+Upgraded `@testing-library/react` (12 -> 16) and `@testing-library/user-event` (13 -> 14) as part of this work — they didn't support React 19's `createRoot`-based test rendering, which blocked any DOM-level test. This also closes the corresponding item under Phase 4.
 
 ---
 
@@ -86,7 +89,7 @@ This is a large migration. Mantine v7 is a near-full rewrite.
 - [ ] `formik` 2.x — evaluate replacing with `react-hook-form` (lighter, more actively maintained)
 - [ ] `yup` 0.x -> 1.x (breaking changes in schema API)
 - [ ] `@iconify/react` 3.x -> 4.x
-- [ ] `@testing-library/react` 12 -> 16+
+- [x] `@testing-library/react` 12 -> 16+ (done in Phase 3, was blocking React 19 DOM tests)
 - [ ] `dagre` 0.8.5 — check if still maintained, consider `@dagrejs/dagre` or `elkjs` exclusively
 - [ ] `dayjs` 1.10 -> 1.11+ (minor)
 
