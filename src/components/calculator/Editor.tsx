@@ -151,7 +151,6 @@ export const Editor: React.FC<EditorProps> = ({ nodesData, edgesData }) => {
     reactFlowInstance.setNodes(data.nodes);
     reactFlowInstance.setEdges(data.edges);
     reactFlowInstance.fitView({ padding: 0.2, includeHiddenNodes: false, duration: 100 });
-    //await new Promise(resolve=>setTimeout(resolve,1000))
     setLoading(false);
   };
 

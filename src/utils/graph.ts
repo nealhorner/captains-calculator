@@ -21,10 +21,10 @@ const elk = new Elk({
   },
 });
 
-export const createGraphLayout = async (
-  nodes: Array<Node>,
+export const createGraphLayout = async <NodeType extends Node = Node>(
+  nodes: Array<NodeType>,
   edges: Array<Edge>,
-): Promise<Array<Node>> => {
+): Promise<Array<NodeType>> => {
   const elkNodes: ElkNode[] = [];
   const elkEdges: ElkPrimitiveEdge[] = [];
 
