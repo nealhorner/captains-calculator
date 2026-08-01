@@ -37,9 +37,10 @@
 
 ### TypeScript 4.9 -> 7.x
 
-- [x] Upgrade `typescript` to latest 7.x
+- [x] Upgrade `typescript` to `6.0.3` (staging step towards 7.x — see below)
+- [ ] Upgrade `typescript` to latest 7.x — blocked: `eslint-plugin-jest` (via `eslint-config-react-app`) eagerly requires `@typescript-eslint/type-utils`, which crashes on TS 7's restructured API (`ts.TypeFlags` missing). `typescript-eslint`'s own peer-dep range excludes `typescript@7` until they ship a new API in 7.1 (~Oct 2026). Revisit once that lands.
 - [x] Update `tsconfig.json` target from `es2015` to `es2020` or `esnext` (smaller output, modern features)
-- [x] Audit and fix any new strict-mode errors introduced by TS 7
+- [x] Audit and fix any new strict-mode errors introduced by TS 6 (`baseUrl` → `paths`, `moduleResolution: node` → `bundler`, framer-motion type shim — all still needed for the eventual TS 7 jump too)
 
 ---
 

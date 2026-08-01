@@ -7,6 +7,6 @@
 // falling back to implicit any. ("export *" doesn't work inside an ambient
 // "declare module" block, hence explicit names.) Remove once the framer-motion
 // v11 upgrade (docs/todo.md Phase 4) replaces the pin.
-declare module "framer-motion" {
-  export { motion, AnimatePresence } from "../../node_modules/framer-motion/types/index";
+declare module 'framer-motion' {
+  export { motion, AnimatePresence } from '../../node_modules/framer-motion/types/index';
 }
