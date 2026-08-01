@@ -1,5 +1,6 @@
 import React from 'react';
-import ReactFlow, {
+import {
+  ReactFlow,
   MiniMap,
   Controls,
   Position,
@@ -12,7 +13,8 @@ import ReactFlow, {
   EdgeTypes,
   Edge,
   Node,
-} from 'react-flow-renderer';
+} from '@xyflow/react';
+import '@xyflow/react/dist/style.css';
 import dagre from 'dagre';
 
 import { useAppState } from 'state';
@@ -25,7 +27,7 @@ import { RecipeEdgeType } from './RecipeEdgeType';
 import { Box, Loader, useMantineTheme } from '@mantine/core';
 import { AnimatePresence, motion } from 'framer-motion';
 
-export type RecipeNodeData = ProductionNode;
+export type RecipeNodeData = ProductionNode & Record<string, unknown>;
 export type RecipeNode = Node<RecipeNodeData>;
 
 const dagreGraph = new dagre.graphlib.Graph();
@@ -43,7 +45,10 @@ const getLayoutedElements = (nodes: Node<any>[], edges: Edge<any>[]) => {
   });
 
   nodes.forEach((node) => {
-    dagreGraph.setNode(node.id, { width: node.width, height: node.height });
+    dagreGraph.setNode(node.id, {
+      width: node.measured?.width,
+      height: node.measured?.height,
+    });
   });
 
   edges.forEach((edge) => {
@@ -54,13 +59,15 @@ const getLayoutedElements = (nodes: Node<any>[], edges: Edge<any>[]) => {
 
   nodes.forEach((node) => {
     const nodeWithPosition = dagreGraph.node(node.id);
+    const width = node.measured?.width;
+    const height = node.measured?.height;
 
     node.targetPosition = Position.Right;
     node.sourcePosition = Position.Left;
 
     node.position = {
-      x: nodeWithPosition.x - (!!node.width ? node.width / 2 : 0),
-      y: nodeWithPosition.y - (!!node.height ? node.height / 2 : 0),
+      x: nodeWithPosition.x - (!!width ? width / 2 : 0),
+      y: nodeWithPosition.y - (!!height ? height / 2 : 0),
     };
 
     return node;
@@ -73,7 +80,7 @@ const nodeTypes: NodeTypes = { RecipeNode: RecipeNodeType };
 const edgeTypes: EdgeTypes = { smart: RecipeEdgeType };
 
 type EditorProps = {
-  nodesData: Node<ProductionNode>[];
+  nodesData: RecipeNode[];
   edgesData: Edge<any>[];
 };
 
@@ -135,18 +142,15 @@ export const Editor: React.FC<EditorProps> = ({ nodesData, edgesData }) => {
   // }
 
   const onConnect = async (params: Connection) => {
-    // @ts-ignore
-    params.style.stroke = generateDarkColorHex();
-    setEdges((eds) => addEdge(params, eds));
+    setEdges((eds) => addEdge({ ...params, style: { stroke: generateDarkColorHex() } }, eds));
   };
 
-  const onInit = async (reactFlowInstance: ReactFlowInstance<RecipeNodeData>) => {
+  const onInit = async (reactFlowInstance: ReactFlowInstance<RecipeNode, Edge<any>>) => {
     reactFlowInstance.setCenter(0, 0);
     let data = getLayoutedElements(reactFlowInstance.getNodes(), reactFlowInstance.getEdges());
     reactFlowInstance.setNodes(data.nodes);
     reactFlowInstance.setEdges(data.edges);
     reactFlowInstance.fitView({ padding: 0.2, includeHiddenNodes: false, duration: 100 });
-    //await new Promise(resolve=>setTimeout(resolve,1000))
     setLoading(false);
   };
 
