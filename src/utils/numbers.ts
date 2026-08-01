@@ -15,8 +15,11 @@ export const EPSILON = 1e-6;
  * and drops a trailing `.0`.
  */
 export const formatRate = (value: number): string => {
-  if (!isFinite(value)) return '∞';
-  let rounded = Math.round(value * 10) / 10;
+  if (Number.isNaN(value)) return '—';
+  if (!Number.isFinite(value)) return '∞';
+  const rounded = Math.round(value * 10) / 10;
+  // A large enough finite value can still overflow while rounding.
+  if (!Number.isFinite(rounded)) return '∞';
   if (Math.abs(rounded) < EPSILON) return '0';
   return Number.isInteger(rounded) ? rounded.toString() : rounded.toFixed(1);
 };
@@ -26,6 +29,9 @@ export const formatRate = (value: number): string => {
  * two decimals, again dropping a redundant `.00`.
  */
 export const formatCount = (value: number): string => {
-  let rounded = Math.round(value * 100) / 100;
+  if (Number.isNaN(value)) return '—';
+  if (!Number.isFinite(value)) return '∞';
+  const rounded = Math.round(value * 100) / 100;
+  if (!Number.isFinite(rounded)) return '∞';
   return Number.isInteger(rounded) ? rounded.toString() : rounded.toFixed(2);
 };

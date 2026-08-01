@@ -21,6 +21,14 @@ export type BuildCost = {
   quantity: number;
 };
 
+/**
+ * Canonical `maintenance_cost_units` values as they appear in the game data.
+ * Compared against by hand in several places, where a typo silently drops a
+ * whole tier from the totals.
+ */
+export const MAINTENANCE_I = 'maintenance_i';
+export const MAINTENANCE_II = 'maintenance_ii';
+
 export type Machine = {
   id: MachineId;
   game_id: string;

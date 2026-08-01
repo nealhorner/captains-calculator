@@ -132,4 +132,37 @@ describe('importGraph', () => {
     expect(result.imported).toBe(0);
     expect(Object.keys(state.recipes.nodes)).toHaveLength(1);
   });
+
+  it('does not let a newly added target overwrite a restored one', async () => {
+    const { file } = await buildAndExport();
+    const { actions, state } = setup();
+
+    actions.importGraph(file);
+    const restoredId = Object.keys(state.recipes.targets)[0];
+
+    // The id counter must resume past what was restored.
+    actions.createTarget();
+
+    expect(Object.keys(state.recipes.targets)).toHaveLength(2);
+    expect(state.recipes.targets[restoredId]).toBeDefined();
+    expect(state.recipes.targets[restoredId].nodeId).not.toBeNull();
+  });
+
+  it('rejects a file carrying a NaN or negative quantity', async () => {
+    const { file } = await buildAndExport();
+    const { actions } = setup();
+
+    expect(
+      actions.importGraph({ ...file, targets: [{ ...file.targets[0], quantity: NaN }] }).imported,
+    ).toBe(0);
+    expect(
+      actions.importGraph({ ...file, targets: [{ ...file.targets[0], quantity: -5 }] }).imported,
+    ).toBe(0);
+    expect(
+      actions.importGraph({
+        ...file,
+        nodes: file.nodes.map((n: any) => ({ ...n, pinnedMachinesCount: Infinity })),
+      }).imported,
+    ).toBe(0);
+  });
 });

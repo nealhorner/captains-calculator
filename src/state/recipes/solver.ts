@@ -202,6 +202,38 @@ export const solveChain = (nodes: SolverNode[], demands: SolverDemand[]): Solver
 
   demands.forEach(({ nodeId, productId, quantity }) => addDemand(nodeId, productId, quantity));
 
+  /**
+   * How much of a product a supplier can still be asked for.
+   *
+   * Only a pinned building is genuinely capped — every other node is sized from
+   * the demand placed on it, so it grows to meet whatever it is asked for and
+   * has no ceiling. `null` means unbounded.
+   */
+  const capacityLeft = new Map<string, Map<string, number>>();
+
+  const remainingCapacity = (nodeId: string, productId: string): number | null => {
+    const node = byId.get(nodeId);
+    if (!node) return 0;
+    if (node.kind !== 'normal' || node.pinnedMachinesCount === null) return null;
+
+    let forNode = capacityLeft.get(nodeId);
+    if (!forNode) {
+      forNode = new Map();
+      capacityLeft.set(nodeId, forNode);
+    }
+    if (!forNode.has(productId)) {
+      const perMachine = node.recipeOutputs[productId] ?? 0;
+      forNode.set(productId, Math.max(0, perMachine * node.pinnedMachinesCount));
+    }
+    return forNode.get(productId)!;
+  };
+
+  const consumeCapacity = (nodeId: string, productId: string, amount: number) => {
+    const forNode = capacityLeft.get(nodeId);
+    if (!forNode || !forNode.has(productId)) return;
+    forNode.set(productId, Math.max(0, forNode.get(productId)! - amount));
+  };
+
   // 2. Order the nodes, consumers before suppliers.
   const roots = demands.map((d) => d.nodeId).filter((id) => byId.has(id));
   const { order, brokenEdges } = orderConsumersFirst(nodes, roots);
@@ -263,7 +295,8 @@ export const solveChain = (nodes: SolverNode[], demands: SolverDemand[]): Solver
       });
     }
 
-    // Split each input's demand evenly across its linked suppliers.
+    // Split each input's demand across its linked suppliers, evenly but never
+    // beyond what a supplier can actually make.
     inputIds.forEach((productId) => {
       const suppliers = node.imports[productId] ?? [];
       const needed = solution.inputRates[productId] ?? 0;
@@ -273,17 +306,46 @@ export const solveChain = (nodes: SolverNode[], demands: SolverDemand[]): Solver
 
       if (!suppliers.length || needed <= 0) return;
 
-      const flow = needed / suppliers.length;
+      const evenShare = needed / suppliers.length;
+      const allocations: { source: string; quantity: number }[] = [];
+      const unbounded: string[] = [];
+      let unallocated = 0;
 
       suppliers.forEach(({ source }) => {
-        solution.importFlows[productId].push({ source, quantity: flow });
-        solution.importedRates[productId] += flow;
+        const capacity = remainingCapacity(source, productId);
+        if (capacity === null) {
+          // Sized from demand, so it will make whatever is asked of it.
+          unbounded.push(source);
+          allocations.push({ source, quantity: evenShare });
+          return;
+        }
+        const taken = Math.min(evenShare, capacity);
+        consumeCapacity(source, productId, taken);
+        unallocated += evenShare - taken;
+        allocations.push({ source, quantity: taken });
+      });
+
+      // Anything a capped supplier could not cover is offered to the suppliers
+      // that can still grow; whatever is left over is a genuine shortfall.
+      if (unallocated > EPSILON && unbounded.length) {
+        const extra = unallocated / unbounded.length;
+        allocations.forEach((allocation) => {
+          if (unbounded.includes(allocation.source)) allocation.quantity += extra;
+        });
+        unallocated = 0;
+      }
+
+      allocations.forEach(({ source, quantity }) => {
+        if (quantity <= 0) return;
+
+        solution.importFlows[productId].push({ source, quantity });
+        solution.importedRates[productId] += quantity;
 
         // A back edge's flow is reported but not propagated, so a cycle
         // cannot feed itself and diverge.
         if (brokenEdges.has(`${nodeId}->${source}:${productId}`)) return;
 
-        addDemand(source, productId, flow);
+        addDemand(source, productId, quantity);
       });
     });
   });

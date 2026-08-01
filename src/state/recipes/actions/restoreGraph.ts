@@ -1,5 +1,6 @@
 import { Action, ChainTarget } from 'state/_types';
-import ProductionNode, { SerializedProductionNode, reserveNodeId } from '../ProductionNode';
+import ProductionNode, { SerializedProductionNode } from '../ProductionNode';
+import { reserveTargetId } from './targets';
 import { ExportedTarget } from '../importExport';
 
 export type RestoreGraphParams = {
@@ -76,8 +77,21 @@ export const restoreGraph: Action<RestoreGraphParams, RestoreGraphResult> = (
           errors.push(`Dropped a link from a node that could not be restored.`);
           return;
         }
-        node.addImportLink(productId, sourceId);
-        source.addExportLink(productId, serialized.id);
+        // Both sides or neither: a recipe that no longer declares this product
+        // would otherwise leave the supplier exporting to a consumer that does
+        // not import.
+        if (!node.addImportLink(productId, sourceId)) {
+          errors.push(
+            `Dropped a link for "${productId}" — the recipe no longer uses it as an input.`,
+          );
+          return;
+        }
+        if (!source.addExportLink(productId, serialized.id)) {
+          node.removeImportLink(productId, sourceId);
+          errors.push(
+            `Dropped a link for "${productId}" — the supplying recipe no longer produces it.`,
+          );
+        }
       });
     });
   });
@@ -101,7 +115,7 @@ export const restoreGraph: Action<RestoreGraphParams, RestoreGraphResult> = (
       quantity: target.quantity,
       nodeId: target.nodeId,
     };
-    reserveNodeId(target.id);
+    reserveTargetId(target.id);
   });
 
   state.recipes.nodes = restoredNodes;

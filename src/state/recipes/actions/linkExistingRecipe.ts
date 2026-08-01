@@ -21,12 +21,17 @@ export const linkExistingRecipe: AsyncAction<LinkExistingRecipeParams> = async (
 
   if (!currentNode || !existingNode || currentNodeId === existingNodeId) return;
 
-  if (direction === 'input') {
-    currentNode.addImportLink(productId, existingNode.id);
-    existingNode.addExportLink(productId, currentNodeId);
-  } else {
-    existingNode.addImportLink(productId, currentNodeId);
-    currentNode.addExportLink(productId, existingNode.id);
+  // Both sides or neither — see `linkRecipe` for why a half-link is harmful.
+  let consumer = direction === 'input' ? currentNode : existingNode;
+  let supplier = direction === 'input' ? existingNode : currentNode;
+
+  let linked =
+    consumer.addImportLink(productId, supplier.id) &&
+    supplier.addExportLink(productId, consumer.id);
+
+  if (!linked) {
+    consumer.removeImportLink(productId, supplier.id);
+    supplier.removeExportLink(productId, consumer.id);
   }
 
   actions.recipes.recalculate();

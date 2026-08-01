@@ -7,6 +7,16 @@ import { RecipeProduct } from 'state/app/effects/loadJsonData';
 let targetSequence = 0;
 
 /**
+ * Keeps the target id counter ahead of anything restored from a file or
+ * localStorage. Without this a restored `target_1` would be silently
+ * overwritten by the next target the user adds, taking its chain with it.
+ */
+export const reserveTargetId = (id: string): void => {
+  const suffix = Number(id.slice(id.lastIndexOf('_') + 1));
+  if (Number.isFinite(suffix) && suffix > targetSequence) targetSequence = suffix;
+};
+
+/**
  * Starts a new, empty target and makes it the one the setup drawers are editing.
  * The product, building and recipe are filled in as the user picks them.
  */

@@ -50,13 +50,21 @@ export const buildExportedGraph = (
     })),
 });
 
+/**
+ * `typeof x === 'number'` also accepts NaN, Infinity and negatives. An imported
+ * file is arbitrary input, and a NaN quantity would propagate through the solver
+ * into every derived rate on screen.
+ */
+const isFiniteAmount = (value: any): value is number =>
+  typeof value === 'number' && Number.isFinite(value) && value >= 0;
+
 const isExportedNode = (node: any): node is ExportedNode => {
   return (
     !!node &&
     typeof node === 'object' &&
     typeof node.id === 'string' &&
     typeof node.recipeId === 'string' &&
-    (node.pinnedMachinesCount === null || typeof node.pinnedMachinesCount === 'number') &&
+    (node.pinnedMachinesCount === null || isFiniteAmount(node.pinnedMachinesCount)) &&
     !!node.imports &&
     typeof node.imports === 'object' &&
     Object.values(node.imports).every(
@@ -73,7 +81,7 @@ const isExportedTarget = (target: any): target is ExportedTarget => {
     typeof target.productId === 'string' &&
     typeof target.machineId === 'string' &&
     typeof target.recipeId === 'string' &&
-    typeof target.quantity === 'number' &&
+    isFiniteAmount(target.quantity) &&
     typeof target.nodeId === 'string'
   );
 };

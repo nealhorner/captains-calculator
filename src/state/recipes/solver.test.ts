@@ -243,9 +243,55 @@ describe('solveChain', () => {
     expect(solved.foundry.machinesCount).toBe(1);
     expect(solved.foundry.outputRates.iron).toBeCloseTo(20, 6);
     expect(solved.smelter.inputRates.iron).toBeCloseTo(60, 6);
-    // The flow requested exceeds what the supplier produces: a shortfall.
-    expect(solved.foundry.exportedRates.iron).toBeCloseTo(60, 6);
-    expect(solved.foundry.exportedRates.iron - solved.foundry.outputRates.iron).toBeCloseTo(40, 6);
+    // The draw is capped at what the foundry can actually make, so the 40/60s
+    // shortfall stays visible on the smelter's input rather than being papered
+    // over by an export flow the supplier could never deliver.
+    expect(solved.foundry.exportedRates.iron).toBeCloseTo(20, 6);
+    expect(solved.smelter.importedRates.iron).toBeCloseTo(20, 6);
+    expect(solved.smelter.inputRates.iron - solved.smelter.importedRates.iron).toBeCloseTo(40, 6);
+  });
+
+  it('caps the draw on a pinned supplier and leaves the rest as a shortfall', () => {
+    // The consumer needs 100 iron but the supplier is pinned to a single
+    // building making 10. The shortfall must stay visible.
+    const nodes = [
+      node({
+        id: 'consumer',
+        inputs: { iron: 100 },
+        outputs: { plate: 50 },
+        imports: { iron: [{ source: 'supplier' }] },
+      }),
+      node({ id: 'supplier', outputs: { iron: 10 }, pinned: 1 }),
+    ];
+    const { nodes: solved } = solveChain(nodes, [
+      { nodeId: 'consumer', productId: 'plate', quantity: 50 },
+    ]);
+
+    expect(solved.supplier.outputRates.iron).toBeCloseTo(10, 6);
+    expect(solved.consumer.importedRates.iron).toBeCloseTo(10, 6);
+    // Not silently reported as fully supplied.
+    expect(solved.consumer.importedRates.iron).toBeLessThan(solved.consumer.inputRates.iron);
+  });
+
+  it('shifts demand a pinned supplier cannot cover onto one that can grow', () => {
+    const nodes = [
+      node({
+        id: 'consumer',
+        inputs: { iron: 100 },
+        outputs: { plate: 50 },
+        imports: { iron: [{ source: 'pinned' }, { source: 'flexible' }] },
+      }),
+      node({ id: 'pinned', outputs: { iron: 10 }, pinned: 1 }),
+      node({ id: 'flexible', outputs: { iron: 10 } }),
+    ];
+    const { nodes: solved } = solveChain(nodes, [
+      { nodeId: 'consumer', productId: 'plate', quantity: 50 },
+    ]);
+
+    // Pinned covers 10 of its 50 share; the flexible supplier absorbs the rest.
+    expect(solved.pinned.outputRates.iron).toBeCloseTo(10, 6);
+    expect(solved.flexible.outputRates.iron).toBeCloseTo(90, 6);
+    expect(solved.consumer.importedRates.iron).toBeCloseTo(100, 6);
   });
 
   it('terminates on a cyclic supplier graph without diverging', () => {

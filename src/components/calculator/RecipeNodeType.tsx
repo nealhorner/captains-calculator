@@ -19,7 +19,7 @@ import { Icon } from '@iconify/react';
 import { sortArray } from 'utils/objects';
 import { formatRate } from 'utils/numbers';
 
-import { ProductId } from 'state/app/effects';
+import { ProductId, MAINTENANCE_I, MAINTENANCE_II } from 'state/app/effects';
 import {
   RecipeIOImportProduct,
   RecipeIOExportProduct,
@@ -635,13 +635,13 @@ export const RecipeNodeType = ({
             );
           })}
           <NeedsBage need="workers" value={machine.workers * buildingsRequired} />
-          {machine.maintenance_cost_units === 'maintenance_i' && (
+          {machine.maintenance_cost_units === MAINTENANCE_I && (
             <NeedsBage
               need="maintenance1"
               value={machine.maintenance_cost_quantity * buildingsRequired}
             />
           )}
-          {machine.maintenance_cost_units === 'maintenance_iI' && (
+          {machine.maintenance_cost_units === MAINTENANCE_II && (
             <NeedsBage
               need="maintenance2"
               value={machine.maintenance_cost_quantity * buildingsRequired}

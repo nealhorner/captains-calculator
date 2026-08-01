@@ -1,3 +1,4 @@
+import { MAINTENANCE_I, MAINTENANCE_II } from 'state/app/effects';
 import { Box, Image, Stack, Table, Alert, ScrollArea, Divider, Text, Tooltip } from '@mantine/core';
 
 import { useAppState } from 'state';
@@ -90,10 +91,10 @@ export const ResultsSummary = () => {
 
     needs.workers.total += machine.workers * built;
     needs.electricity.total += machine.electricity_consumed * running;
-    if (machine.maintenance_cost_units === 'maintenance_i') {
+    if (machine.maintenance_cost_units === MAINTENANCE_I) {
       needs.maintenance1.total += machine.maintenance_cost_quantity * built;
     }
-    if (machine.maintenance_cost_units === 'maintenance_ii') {
+    if (machine.maintenance_cost_units === MAINTENANCE_II) {
       needs.maintenance2.total += machine.maintenance_cost_quantity * built;
     }
 

@@ -42,12 +42,23 @@ export const linkRecipe: AsyncAction<LinkRecipeParams> = async (
 
   let newNode = actions.recipes.createProductionNode({ recipeId: newNodeId });
 
-  if (direction === 'input') {
-    currentNode.addImportLink(productId, newNode.id);
-    newNode.addExportLink(productId, currentNodeId);
-  } else {
-    newNode.addImportLink(productId, currentNodeId);
-    currentNode.addExportLink(productId, newNode.id);
+  // A link has to exist on both sides. Only the import side draws edges and
+  // carries demand, while only the export side keeps a node reachable when
+  // pruning — so half a link would leave either an unmet demand or an
+  // invisible node that survives cleanup.
+  let consumer = direction === 'input' ? currentNode : newNode;
+  let supplier = direction === 'input' ? newNode : currentNode;
+
+  let linked =
+    consumer.addImportLink(productId, supplier.id) &&
+    supplier.addExportLink(productId, consumer.id);
+
+  if (!linked) {
+    consumer.removeImportLink(productId, supplier.id);
+    supplier.removeExportLink(productId, consumer.id);
+    actions.recipes.pruneOrphanNodes();
+    actions.recipes.recalculate();
+    return;
   }
 
   actions.recipes.recalculate();
