@@ -1,5 +1,5 @@
 import React from 'react';
-import { Button, useMantineColorScheme } from '@mantine/core';
+import { Button, useComputedColorScheme } from '@mantine/core';
 import { matchRoutes, useLocation, useNavigate } from 'react-router-dom';
 import { Icon } from '@iconify/react';
 
@@ -11,7 +11,7 @@ export const BackButton = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const matchedRoutes = matchRoutes(routes, location);
-  const { colorScheme } = useMantineColorScheme();
+  const colorScheme = useComputedColorScheme('light');
 
   const parentRoutes = matchedRoutes?.filter((match) => {
     let isIndexRoute = !!match.route.index;

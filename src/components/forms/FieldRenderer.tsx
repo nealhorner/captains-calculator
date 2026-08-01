@@ -1,5 +1,5 @@
 import React from 'react';
-import { Badge, createStyles, Grid, NumberInput, Select, TextInput } from '@mantine/core';
+import { Badge, Grid, NumberInput, Select, TextInput } from '@mantine/core';
 import { DatePicker } from '@mantine/dates';
 import { useMediaQuery } from '@mantine/hooks';
 import { FormikHandlers, FormikHelpers, FormikState } from 'formik';
@@ -9,6 +9,7 @@ import { checkIfFieldHasRequiredValidation, FormConfig, statesList } from 'utils
 
 import { generateHours } from 'utils/dates';
 import PhoneField from './PhoneField';
+import styles from './FieldRenderer.module.css';
 
 type FieldRendererProps<PayloadType extends GenericDictionary> = {
   formConfig: FormConfig;
@@ -20,27 +21,6 @@ type FieldRendererProps<PayloadType extends GenericDictionary> = {
   handleChange: FormikHandlers['handleChange'];
 };
 
-const userFormStyles = createStyles((theme) => ({
-  root: {
-    display: 'flex',
-    flexDirection: 'column',
-  },
-  error: {
-    fontSize: theme.fontSizes.xs,
-    lineHeight: `${theme.fontSizes.xs + 8}px`,
-    marginTop: '-20px',
-  },
-  wrapper: {
-    marginBottom: '20px',
-  },
-  label: {
-    fontSize: theme.fontSizes.sm,
-    lineHeight: `${theme.fontSizes.sm}px`,
-    display: 'inline-block',
-    marginBottom: 8,
-  },
-}));
-
 function FieldRenderer<PayloadType extends GenericDictionary>({
   formConfig,
   formMode,
@@ -50,7 +30,6 @@ function FieldRenderer<PayloadType extends GenericDictionary>({
   handleBlur,
   handleChange,
 }: React.PropsWithChildren<FieldRendererProps<PayloadType>>): React.ReactElement | null {
-  const { classes: styles } = userFormStyles();
   const isMobile = useMediaQuery('(max-width: 1024px)');
 
   return (

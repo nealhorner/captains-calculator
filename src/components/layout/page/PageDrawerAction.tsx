@@ -1,14 +1,5 @@
 import React from 'react';
-import {
-  Text,
-  Box,
-  Drawer,
-  Button,
-  MediaQuery,
-  MantineColor,
-  MantineSize,
-  ButtonVariant,
-} from '@mantine/core';
+import { Text, Box, Drawer, Button, MantineColor, MantineSize, ButtonVariant } from '@mantine/core';
 import Icons from 'components/ui/Icons';
 import { Icon } from '@iconify/react';
 
@@ -49,41 +40,39 @@ function PageDrawerAction<T extends DrawerActionProps>({
         title={title}
         padding={0}
         size="xl"
-        styles={(theme) => ({
+        styles={{
           header: {
-            borderBottom: `1px solid ${theme.colorScheme === 'light' ? theme.colors.gray[2] : theme.colors.dark[5]}`,
+            borderBottom:
+              '1px solid light-dark(var(--mantine-color-gray-2), var(--mantine-color-dark-5))',
             marginBottom: 0,
-            padding: theme.spacing.xl,
+            padding: 'var(--mantine-spacing-xl)',
           },
-          drawer: {
+          content: {
             height: '100%',
             minHeight: '100%',
             maxHeight: '100%',
           },
-        })}
+        }}
       >
         <PageAction {...props} onClose={() => setOpened(false)} />
       </Drawer>
 
-      <MediaQuery smallerThan="md" styles={{ display: 'none' }}>
-        <Button
-          onClick={() => setOpened(true)}
-          rightIcon={<Icon icon={icon} color={iconColor} width={18} />}
-          color={color}
-          variant={variant}
-          size={size}
-        >
-          <Text>{title}</Text>
-        </Button>
-      </MediaQuery>
+      <Button
+        onClick={() => setOpened(true)}
+        rightSection={<Icon icon={icon} color={iconColor} width={18} />}
+        color={color}
+        variant={variant}
+        size={size}
+        visibleFrom="md"
+      >
+        <Text>{title}</Text>
+      </Button>
 
-      <MediaQuery largerThan="md" styles={{ display: 'none' }}>
-        <Box>
-          <Button onClick={() => setOpened(true)} color={color} variant={variant} size="xs" px={5}>
-            <Icon icon={icon} color={iconColor} width={18} />
-          </Button>
-        </Box>
-      </MediaQuery>
+      <Box hiddenFrom="md">
+        <Button onClick={() => setOpened(true)} color={color} variant={variant} size="xs" px={5}>
+          <Icon icon={icon} color={iconColor} width={18} />
+        </Button>
+      </Box>
     </Box>
   );
 }

@@ -5,6 +5,7 @@ import { useAppState, useActions } from 'state';
 import RecipeListCard from './RecipeListCard';
 import { DrawerBody, DrawerBodyScrollArea } from 'components/ui/DrawerBody';
 import { RecipeId } from 'state/app/effects';
+import classes from './RecipeSelectDrawer.module.css';
 
 export const RecipeSelectDrawer = () => {
   const currentProduct = useAppState((state) => state.products.currentItem);
@@ -39,7 +40,7 @@ export const RecipeSelectDrawer = () => {
       <DrawerBody>
         <DrawerBodyScrollArea>
           <Box p="md">
-            <Stack spacing="xs">
+            <Stack gap="xs">
               {filteredItems.map((i, k) => (
                 <RecipeListCard
                   key={k}
@@ -64,36 +65,25 @@ export const RecipeSelectDrawer = () => {
         title="Select Recipe"
         padding={0}
         size="xl"
-        overlayBlur={3}
+        overlayProps={{ blur: 3 }}
         position="left"
       >
         {renderBody()}
       </Drawer>
 
       <Box>
-        <Text weight="bold" mb="xs">
+        <Text fw="bold" mb="xs">
           3. Production Recipe
         </Text>
         {currentItem ? (
-          <Card
-            onClick={() => setOpened(true)}
-            shadow="xs"
-            p="xs"
-            sx={(theme) => ({
-              cursor: 'pointer',
-              '&:hover': {
-                backgroundColor:
-                  theme.colorScheme === 'light' ? theme.colors.gray[6] : theme.colors.dark[9],
-              },
-            })}
-          >
-            <Group position="apart">
-              <Text weight={500} size="sm">
+          <Card onClick={() => setOpened(true)} shadow="xs" p="xs" className={classes.card}>
+            <Group justify="space-between">
+              <Text fw={500} size="sm">
                 {currentItem.name}
               </Text>
               <Box
                 p="xs"
-                sx={(theme) => ({
+                style={(theme) => ({
                   borderRadius: theme.radius.sm,
                   background: theme.colors.dark[3],
                 })}

@@ -19,7 +19,7 @@ const CostsBadge: React.FC<CostsBadgeProps> = ({ product, mode = 'short', suffix
       <Box
         pl={3}
         pr={5}
-        sx={(theme) => ({
+        style={(theme) => ({
           borderRadius: theme.radius.sm,
           background: theme.colors.dark[4],
           height: 32,
@@ -28,9 +28,9 @@ const CostsBadge: React.FC<CostsBadgeProps> = ({ product, mode = 'short', suffix
         })}
       >
         {mode === 'long' ? (
-          <Group position="left" spacing={5}>
+          <Group justify="flex-start" gap={5}>
             <Image
-              sx={{ display: 'block' }}
+              style={{ display: 'block' }}
               height={16}
               src={`/assets/products/${productData.icon}`}
             />
@@ -41,7 +41,7 @@ const CostsBadge: React.FC<CostsBadgeProps> = ({ product, mode = 'short', suffix
         ) : (
           <Box px={4}>
             <Image
-              sx={{ display: 'block' }}
+              style={{ display: 'block' }}
               height={16}
               src={`/assets/products/${productData.icon}`}
             />
@@ -51,12 +51,12 @@ const CostsBadge: React.FC<CostsBadgeProps> = ({ product, mode = 'short', suffix
         <Box
           px={4}
           py={1}
-          sx={(theme) => ({
+          style={(theme) => ({
             borderRadius: theme.radius.sm,
             background: '#141517',
           })}
         >
-          <Text color="white" weight="lighter" sx={{ fontSize: 12 }}>
+          <Text color="white" fw="lighter" style={{ fontSize: 12 }}>
             {value}
             {suffix ? ` ${suffix}` : ''}
           </Text>

@@ -36,8 +36,8 @@ export const NodeDrawer = () => {
       <DrawerBody>
         <DrawerBodyScrollArea>
           <Box p="xl">
-            <Stack spacing="xs">
-              <Text weight="bold" mb="xs">
+            <Stack gap="xs">
+              <Text fw="bold" mb="xs">
                 1. Desired Product
               </Text>
               {/* {Object.keys(node.inputs).map((productId, key) => {
@@ -76,21 +76,22 @@ export const NodeDrawer = () => {
         title={node.machine.name}
         padding={0}
         size="xl"
-        overlayBlur={3}
+        overlayProps={{ blur: 3 }}
         position="left"
-        styles={(theme) => ({
+        styles={{
           header: {
-            borderBottom: `1px solid ${theme.colorScheme === 'light' ? theme.colors.gray[2] : theme.colors.dark[5]}`,
+            borderBottom:
+              '1px solid light-dark(var(--mantine-color-gray-2), var(--mantine-color-dark-5))',
             marginBottom: 0,
-            padding: theme.spacing.xl,
+            padding: 'var(--mantine-spacing-xl)',
           },
-          drawer: {
+          content: {
             height: '100%',
             minHeight: '100%',
             maxHeight: '100%',
-            backgroundColor: theme.colors.gray[1],
+            backgroundColor: 'var(--mantine-color-gray-1)',
           },
-        })}
+        }}
       >
         {renderBody()}
       </Drawer>

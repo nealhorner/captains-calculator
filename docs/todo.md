@@ -63,11 +63,22 @@ The project has testing libraries installed (`@testing-library/react`, `jest-dom
 
 This is a large migration. Mantine v7 is a near-full rewrite.
 
-- [ ] Replace `createStyles()` with CSS Modules or Mantine's new `classNames` API
-- [ ] Replace `sx` prop usage with `style` prop or CSS variables
-- [ ] Update all component imports (many were renamed/removed between v4-v7)
-- [ ] Replace `@mantine/modals` and `@mantine/notifications` with v7 equivalents
-- [ ] Remove Emotion dependency (Mantine v7 dropped CSS-in-JS)
+- [x] Replace `createStyles()` with CSS Modules or Mantine's new `classNames` API
+- [x] Replace `sx` prop usage with `style` prop or CSS variables
+- [x] Update all component imports (many were renamed/removed between v4-v7)
+- [x] Replace `@mantine/modals` and `@mantine/notifications` with v7 equivalents
+- [x] Remove Emotion dependency (Mantine v7 dropped CSS-in-JS)
+
+**Gaps / follow-ups from this migration:**
+
+- **Found and fixed a real layout bug**: v7's Drawer/Modal `body` part is `display:block` by default (v4's was effectively a flex column filling available height). The app's custom `DrawerBody`/`DrawerBodyScrollArea` (`src/components/ui/DrawerBody.tsx`) relied on percentage-height resolving through that chain, so every drawer's scrollable list silently collapsed to 0px height (fully present in the DOM, invisible on screen). Fixed via `theme.ts`'s `Drawer` component styles (flex column + `flex: 1` body) plus updating `DrawerBody` to use `flex: 1 1 auto; min-height: 0` instead of a hardcoded `calc(100% - 77px)`. Worth double-checking any other custom component that assumes percentage-height Mantine internals if more v7 upgrades land.
+- **`~59` pre-existing TypeScript errors remain** (verified unrelated to Mantine, left untouched as out of scope for this task):
+  - React 19 typing gap — many components use `React.FC` and destructure `children` without `PropsWithChildren`, so `children` isn't a recognized prop under React 19's stricter types (e.g. `DrawerBody.tsx`, `AnimatedList.tsx`, `PageLayoutBlank.tsx`, `StatsCard.tsx`, `Calculator.tsx`, `NotFound.tsx`). This predates the Mantine work and should be tracked as its own "React 17 -> 19+" follow-up (that phase is marked done above but didn't cover this).
+  - `FieldRenderer.tsx` — Formik generic type errors (`FormikErrors<T>` not assignable to `ReactNode`) and a few implicit-`any` params, unrelated to the `createStyles` removal done here.
+  - `src/state/recipes/testFixtures.ts` and `linkRecipe.test.ts` — fixture objects missing the 220+ keys of `ProductRecipes`; predates this branch.
+  - `ImportExportMenu.tsx` — `importGraph(data)` "expected 0 arguments" error; unrelated to the notification/icon prop renames made here.
+- **Browser verification was done via direct React prop invocation (`props.onClick(...)`) rather than the automation tool's simulated mouse clicks** — real `left_click` calls on Drawer trigger buttons were unreliable in the sandboxed browser tool for reasons that look tool-specific (hover/focus CSS applied, but the click event didn't reach React's handler), not a code issue. Worth a manual click-through in a real browser to be 100% sure, though the underlying rendering/state was confirmed correct.
+- **Not covered by this pass**: verifying every Mantine component still uses its intended `variant`/`color` visuals pixel-for-pixel against the old v4 look (spot-checked Drawers, Cards, Select, Tabs, AppShell, dark/light toggle — looked correct — but a full visual diff wasn't done).
 
 ### react-flow-renderer -> @xyflow/react
 

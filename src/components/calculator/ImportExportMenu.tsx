@@ -2,7 +2,7 @@ import React from 'react';
 import { Button, Group } from '@mantine/core';
 import { Icon } from '@iconify/react';
 import { useModals } from '@mantine/modals';
-import { showNotification } from '@mantine/notifications';
+import { notifications } from '@mantine/notifications';
 
 import { useActions, useAppState } from 'state';
 import Icons from 'components/ui/Icons';
@@ -32,7 +32,7 @@ export const ImportExportMenu = () => {
   };
 
   const notifyImportFailed = (message: string) => {
-    showNotification({
+    notifications.show({
       icon: <Icon icon={Icons.failCircle} />,
       color: 'red',
       title: 'Import Failed',
@@ -56,7 +56,7 @@ export const ImportExportMenu = () => {
       return;
     }
 
-    showNotification({
+    notifications.show({
       icon: <Icon icon={Icons.successCircle} />,
       color: 'green',
       title: 'Import Complete',
@@ -104,13 +104,13 @@ export const ImportExportMenu = () => {
       />
       <Button
         variant="default"
-        leftIcon={<Icon icon={Icons.download} />}
+        leftSection={<Icon icon={Icons.download} />}
         disabled={!nodesList.length}
         onClick={handleExportJson}
       >
         Export
       </Button>
-      <Button variant="default" leftIcon={<Icon icon={Icons.upload} />} onClick={confirmImport}>
+      <Button variant="default" leftSection={<Icon icon={Icons.upload} />} onClick={confirmImport}>
         Import
       </Button>
     </Group>

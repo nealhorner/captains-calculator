@@ -22,7 +22,7 @@ import { generateDarkColorHex, generateLightColorHex } from 'utils/colors';
 
 import { RecipeNodeType } from './RecipeNodeType';
 import { RecipeEdgeType } from './RecipeEdgeType';
-import { Box, Loader, useMantineTheme } from '@mantine/core';
+import { Box, Loader, useComputedColorScheme } from '@mantine/core';
 import { AnimatePresence, motion } from 'framer-motion';
 
 export type RecipeNodeData = ProductionNode;
@@ -84,6 +84,7 @@ export const Editor: React.FC<EditorProps> = ({ nodesData, edgesData }) => {
   // const [graph, setGraph] = React.useState<Array<Node>>()
 
   const [loading, setLoading] = React.useState(true);
+  const colorScheme = useComputedColorScheme('light');
 
   const [nodes, setNodes, onNodesChange] = useNodesState(nodesData);
   const [edges, setEdges, onEdgesChange] = useEdgesState(edgesData);
@@ -177,10 +178,9 @@ export const Editor: React.FC<EditorProps> = ({ nodesData, edgesData }) => {
             }}
           >
             <Box
-              sx={(theme) => ({
-                background:
-                  theme.colorScheme === 'light' ? theme.colors.white : theme.colors.dark[7],
-                backgroundImage: `url("/img/${theme.colorScheme === 'light' ? 'squared-metal.png' : 'squared-metal-inverted.png'}")`,
+              style={(theme) => ({
+                background: colorScheme === 'light' ? theme.colors.white : theme.colors.dark[7],
+                backgroundImage: `url("/img/${colorScheme === 'light' ? 'squared-metal.png' : 'squared-metal-inverted.png'}")`,
                 position: 'absolute',
                 top: 0,
                 left: 0,
@@ -225,7 +225,7 @@ export const Editor: React.FC<EditorProps> = ({ nodesData, edgesData }) => {
 };
 
 export const EditorWrapper = () => {
-  const theme = useMantineTheme();
+  const colorScheme = useComputedColorScheme('light');
   let { nodesData, edgesData } = useAppState((state) => state.recipes);
 
   if (!nodesData.length) return null;
@@ -237,7 +237,7 @@ export const EditorWrapper = () => {
       edgesData={edgesData.map((e) => ({
         ...e,
         style: {
-          stroke: theme.colorScheme === 'light' ? generateDarkColorHex() : generateLightColorHex(),
+          stroke: colorScheme === 'light' ? generateDarkColorHex() : generateLightColorHex(),
           strokeWidth: 3,
         },
       }))}

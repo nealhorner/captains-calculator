@@ -1,9 +1,10 @@
 import React from 'react';
-import { Group, Input, Button, Tabs, MediaQuery } from '@mantine/core';
+import { Group, Stack, Input, Button, Tabs } from '@mantine/core';
 import { Icon } from '@iconify/react';
 
 import Icons from 'components/ui/Icons';
 import { useSearchParams } from 'react-router-dom';
+import classes from './PageFilters.module.css';
 
 type ClickFilterConfig<T> = {
   label: string;
@@ -208,43 +209,23 @@ export const PageFilters: React.FC<FilterComponentProps> = ({ options }) => {
   const renderClickFilter = (grow: boolean = false) => {
     return (
       <Tabs
-        active={options.clickFilter.index}
-        onTabChange={options.onClickFilterChanged}
+        value={options.clickFilter.value ?? 'all'}
+        onChange={(value) => {
+          const index =
+            value === 'all' ? 0 : options.clickFilterItems.findIndex((f) => f.value === value) + 1;
+          options.onClickFilterChanged(index, value ?? 'all');
+        }}
         variant="unstyled"
-        grow={grow}
-        styles={(theme) => ({
-          tabControl: {
-            backgroundColor:
-              theme.colorScheme === 'dark' ? theme.colors.dark[9] : theme.colors.gray[1],
-            color: theme.colorScheme === 'dark' ? theme.colors.dark[0] : theme.colors.gray[9],
-            border: `1px solid ${theme.colorScheme === 'dark' ? theme.colors.dark[6] : theme.colors.gray[4]}`,
-
-            '&:not(:first-of-type)': {
-              borderLeft: 0,
-            },
-
-            '&:first-of-type': {
-              borderTopLeftRadius: theme.radius.sm,
-              borderBottomLeftRadius: theme.radius.sm,
-            },
-
-            '&:last-of-type': {
-              borderTopRightRadius: theme.radius.sm,
-              borderBottomRightRadius: theme.radius.sm,
-            },
-          },
-
-          tabActive: {
-            backgroundColor:
-              theme.colorScheme === 'dark' ? theme.colors.dark[7] : theme.colors.gray[3],
-            fontWeight: 'bold',
-          },
-        })}
+        classNames={{ tab: classes.tab }}
       >
-        <Tabs.Tab label="All" tabKey="all" />
-        {options.clickFilterItems.map((f, k) => (
-          <Tabs.Tab key={k} label={f.label} tabKey={f.value} />
-        ))}
+        <Tabs.List grow={grow}>
+          <Tabs.Tab value="all">All</Tabs.Tab>
+          {options.clickFilterItems.map((f, k) => (
+            <Tabs.Tab key={k} value={f.value}>
+              {f.label}
+            </Tabs.Tab>
+          ))}
+        </Tabs.List>
       </Tabs>
     );
   };
@@ -252,17 +233,9 @@ export const PageFilters: React.FC<FilterComponentProps> = ({ options }) => {
   const renderSearchFilter = () => {
     return (
       <Input
-        icon={<Icon icon={Icons.search} />}
+        leftSection={<Icon icon={Icons.search} />}
         placeholder="Search..."
-        styles={(theme) => ({
-          input: {
-            backgroundColor: 'transparent',
-            border: `1px solid ${theme.colorScheme === 'dark' ? theme.colors.dark[6] : theme.colors.gray[4]}`,
-          },
-          rightSection: {
-            marginRight: 2,
-          },
-        })}
+        classNames={{ input: classes.searchInput, section: classes.searchInputSection }}
         rightSection={
           <Button
             size="xs"
@@ -292,18 +265,14 @@ export const PageFilters: React.FC<FilterComponentProps> = ({ options }) => {
 
   return (
     <React.Fragment>
-      <MediaQuery smallerThan="xs" styles={{ display: 'none' }}>
-        <Group position="apart" mb="md" align="center">
-          {renderClickFilter()}
-          {renderSearchFilter()}
-        </Group>
-      </MediaQuery>
-      <MediaQuery largerThan="xs" styles={{ display: 'none' }}>
-        <Group mb="md" grow direction="column">
-          {renderClickFilter(true)}
-          {renderSearchFilter()}
-        </Group>
-      </MediaQuery>
+      <Group justify="space-between" mb="md" align="center" visibleFrom="xs">
+        {renderClickFilter()}
+        {renderSearchFilter()}
+      </Group>
+      <Stack mb="md" hiddenFrom="xs">
+        {renderClickFilter(true)}
+        {renderSearchFilter()}
+      </Stack>
     </React.Fragment>
   );
 };

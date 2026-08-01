@@ -11,6 +11,7 @@ import {
   ScrollArea,
   Modal,
   Button,
+  useComputedColorScheme,
 } from '@mantine/core';
 import { Handle, Position, NodeProps } from 'react-flow-renderer';
 import { Icon } from '@iconify/react';
@@ -32,6 +33,7 @@ import { NodeRecipeLink } from 'components/calculator/NodeRecipeSelect';
 import { RecipeNodeData } from './Editor';
 import { useModals } from '@mantine/modals';
 import { useActions } from 'state';
+import classes from './RecipeNodeType.module.css';
 
 const handleStyle: React.CSSProperties = {
   border: 'none',
@@ -61,6 +63,7 @@ export const RecipeNodeType = ({
   >({});
   const deleteNode = useActions().recipes.deleteNode;
   const modals = useModals();
+  const colorScheme = useComputedColorScheme('light');
 
   const handleLinkCreate = (
     direction: 'input' | 'output',
@@ -98,8 +101,8 @@ export const RecipeNodeType = ({
   return (
     <Box
       key={`recipe-node-${id}`}
-      sx={(theme) => ({
-        backgroundColor: theme.colorScheme === 'light' ? theme.white : theme.colors.dark[8],
+      style={(theme) => ({
+        backgroundColor: colorScheme === 'light' ? theme.white : theme.colors.dark[8],
         borderRadius: theme.radius.sm,
         boxShadow: theme.shadows.sm,
         minWidth: 240,
@@ -112,13 +115,13 @@ export const RecipeNodeType = ({
           onClose={handleModalClose}
           title={
             <Text
-              weight={600}
+              fw={600}
             >{`Select ${selectedDirection === 'input' ? 'Input Source' : 'Output Target'} For ${selectedProduct.name}`}</Text>
           }
         >
-          <Box sx={{ height: 500 }}>
+          <Box style={{ height: 500 }}>
             <Box
-              sx={{
+              style={{
                 overflow: 'hidden',
                 position: 'relative',
                 height: '100%',
@@ -134,7 +137,7 @@ export const RecipeNodeType = ({
                 }}
               >
                 <Box>
-                  <Stack spacing="xs">
+                  <Stack gap="xs">
                     {Object.keys(selectedDestinations)
                       .filter((productId) => productId === selectedProduct.id)
                       .map((productId, key) => {
@@ -169,14 +172,13 @@ export const RecipeNodeType = ({
         </Modal>
       )}
       <Box>
-        <Group position="apart" px="md" pt="md" pb={0}>
+        <Group justify="space-between" px="md" pt="md" pb={0}>
           <Tooltip label={machine.name} withArrow withinPortal>
             <Box
               p={4}
-              sx={(theme) => ({
+              style={(theme) => ({
                 borderRadius: theme.radius.sm,
-                background:
-                  theme.colorScheme === 'light' ? theme.colors.dark[3] : theme.colors.dark[5],
+                background: colorScheme === 'light' ? theme.colors.dark[3] : theme.colors.dark[5],
               })}
             >
               <Image
@@ -188,14 +190,14 @@ export const RecipeNodeType = ({
             </Box>
           </Tooltip>
 
-          <Group spacing={5}>
-            <Text weight="bolder" size="lg" sx={{ lineHeight: '1em' }}>
+          <Group gap={5}>
+            <Text fw="bolder" size="lg" style={{ lineHeight: '1em' }}>
               {machine.name}
             </Text>
             <Button
               variant="subtle"
               color="red"
-              sx={{
+              style={{
                 padding: 6,
                 height: 'auto',
               }}
@@ -203,7 +205,7 @@ export const RecipeNodeType = ({
             >
               <Box
                 component="span"
-                sx={(theme) => ({
+                style={(theme) => ({
                   display: 'flex',
                   justifyContent: 'center',
                   alignItems: 'center',
@@ -218,10 +220,9 @@ export const RecipeNodeType = ({
           <Tooltip label={category.name} withArrow withinPortal>
             <Box
               p={4}
-              sx={(theme) => ({
+              style={(theme) => ({
                 borderRadius: theme.radius.sm,
-                background:
-                  theme.colorScheme === 'light' ? theme.colors.dark[3] : theme.colors.dark[5],
+                background: colorScheme === 'light' ? theme.colors.dark[3] : theme.colors.dark[5],
               })}
             >
               <Image
@@ -237,7 +238,7 @@ export const RecipeNodeType = ({
       <Divider py="xs" variant="solid" labelPosition="center" label="Inputs & Outputs" />
       <Grid gutter={40}>
         <Grid.Col span={6}>
-          <Stack spacing="sm" justify="space-around">
+          <Stack gap="sm" justify="space-around">
             {Object.keys(inputs)
               .sort((a, b) => sortArray(inputs[a].name, inputs[b].name))
               .map((productId) => {
@@ -245,38 +246,31 @@ export const RecipeNodeType = ({
                 return (
                   <Box
                     key={`recipe-handle-input-${productId}`}
-                    sx={{ marginLeft: product.maxed ? -14 : -47 }}
+                    style={{ marginLeft: product.maxed ? -14 : -47 }}
                     className="nodrag"
                   >
-                    <Group spacing={5} noWrap>
+                    <Group gap={5} wrap="nowrap">
                       {!product.maxed && (
                         <Tooltip
                           label="Add Input Source"
                           withArrow
                           withinPortal
-                          allowPointerEvents
                           position="left"
-                          gutter={5}
+                          offset={5}
                         >
                           <Box
                             onClick={() => handleLinkCreate('input', product)}
-                            sx={(theme) => ({
+                            className={classes.linkButton}
+                            style={(theme) => ({
                               width: 28,
                               height: 28,
                               display: 'flex',
                               justifyContent: 'center',
                               alignItems: 'center',
                               backgroundColor:
-                                theme.colorScheme === 'light' ? theme.white : theme.colors.dark[9],
+                                colorScheme === 'light' ? theme.white : theme.colors.dark[9],
                               borderRadius: theme.radius.sm,
                               boxShadow: theme.shadows.sm,
-                              cursor: 'default',
-                              '&:hover': {
-                                backgroundColor:
-                                  theme.colorScheme === 'light'
-                                    ? theme.colors.gray[2]
-                                    : theme.colors.dark[6],
-                              },
                             })}
                           >
                             <Icon icon={Icons.add} />
@@ -291,7 +285,7 @@ export const RecipeNodeType = ({
                         style={handleStyle}
                       >
                         <Box
-                          sx={(theme) => ({
+                          style={(theme) => ({
                             width: 28,
                             height: 28,
                             display: 'flex',
@@ -302,33 +296,33 @@ export const RecipeNodeType = ({
                             pointerEvents: 'none',
                           })}
                         >
-                          <Text color="white" align="center" size="sm" sx={{ lineHeight: 24 }}>
+                          <Text color="white" ta="center" size="sm" style={{ lineHeight: 24 }}>
                             {product.imported}
                           </Text>
                         </Box>
                       </Handle>
                       <Box
-                        sx={(theme) => ({
+                        style={(theme) => ({
                           width: 28,
                           height: 28,
                           display: 'flex',
                           justifyContent: 'center',
                           alignItems: 'center',
                           backgroundColor:
-                            theme.colorScheme === 'light' ? theme.white : theme.colors.dark[7],
+                            colorScheme === 'light' ? theme.white : theme.colors.dark[7],
                           borderRadius: theme.radius.sm,
                           pointerEvents: 'none',
-                          border: `1px dashed ${theme.colorScheme === 'light' ? theme.colors.gray[4] : theme.colors.dark[4]}`,
+                          border: `1px dashed ${colorScheme === 'light' ? theme.colors.gray[4] : theme.colors.dark[4]}`,
                         })}
                       >
-                        <Text align="center" size="sm" sx={{ lineHeight: 24 }}>
+                        <Text ta="center" size="sm" style={{ lineHeight: 24 }}>
                           {product.quantity}
                         </Text>
                       </Box>
-                      <Group spacing={5} noWrap>
+                      <Group gap={5} wrap="nowrap">
                         <Box
-                          sx={(theme) => ({
-                            border: `1px dashed ${theme.colorScheme === 'light' ? theme.colors.gray[4] : theme.colors.dark[4]}`,
+                          style={(theme) => ({
+                            border: `1px dashed ${colorScheme === 'light' ? theme.colors.gray[4] : theme.colors.dark[4]}`,
                             borderRadius: theme.radius.sm,
                             padding: 3,
                           })}
@@ -342,14 +336,9 @@ export const RecipeNodeType = ({
                           />
                         </Box>
                         {machine.isStorage || product.quantity === product.imported ? (
-                          <Tooltip
-                            label="Input Satisfied"
-                            withArrow
-                            withinPortal
-                            allowPointerEvents
-                          >
+                          <Tooltip label="Input Satisfied" withArrow withinPortal>
                             <Box
-                              sx={(theme) => ({
+                              style={(theme) => ({
                                 display: 'flex',
                                 justifyContent: 'center',
                                 alignItems: 'center',
@@ -361,9 +350,9 @@ export const RecipeNodeType = ({
                             </Box>
                           </Tooltip>
                         ) : (
-                          <Tooltip label="Missing Input" withArrow withinPortal allowPointerEvents>
+                          <Tooltip label="Missing Input" withArrow withinPortal>
                             <Box
-                              sx={(theme) => ({
+                              style={(theme) => ({
                                 display: 'flex',
                                 justifyContent: 'center',
                                 alignItems: 'center',
@@ -383,7 +372,7 @@ export const RecipeNodeType = ({
           </Stack>
         </Grid.Col>
         <Grid.Col span={6}>
-          <Stack spacing="sm" justify="space-around" align="flex-end">
+          <Stack gap="sm" justify="space-around" align="flex-end">
             {Object.keys(outputs)
               .sort((a, b) => sortArray(outputs[a].name, outputs[b].name))
               .map((productId) => {
@@ -391,22 +380,17 @@ export const RecipeNodeType = ({
                 return (
                   <Box
                     key={`recipe-handle-output-${productId}`}
-                    sx={{ marginRight: product.maxed ? -14 : -47 }}
+                    style={{ marginRight: product.maxed ? -14 : -47 }}
                     className="nodrag"
                   >
-                    <Group spacing={5} noWrap>
-                      <Group spacing={5} noWrap>
+                    <Group gap={5} wrap="nowrap">
+                      <Group gap={5} wrap="nowrap">
                         {machine.isStorage ||
                         machine.isMine ||
                         product.quantity === product.exported ? (
-                          <Tooltip
-                            label="Output Satisfied"
-                            withArrow
-                            withinPortal
-                            allowPointerEvents
-                          >
+                          <Tooltip label="Output Satisfied" withArrow withinPortal>
                             <Box
-                              sx={(theme) => ({
+                              style={(theme) => ({
                                 display: 'flex',
                                 justifyContent: 'center',
                                 alignItems: 'center',
@@ -418,9 +402,9 @@ export const RecipeNodeType = ({
                             </Box>
                           </Tooltip>
                         ) : (
-                          <Tooltip label="Output Is Full" withArrow withinPortal allowPointerEvents>
+                          <Tooltip label="Output Is Full" withArrow withinPortal>
                             <Box
-                              sx={(theme) => ({
+                              style={(theme) => ({
                                 display: 'flex',
                                 justifyContent: 'center',
                                 alignItems: 'center',
@@ -433,8 +417,8 @@ export const RecipeNodeType = ({
                           </Tooltip>
                         )}
                         <Box
-                          sx={(theme) => ({
-                            border: `1px dashed ${theme.colorScheme === 'light' ? theme.colors.gray[4] : theme.colors.dark[4]}`,
+                          style={(theme) => ({
+                            border: `1px dashed ${colorScheme === 'light' ? theme.colors.gray[4] : theme.colors.dark[4]}`,
                             borderRadius: theme.radius.sm,
                             padding: 3,
                           })}
@@ -449,23 +433,26 @@ export const RecipeNodeType = ({
                         </Box>
                       </Group>
                       <Box
-                        sx={(theme) => ({
+                        style={(theme) => ({
                           width: 28,
                           height: 28,
                           display: 'flex',
                           justifyContent: 'center',
                           alignItems: 'center',
                           backgroundColor:
-                            theme.colorScheme === 'light' ? theme.white : theme.colors.dark[7],
+                            colorScheme === 'light' ? theme.white : theme.colors.dark[7],
                           borderRadius: theme.radius.sm,
                           pointerEvents: 'none',
-                          border: `1px dashed ${theme.colorScheme === 'light' ? theme.colors.gray[4] : theme.colors.dark[4]}`,
+                          border: `1px dashed ${colorScheme === 'light' ? theme.colors.gray[4] : theme.colors.dark[4]}`,
                         })}
                       >
                         <Text
-                          align="center"
+                          ta="center"
                           size="sm"
-                          sx={{ lineHeight: 24, fontFamily: product.quantity < 1 ? 'Verdana' : '' }}
+                          style={{
+                            lineHeight: 24,
+                            fontFamily: product.quantity < 1 ? 'Verdana' : '',
+                          }}
                         >
                           {product.quantity < 1 ? '∞' : product.quantity}
                         </Text>
@@ -478,7 +465,7 @@ export const RecipeNodeType = ({
                         style={handleStyle}
                       >
                         <Box
-                          sx={(theme) => ({
+                          style={(theme) => ({
                             width: 28,
                             height: 28,
                             display: 'flex',
@@ -489,38 +476,26 @@ export const RecipeNodeType = ({
                             pointerEvents: 'none',
                           })}
                         >
-                          <Text color="white" align="center" size="sm" sx={{ lineHeight: 24 }}>
+                          <Text color="white" ta="center" size="sm" style={{ lineHeight: 24 }}>
                             {product.exported}
                           </Text>
                         </Box>
                       </Handle>
                       {!product.maxed && (
-                        <Tooltip
-                          label="Add Output Target"
-                          withArrow
-                          withinPortal
-                          allowPointerEvents
-                          position="right"
-                        >
+                        <Tooltip label="Add Output Target" withArrow withinPortal position="right">
                           <Box
                             onClick={() => handleLinkCreate('output', product)}
-                            sx={(theme) => ({
+                            className={classes.linkButton}
+                            style={(theme) => ({
                               width: 28,
                               height: 28,
                               display: 'flex',
                               justifyContent: 'center',
                               alignItems: 'center',
                               backgroundColor:
-                                theme.colorScheme === 'light' ? theme.white : theme.colors.dark[9],
+                                colorScheme === 'light' ? theme.white : theme.colors.dark[9],
                               borderRadius: theme.radius.sm,
                               boxShadow: theme.shadows.sm,
-                              cursor: 'default',
-                              '&:hover': {
-                                backgroundColor:
-                                  theme.colorScheme === 'light'
-                                    ? theme.colors.gray[2]
-                                    : theme.colors.dark[6],
-                              },
                             })}
                           >
                             <Icon icon={Icons.add} />
@@ -537,7 +512,7 @@ export const RecipeNodeType = ({
 
       <Divider py="xs" variant="solid" labelPosition="center" label="Costs & Needs" />
       <Box pb="md" px="md">
-        <Group spacing={4} position="center" noWrap={false}>
+        <Group gap={4} justify="center" wrap="wrap">
           {machine.build_costs.map((product, key) => {
             return <CostsBadge key={key} product={product} />;
           })}

@@ -4,3 +4,51 @@ body,
 #supertokens-root {
   height: 100%;
 }
+
+::placeholder {
+  color: light-dark(var(--mantine-color-black), var(--mantine-color-dark-3));
+}
+
+input:-webkit-autofill {
+  color: light-dark(var(--mantine-color-black), var(--mantine-color-dark-3)) !important;
+  -webkit-text-fill-color: light-dark(
+    var(--mantine-color-black),
+    var(--mantine-color-dark-0)
+  ) !important;
+  font-family: 'Euclid Circular B';
+  -webkit-box-shadow: 0 0 0px 1000px
+    light-dark(var(--mantine-color-white), var(--mantine-color-dark-5)) inset;
+  transition: background-color 5000s ease-in-out 0s;
+}
+
+body {
+  background: light-dark(var(--mantine-color-gray-1), var(--mantine-color-dark-7));
+  color: light-dark(var(--mantine-color-black), var(--mantine-color-dark-0));
+}
+
+.react-flow__minimap-mask {
+  fill: light-dark(rgba(240, 242, 243, 0.7), rgba(26, 27, 30, 0.7));
+}
+
+.react-flow__minimap {
+  background-color: light-dark(#ffffff, #141517);
+}
+
+.react-flow__controls-button {
+  background: light-dark(#fefefe, #25262b);
+  border-bottom: light-dark(#eee, 1px solid #141517);
+}
+
+.react-flow__controls-button svg {
+  fill: light-dark(#000000, #c1bab5);
+}
+
+.react-flow__minimap-node {
+  fill: light-dark(rgba(240, 242, 243, 0.7), rgba(26, 27, 30, 0.7));
+  stroke: rgb(85, 85, 85);
+}
+
+.fitwidth {
+  width: 1px;
+  white-space: nowrap;
+}

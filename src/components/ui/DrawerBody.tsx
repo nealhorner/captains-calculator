@@ -4,7 +4,7 @@ import { Box, ScrollArea } from '@mantine/core';
 export const DrawerBodyScrollArea: React.FC = ({ children }) => {
   return (
     <Box
-      sx={{
+      style={{
         overflow: 'hidden',
         position: 'relative',
         height: '100%',
@@ -28,8 +28,9 @@ export const DrawerBodyScrollArea: React.FC = ({ children }) => {
 export const DrawerBody: React.FC = ({ children }) => {
   return (
     <Box
-      sx={{
-        height: 'calc(100% - 77px)',
+      style={{
+        flex: '1 1 auto',
+        minHeight: 0,
         display: 'grid',
       }}
     >

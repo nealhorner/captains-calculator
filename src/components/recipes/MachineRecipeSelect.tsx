@@ -1,310 +1,257 @@
 import React from 'react';
-import { Box, Group, Select, Image, Tooltip, Indicator, Text } from '@mantine/core';
+import { Box, Group, Select, Image, Tooltip, Indicator, Text, OptionsFilter } from '@mantine/core';
 import { useAppState, useActions } from '../../state/index';
 import { Machine, Recipe, RecipeId } from '../../state/app/effects/loadJsonData';
 import { Icon } from '@iconify/react';
+import productFlowClasses from 'components/ui/ProductFlowRow.module.css';
 
-interface ItemProps extends React.ComponentPropsWithoutRef<'div'> {
-  label: string;
-  recipe: Recipe;
-}
-
-interface ItemPropsWithMachine extends React.ComponentPropsWithoutRef<'div'> {
-  label: string;
-  recipe: Recipe;
-  machine: Machine;
-}
-
-const SelectItem = React.forwardRef<HTMLDivElement, ItemProps>(
-  ({ label, recipe, ...others }: ItemProps, ref) => {
-    const products = useAppState((state) => state.products.items);
-    let recipeInputs = recipe.inputs.map((p) => {
-      return {
-        ...products[p.id],
-        quantity: p.quantity,
-      };
-    });
-    let recipeOutputs = recipe.outputs.map((p) => {
-      return {
-        ...products[p.id],
-        quantity: p.quantity,
-      };
-    });
-    return (
-      <div ref={ref} {...others}>
-        <Group spacing="xs" noWrap>
-          <Group
-            noWrap
-            spacing="xs"
-            sx={(theme) => ({
-              '& .product-input .product-icon': {
-                color: theme.colors.gray[6],
-              },
-              '& .product-input:last-child .product-icon': {
-                display: 'none',
-              },
-            })}
-          >
-            {recipeInputs.map((product) => {
-              return (
-                <Group className="product-input" spacing="xs" key={`input_${product.id}`} noWrap>
-                  <Tooltip label={product.name} withArrow color="green" withinPortal>
-                    <Indicator
-                      label={product.quantity}
-                      color="green"
-                      radius="xs"
-                      styles={{
-                        indicator: {
-                          fontSize: 11,
-                          height: 'auto',
-                          paddingRight: 5,
-                          paddingLeft: 5,
-                        },
-                      }}
-                      size={8}
-                    >
-                      <Box
-                        p={8}
-                        sx={(theme) => ({
-                          borderRadius: theme.radius.md,
-                          border: `1px solid ${theme.colors.gray[1]}`,
-                          background: theme.colors.gray[7],
-                        })}
-                      >
-                        <Image src={`/assets/products/${product.icon}`} height={22} width={22} />
-                      </Box>
-                    </Indicator>
-                  </Tooltip>
-                  <Icon className="product-icon" icon="icomoon-free:plus" width={10} />
-                </Group>
-              );
-            })}
-          </Group>
-          <Group spacing="xs">
-            <Icon className="results-icon" icon="icomoon-free:arrow-right" width={15} />
-          </Group>
-          <Group
-            noWrap
-            spacing="xs"
-            sx={(theme) => ({
-              '& .product-output .product-icon': {
-                color: theme.colors.gray[6],
-              },
-              '& .product-output:last-child .product-icon': {
-                display: 'none',
-              },
-            })}
-          >
-            {recipeOutputs.map((product) => {
-              return (
-                <Group className="product-output" spacing="xs" key={`output_${product.id}`} noWrap>
-                  <Tooltip label={product.name} withArrow color="red" withinPortal>
-                    <Indicator
-                      label={product.quantity}
-                      color="red"
-                      radius="xs"
-                      styles={{
-                        indicator: {
-                          fontSize: 11,
-                          height: 'auto',
-                          paddingRight: 5,
-                          paddingLeft: 5,
-                        },
-                      }}
-                      size={8}
-                    >
-                      <Box
-                        p={8}
-                        sx={(theme) => ({
-                          borderRadius: theme.radius.md,
-                          border: `1px solid ${theme.colors.gray[1]}`,
-                          background: theme.colors.gray[7],
-                        })}
-                      >
-                        <Image src={`/assets/products/${product.icon}`} height={26} width={26} />
-                      </Box>
-                    </Indicator>
-                  </Tooltip>
-                  <Icon className="product-icon" icon="icomoon-free:plus" width={10} />
-                </Group>
-              );
-            })}
-          </Group>
-        </Group>
-      </div>
-    );
-  },
-);
-
-const SelectItemWithMachine = React.forwardRef<HTMLDivElement, ItemPropsWithMachine>(
-  ({ label, recipe, machine, ...others }: ItemPropsWithMachine, ref) => {
-    const products = useAppState((state) => state.products.items);
-    let recipeInputs = recipe.inputs.map((p) => {
-      return {
-        ...products[p.id],
-        quantity: p.quantity,
-      };
-    });
-    let recipeOutputs = recipe.outputs.map((p) => {
-      return {
-        ...products[p.id],
-        quantity: p.quantity,
-      };
-    });
-    return (
-      <div ref={ref} {...others}>
-        <Group spacing="xs" noWrap>
-          <Group spacing="xs">
-            {machine ? (
-              <React.Fragment>
-                <Box
-                  p={5}
-                  sx={(theme) => ({
-                    borderRadius: theme.radius.md,
-                    border: `1px solid ${theme.colors.gray[2]}`,
-                    background: theme.colors.gray[0],
-                  })}
+const SelectItem: React.FC<{ recipe: Recipe }> = ({ recipe }) => {
+  const products = useAppState((state) => state.products.items);
+  let recipeInputs = recipe.inputs.map((p) => {
+    return {
+      ...products[p.id],
+      quantity: p.quantity,
+    };
+  });
+  let recipeOutputs = recipe.outputs.map((p) => {
+    return {
+      ...products[p.id],
+      quantity: p.quantity,
+    };
+  });
+  return (
+    <Group gap="xs" wrap="nowrap">
+      <Group wrap="nowrap" gap="xs" className={productFlowClasses.row}>
+        {recipeInputs.map((product) => {
+          return (
+            <Group className="product-input" gap="xs" key={`input_${product.id}`} wrap="nowrap">
+              <Tooltip label={product.name} withArrow color="green" withinPortal>
+                <Indicator
+                  label={product.quantity}
+                  color="green"
+                  radius="xs"
+                  styles={{
+                    indicator: {
+                      fontSize: 11,
+                      height: 'auto',
+                      paddingRight: 5,
+                      paddingLeft: 5,
+                    },
+                  }}
+                  size={8}
                 >
-                  <Image
-                    height={35}
-                    radius="md"
-                    src={`/assets/buildings/${machine.icon}`}
-                    alt={machine.name}
-                  />
-                </Box>
-                <Box>
-                  <Text weight={500} size="md" sx={{ lineHeight: '1em' }}>
-                    {machine.name}
-                  </Text>
-                </Box>
-              </React.Fragment>
-            ) : (
-              <React.Fragment>
-                <Box
-                  p={5}
-                  sx={(theme) => ({
-                    borderRadius: theme.radius.md,
-                    border: `1px solid ${theme.colors.gray[2]}`,
-                    background: theme.colors.gray[0],
-                  })}
+                  <Box
+                    p={8}
+                    style={(theme) => ({
+                      borderRadius: theme.radius.md,
+                      border: `1px solid ${theme.colors.gray[1]}`,
+                      background: theme.colors.gray[7],
+                    })}
+                  >
+                    <Image src={`/assets/products/${product.icon}`} height={22} width={22} />
+                  </Box>
+                </Indicator>
+              </Tooltip>
+              <Icon className="product-icon" icon="icomoon-free:plus" width={10} />
+            </Group>
+          );
+        })}
+      </Group>
+      <Group gap="xs">
+        <Icon className="results-icon" icon="icomoon-free:arrow-right" width={15} />
+      </Group>
+      <Group wrap="nowrap" gap="xs" className={productFlowClasses.row}>
+        {recipeOutputs.map((product) => {
+          return (
+            <Group className="product-output" gap="xs" key={`output_${product.id}`} wrap="nowrap">
+              <Tooltip label={product.name} withArrow color="red" withinPortal>
+                <Indicator
+                  label={product.quantity}
+                  color="red"
+                  radius="xs"
+                  styles={{
+                    indicator: {
+                      fontSize: 11,
+                      height: 'auto',
+                      paddingRight: 5,
+                      paddingLeft: 5,
+                    },
+                  }}
+                  size={8}
                 >
-                  <Image
-                    height={35}
-                    radius="md"
-                    src={`/assets/buildings/Placeholder.png`}
-                    alt={recipe.name}
-                  />
-                </Box>
-                <Box>
-                  <Text weight={500} size="md" sx={{ lineHeight: '1em' }}>
-                    {recipe.name}
-                  </Text>
-                </Box>
-              </React.Fragment>
-            )}
-          </Group>
-          <Group
-            noWrap
-            spacing="xs"
-            sx={(theme) => ({
-              '& .product-input .product-icon': {
-                color: theme.colors.gray[6],
-              },
-              '& .product-input:last-child .product-icon': {
-                display: 'none',
-              },
-            })}
-          >
-            {recipeInputs.map((product) => {
-              return (
-                <Group className="product-input" spacing="xs" key={`input_${product.id}`} noWrap>
-                  <Tooltip label={product.name} withArrow color="green" withinPortal>
-                    <Indicator
-                      label={product.quantity}
-                      color="green"
-                      radius="xs"
-                      styles={{
-                        indicator: {
-                          fontSize: 11,
-                          height: 'auto',
-                          paddingRight: 5,
-                          paddingLeft: 5,
-                        },
-                      }}
-                      size={5}
-                    >
-                      <Box
-                        p={8}
-                        sx={(theme) => ({
-                          borderRadius: theme.radius.md,
-                          border: `1px solid ${theme.colors.gray[1]}`,
-                          background: theme.colors.gray[7],
-                        })}
-                      >
-                        <Image src={`/assets/products/${product.icon}`} height={18} width={18} />
-                      </Box>
-                    </Indicator>
-                  </Tooltip>
-                  <Icon className="product-icon" icon="icomoon-free:plus" width={10} />
-                </Group>
-              );
-            })}
-          </Group>
-          <Group spacing="xs">
-            <Icon className="results-icon" icon="icomoon-free:arrow-right" width={15} />
-          </Group>
-          <Group
-            noWrap
-            spacing="xs"
-            sx={(theme) => ({
-              '& .product-output .product-icon': {
-                color: theme.colors.gray[6],
-              },
-              '& .product-output:last-child .product-icon': {
-                display: 'none',
-              },
-            })}
-          >
-            {recipeOutputs.map((product) => {
-              return (
-                <Group className="product-output" spacing="xs" key={`output_${product.id}`} noWrap>
-                  <Tooltip label={product.name} withArrow color="red" withinPortal>
-                    <Indicator
-                      label={product.quantity}
-                      color="red"
-                      radius="xs"
-                      styles={{
-                        indicator: {
-                          fontSize: 11,
-                          height: 'auto',
-                          paddingRight: 5,
-                          paddingLeft: 5,
-                        },
-                      }}
-                      size={8}
-                    >
-                      <Box
-                        p={8}
-                        sx={(theme) => ({
-                          borderRadius: theme.radius.md,
-                          border: `1px solid ${theme.colors.gray[1]}`,
-                          background: theme.colors.gray[7],
-                        })}
-                      >
-                        <Image src={`/assets/products/${product.icon}`} height={18} width={18} />
-                      </Box>
-                    </Indicator>
-                  </Tooltip>
-                  <Icon className="product-icon" icon="icomoon-free:plus" width={10} />
-                </Group>
-              );
-            })}
-          </Group>
-        </Group>
-      </div>
-    );
-  },
-);
+                  <Box
+                    p={8}
+                    style={(theme) => ({
+                      borderRadius: theme.radius.md,
+                      border: `1px solid ${theme.colors.gray[1]}`,
+                      background: theme.colors.gray[7],
+                    })}
+                  >
+                    <Image src={`/assets/products/${product.icon}`} height={26} width={26} />
+                  </Box>
+                </Indicator>
+              </Tooltip>
+              <Icon className="product-icon" icon="icomoon-free:plus" width={10} />
+            </Group>
+          );
+        })}
+      </Group>
+    </Group>
+  );
+};
+
+const SelectItemWithMachine: React.FC<{ recipe: Recipe; machine: Machine | null }> = ({
+  recipe,
+  machine,
+}) => {
+  const products = useAppState((state) => state.products.items);
+  let recipeInputs = recipe.inputs.map((p) => {
+    return {
+      ...products[p.id],
+      quantity: p.quantity,
+    };
+  });
+  let recipeOutputs = recipe.outputs.map((p) => {
+    return {
+      ...products[p.id],
+      quantity: p.quantity,
+    };
+  });
+  return (
+    <Group gap="xs" wrap="nowrap">
+      <Group gap="xs">
+        {machine ? (
+          <React.Fragment>
+            <Box
+              p={5}
+              style={(theme) => ({
+                borderRadius: theme.radius.md,
+                border: `1px solid ${theme.colors.gray[2]}`,
+                background: theme.colors.gray[0],
+              })}
+            >
+              <Image
+                height={35}
+                radius="md"
+                src={`/assets/buildings/${machine.icon}`}
+                alt={machine.name}
+              />
+            </Box>
+            <Box>
+              <Text fw={500} size="md" style={{ lineHeight: '1em' }}>
+                {machine.name}
+              </Text>
+            </Box>
+          </React.Fragment>
+        ) : (
+          <React.Fragment>
+            <Box
+              p={5}
+              style={(theme) => ({
+                borderRadius: theme.radius.md,
+                border: `1px solid ${theme.colors.gray[2]}`,
+                background: theme.colors.gray[0],
+              })}
+            >
+              <Image
+                height={35}
+                radius="md"
+                src={`/assets/buildings/Placeholder.png`}
+                alt={recipe.name}
+              />
+            </Box>
+            <Box>
+              <Text fw={500} size="md" style={{ lineHeight: '1em' }}>
+                {recipe.name}
+              </Text>
+            </Box>
+          </React.Fragment>
+        )}
+      </Group>
+      <Group wrap="nowrap" gap="xs" className={productFlowClasses.row}>
+        {recipeInputs.map((product) => {
+          return (
+            <Group className="product-input" gap="xs" key={`input_${product.id}`} wrap="nowrap">
+              <Tooltip label={product.name} withArrow color="green" withinPortal>
+                <Indicator
+                  label={product.quantity}
+                  color="green"
+                  radius="xs"
+                  styles={{
+                    indicator: {
+                      fontSize: 11,
+                      height: 'auto',
+                      paddingRight: 5,
+                      paddingLeft: 5,
+                    },
+                  }}
+                  size={5}
+                >
+                  <Box
+                    p={8}
+                    style={(theme) => ({
+                      borderRadius: theme.radius.md,
+                      border: `1px solid ${theme.colors.gray[1]}`,
+                      background: theme.colors.gray[7],
+                    })}
+                  >
+                    <Image src={`/assets/products/${product.icon}`} height={18} width={18} />
+                  </Box>
+                </Indicator>
+              </Tooltip>
+              <Icon className="product-icon" icon="icomoon-free:plus" width={10} />
+            </Group>
+          );
+        })}
+      </Group>
+      <Group gap="xs">
+        <Icon className="results-icon" icon="icomoon-free:arrow-right" width={15} />
+      </Group>
+      <Group wrap="nowrap" gap="xs" className={productFlowClasses.row}>
+        {recipeOutputs.map((product) => {
+          return (
+            <Group className="product-output" gap="xs" key={`output_${product.id}`} wrap="nowrap">
+              <Tooltip label={product.name} withArrow color="red" withinPortal>
+                <Indicator
+                  label={product.quantity}
+                  color="red"
+                  radius="xs"
+                  styles={{
+                    indicator: {
+                      fontSize: 11,
+                      height: 'auto',
+                      paddingRight: 5,
+                      paddingLeft: 5,
+                    },
+                  }}
+                  size={8}
+                >
+                  <Box
+                    p={8}
+                    style={(theme) => ({
+                      borderRadius: theme.radius.md,
+                      border: `1px solid ${theme.colors.gray[1]}`,
+                      background: theme.colors.gray[7],
+                    })}
+                  >
+                    <Image src={`/assets/products/${product.icon}`} height={18} width={18} />
+                  </Box>
+                </Indicator>
+              </Tooltip>
+              <Icon className="product-icon" icon="icomoon-free:plus" width={10} />
+            </Group>
+          );
+        })}
+      </Group>
+    </Group>
+  );
+};
+
+const labelFilter: OptionsFilter = ({ options, search }) =>
+  options.filter(
+    (option) =>
+      'label' in option && option.label.toLowerCase().includes(search.toLowerCase().trim()),
+  );
 
 export const MachineRecipeSelect = () => {
   const currentProduct = useAppState((state) => state.products.currentItem);
@@ -312,9 +259,10 @@ export const MachineRecipeSelect = () => {
   const { itemsList: allRecipes, currentItemId } = useAppState((state) => state.recipes);
   const selectRecipe = useActions().recipes.selectRecipe;
   const selectRecipesItem = useActions().recipes.selectRecipesItem;
-  const onChange = (recipeId: RecipeId) => {
-    selectRecipe(recipeId);
-    selectRecipesItem(recipeId);
+  const onChange = (recipeId: string | null) => {
+    if (!recipeId) return;
+    selectRecipe(recipeId as RecipeId);
+    selectRecipesItem(recipeId as RecipeId);
   };
   if (!currentMachine || !currentProduct) return null;
   let filteredRecipes = allRecipes.filter((recipe) => {
@@ -323,6 +271,7 @@ export const MachineRecipeSelect = () => {
       recipe.outputs.find((product) => product.id === currentProduct.id)
     );
   });
+  const recipesById = new Map(filteredRecipes.map((r) => [r.id, r]));
   return (
     <Select
       size="md"
@@ -330,18 +279,18 @@ export const MachineRecipeSelect = () => {
       onChange={onChange}
       label="3. Select Recipe"
       placeholder="Make Selection..."
-      itemComponent={SelectItem}
+      renderOption={({ option }) => {
+        const recipe = recipesById.get(option.value as RecipeId);
+        return recipe ? <SelectItem recipe={recipe} /> : option.label;
+      }}
       data={filteredRecipes.map((r) => ({
         label: r.name,
         value: r.id,
-        recipe: r,
       }))}
       searchable
       maxDropdownHeight={400}
-      nothingFound="No Match Found"
-      filter={(value, item) =>
-        item.label ? item.label.toLowerCase().includes(value.toLowerCase().trim()) : false
-      }
+      nothingFoundMessage="No Match Found"
+      filter={labelFilter}
     />
   );
 };
@@ -360,10 +309,13 @@ export const RecipeSelectControlled: React.FC<RecipeSelectControlledProps> = ({
   const { items: allMachines } = useAppState((state) => state.machines);
   const [selectedId, selectId] = React.useState<RecipeId | null>(null);
 
-  const onChange = (recipeId: RecipeId) => {
-    selectId(recipeId);
-    onSelect(recipeId);
+  const onChange = (recipeId: string | null) => {
+    if (!recipeId) return;
+    selectId(recipeId as RecipeId);
+    onSelect(recipeId as RecipeId);
   };
+
+  const recipesById = new Map(recipes.map((r) => [r.id, r]));
 
   return (
     <Select
@@ -371,19 +323,22 @@ export const RecipeSelectControlled: React.FC<RecipeSelectControlledProps> = ({
       value={selectedId}
       onChange={onChange}
       placeholder={`Select Source For ${label} Input`}
-      itemComponent={SelectItemWithMachine}
+      renderOption={({ option }) => {
+        const recipe = recipesById.get(option.value as RecipeId);
+        return recipe ? (
+          <SelectItemWithMachine recipe={recipe} machine={allMachines[recipe.machine]} />
+        ) : (
+          option.label
+        );
+      }}
       data={recipes.map((r) => ({
         label: `${r.name} [${allMachines[r.machine].name}]`,
         value: r.id,
-        recipe: r,
-        machine: allMachines[r.machine],
       }))}
       searchable
       maxDropdownHeight={400}
-      nothingFound="No Match Found"
-      filter={(value, item) =>
-        item.label ? item.label.toLowerCase().includes(value.toLowerCase().trim()) : false
-      }
+      nothingFoundMessage="No Match Found"
+      filter={labelFilter}
     />
   );
 };

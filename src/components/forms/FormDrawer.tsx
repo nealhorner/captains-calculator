@@ -1,9 +1,18 @@
 import React from 'react';
 import { Formik, FormikHelpers } from 'formik';
 import { useModals } from '@mantine/modals';
-import { Alert, Box, Button, Grid, Group, ScrollArea, Text } from '@mantine/core';
+import {
+  Alert,
+  Box,
+  Button,
+  Grid,
+  Group,
+  ScrollArea,
+  Text,
+  useComputedColorScheme,
+} from '@mantine/core';
 import { useNavigate } from 'react-router-dom';
-import { useNotifications } from '@mantine/notifications';
+import { notifications } from '@mantine/notifications';
 import { Icon } from '@iconify/react';
 
 import { buildFormConfig, FormConfig } from 'utils/forms';
@@ -84,7 +93,7 @@ function FormDrawer<
 >): React.ReactElement | null {
   const modals = useModals();
   const navigate = useNavigate();
-  const notifications = useNotifications();
+  const colorScheme = useComputedColorScheme('light');
   const [formMode, setFormMode] = React.useState<'create' | 'update' | null>(null);
   const [initialState] = React.useState<PayloadType>(currentItemData || initialData);
   const [formConfig, setFormConfig] = React.useState<FormConfig | null>(null);
@@ -133,7 +142,7 @@ function FormDrawer<
     if (formMode === 'update' && currentItemId && deleteAction) {
       let success = await deleteAction({ id: currentItemId });
       if (success) {
-        notifications.showNotification({
+        notifications.show({
           icon: <Icon icon={Icons.warningCircle} width={24} />,
           color: 'green',
           autoClose: 1000,
@@ -148,7 +157,7 @@ function FormDrawer<
           }
         }
       } else {
-        notifications.showNotification({
+        notifications.show({
           icon: <Icon icon={Icons.warningCircle} width={24} />,
           color: 'red',
           autoClose: 1000,
@@ -173,7 +182,7 @@ function FormDrawer<
     if (formMode === 'create' && createAction) {
       let newItem = await createAction(payload);
       if (newItem) {
-        notifications.showNotification({
+        notifications.show({
           icon: <Icon icon={Icons.warningCircle} width={24} />,
           color: 'green',
           autoClose: 1000,
@@ -188,7 +197,7 @@ function FormDrawer<
           }
         }
       } else {
-        notifications.showNotification({
+        notifications.show({
           icon: <Icon icon={Icons.warningCircle} width={24} />,
           color: 'red',
           autoClose: 1000,
@@ -201,7 +210,7 @@ function FormDrawer<
       let editablePayload = getEditablePayload(payload);
       let updatedItem = await updateAction({ id: currentItemId, _set: editablePayload });
       if (updatedItem) {
-        notifications.showNotification({
+        notifications.show({
           icon: <Icon icon={Icons.warningCircle} width={24} />,
           color: 'green',
           autoClose: 1000,
@@ -217,7 +226,7 @@ function FormDrawer<
           }
         }
       } else {
-        notifications.showNotification({
+        notifications.show({
           icon: <Icon icon={Icons.warningCircle} width={24} />,
           color: 'red',
           autoClose: 1000,
@@ -274,13 +283,13 @@ function FormDrawer<
             <Box
               component="form"
               onSubmit={handleSubmit}
-              sx={{
+              style={{
                 height: 'calc(100% - 77px)',
                 display: 'grid',
                 gridTemplateRows: '1fr auto',
               }}
             >
-              <Box sx={{ position: 'relative', height: '100%' }}>
+              <Box style={{ position: 'relative', height: '100%' }}>
                 <ScrollArea
                   style={{
                     position: 'absolute',
@@ -291,7 +300,7 @@ function FormDrawer<
                   }}
                 >
                   <Box p="xl">
-                    <Grid gutter="xs" sx={{ margin: 0 }}>
+                    <Grid gutter="xs" style={{ margin: 0 }}>
                       <FieldRenderer
                         formConfig={formConfig}
                         formMode={formMode}
@@ -309,12 +318,12 @@ function FormDrawer<
               </Box>
 
               <Box
-                sx={(theme) => ({
-                  borderTop: `1px solid ${theme.colorScheme === 'light' ? theme.colors.gray[2] : theme.colors.dark[5]}`,
+                style={(theme) => ({
+                  borderTop: `1px solid ${colorScheme === 'light' ? theme.colors.gray[2] : theme.colors.dark[5]}`,
                   padding: theme.spacing.xl,
                 })}
               >
-                <Group position="apart">
+                <Group justify="space-between">
                   <Box>
                     {formMode === 'update' && !hideDelete ? (
                       <Button color="red" onClick={openDeleteModal}>

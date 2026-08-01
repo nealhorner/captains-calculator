@@ -7,6 +7,7 @@ import { Link } from 'react-router-dom';
 import NeedsBage from 'components/ui/NeedsBadge';
 import { CategoryTabs } from 'components/ui/CategoryTabs';
 import AnimatedList, { AnimateListItem } from '../../components/ui/AnimatedList';
+import hoverCardClasses from 'components/ui/HoverCard.module.css';
 
 const Buildings: React.FC = () => {
   const { itemsList } = useAppState((state) => state.machines);
@@ -28,35 +29,28 @@ const Buildings: React.FC = () => {
       ) : (
         <Box>
           <CategoryTabs />
-          <Text size="xl" weight="bold" mb="md">
+          <Text size="xl" fw="bold" mb="md">
             {currentCategoryId === null ? 'All Items' : currentCategory?.name}
           </Text>
           <AnimatedList>
             <Grid>
               {filteredItems.map((i, key) => {
                 return (
-                  <Grid.Col md={12} key={key}>
+                  <Grid.Col span={{ md: 12 }} key={key}>
                     <AnimateListItem itemKey={i.id}>
                       <Box>
                         <Card
                           component={Link}
                           to={`/buildings/${i.id}`}
                           shadow="xs"
-                          sx={(theme) => ({
-                            '&:hover': {
-                              backgroundColor:
-                                theme.colorScheme === 'light'
-                                  ? theme.colors.gray[2]
-                                  : theme.colors.dark[9],
-                            },
-                          })}
+                          className={hoverCardClasses.card}
                         >
-                          <Group position="apart">
+                          <Group justify="space-between">
                             <Stack justify="space-between">
-                              <Text weight={500} size="lg">
+                              <Text fw={500} size="lg">
                                 {i.name}
                               </Text>
-                              <Group spacing={2}>
+                              <Group gap={2}>
                                 <NeedsBage need="workers" value={i.workers} />
                                 {i.maintenance_cost_units === 'maintenance_i' && (
                                   <NeedsBage
@@ -81,7 +75,7 @@ const Buildings: React.FC = () => {
                             </Stack>
                             <Box
                               p="sm"
-                              sx={(theme) => ({
+                              style={(theme) => ({
                                 borderRadius: theme.radius.md,
                                 border: `1px solid ${theme.colors.gray[2]}`,
                                 background: theme.colors.gray[0],

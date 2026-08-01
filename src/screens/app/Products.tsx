@@ -5,6 +5,7 @@ import React from 'react';
 import { useAppState } from 'state';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Link } from 'react-router-dom';
+import hoverCardClasses from 'components/ui/HoverCard.module.css';
 
 const Products: React.FC = () => {
   const { itemsList } = useAppState((state) => state.products);
@@ -29,7 +30,7 @@ const Products: React.FC = () => {
           <Grid>
             {itemsList.map((i, k) => {
               return (
-                <Grid.Col md={4} key={k}>
+                <Grid.Col span={{ md: 4 }} key={k}>
                   <motion.div
                     variants={{
                       hidden: { opacity: 0, transition },
@@ -45,20 +46,13 @@ const Products: React.FC = () => {
                         component={Link}
                         to={`/buildings/${i.id}`}
                         shadow="xs"
-                        sx={(theme) => ({
-                          '&:hover': {
-                            backgroundColor:
-                              theme.colorScheme === 'light'
-                                ? theme.colors.gray[2]
-                                : theme.colors.dark[9],
-                          },
-                        })}
+                        className={hoverCardClasses.card}
                       >
-                        <Group position="apart">
-                          <Text weight={500}>{i.name}</Text>
+                        <Group justify="space-between">
+                          <Text fw={500}>{i.name}</Text>
                           <Box
                             p="xs"
-                            sx={(theme) => ({
+                            style={(theme) => ({
                               borderRadius: theme.radius.md,
                               border: `1px solid ${theme.colors.gray[1]}`,
                               background: theme.colors.gray[7],

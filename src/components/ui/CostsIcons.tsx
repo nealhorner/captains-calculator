@@ -15,11 +15,11 @@ const CostsIcon: React.FC<CostsIconProps> = ({ product, recipeId, color = 'dark'
   let value = Math.round(product.quantity * 10) / 10;
 
   return (
-    <Stack align="center" spacing={5}>
+    <Stack align="center" gap={5}>
       <Tooltip label={product.name} withArrow withinPortal>
         <Box
           p={6}
-          sx={(theme) => ({
+          style={(theme) => ({
             borderRadius: theme.radius.sm,
             background: theme.colors.dark[3],
           })}
@@ -27,7 +27,7 @@ const CostsIcon: React.FC<CostsIconProps> = ({ product, recipeId, color = 'dark'
           <Image src={`/assets/products/${productData.icon}`} height={28} width={28} />
         </Box>
       </Tooltip>
-      <Text weight="bold" size="sm" sx={(theme) => ({ lineHeight: `${theme.fontSizes.sm}px` })}>
+      <Text fw="bold" size="sm" style={(theme) => ({ lineHeight: `${theme.fontSizes.sm}px` })}>
         {value}
       </Text>
     </Stack>

@@ -11,6 +11,7 @@ import { ProductSelect } from 'components/products/ProductSelect';
 import { useActions, useAppState } from 'state';
 import { Category, Machine, ProductId, Recipe, RecipeId } from 'state/app/effects';
 import CostsIcon from 'components/ui/CostsIcons';
+import productFlowClasses from 'components/ui/ProductFlowRow.module.css';
 import NeedsBage, { needMap } from 'components/ui/NeedsBadge';
 import ProductIcon from 'components/products/ProductIcon';
 import { Icon } from '@iconify/react';
@@ -19,12 +20,12 @@ import CostsBadge from 'components/ui/CostsBadge';
 const renderRecipeSource = (recipe: Recipe, machine: Machine, category: Category) => {
   return (
     <React.Fragment>
-      <Group position="apart" align="center" p="xs">
-        <Group spacing={7}>
+      <Group justify="space-between" align="center" p="xs">
+        <Group gap={7}>
           <Tooltip label={category.name} withArrow withinPortal>
             <Box
               p={4}
-              sx={(theme) => ({
+              style={(theme) => ({
                 borderRadius: theme.radius.sm,
                 background: theme.colors.dark[4],
               })}
@@ -39,7 +40,7 @@ const renderRecipeSource = (recipe: Recipe, machine: Machine, category: Category
           <Tooltip label={machine.name} withArrow withinPortal>
             <Box
               p={4}
-              sx={(theme) => ({
+              style={(theme) => ({
                 borderRadius: theme.radius.sm,
                 background: theme.colors.dark[4],
               })}
@@ -52,13 +53,13 @@ const renderRecipeSource = (recipe: Recipe, machine: Machine, category: Category
               />
             </Box>
           </Tooltip>
-          <Group spacing={5}>
-            <Text weight="bolder" size="lg" sx={{ lineHeight: '1em' }}>
+          <Group gap={5}>
+            <Text fw="bolder" size="lg" style={{ lineHeight: '1em' }}>
               {machine.name}
             </Text>
           </Group>
         </Group>
-        <Group spacing={4} align="center">
+        <Group gap={4} align="center">
           {machine.build_costs.map((product, key) => {
             return <CostsBadge key={key} product={product} />;
           })}
@@ -80,40 +81,32 @@ const renderRecipeSource = (recipe: Recipe, machine: Machine, category: Category
         variant="solid"
         labelPosition="center"
         color="gray"
-        sx={(theme) => ({ borderTopColor: theme.colors.gray[4] })}
+        style={(theme) => ({ borderTopColor: theme.colors.gray[4] })}
       />
 
       <Box p="xs">
-        <Group noWrap position="center">
+        <Group wrap="nowrap" justify="center">
           <Group
-            noWrap
-            spacing="xs"
-            sx={(theme) => ({
-              '& .product-input .product-icon': {
-                color: theme.colors.gray[6],
-                marginBottom: 18,
-              },
-              '& .product-input:last-child .product-icon': {
-                display: 'none',
-              },
-            })}
+            wrap="nowrap"
+            gap="xs"
+            className={`${productFlowClasses.row} ${productFlowClasses.rowIconMargin}`}
           >
             {recipe.inputs.map((product, key) => {
               return (
-                <Group className="product-input" spacing="xs" key={`input_${product.id}`} noWrap>
+                <Group className="product-input" gap="xs" key={`input_${product.id}`} wrap="nowrap">
                   <CostsIcon key={key} recipeId={recipe.id} product={product} color="red" />
                   <Icon className="product-icon" icon="icomoon-free:plus" width={10} />
                 </Group>
               );
             })}
           </Group>
-          <Group spacing="xs">
-            <Stack align="center" spacing={5}>
+          <Group gap="xs">
+            <Stack align="center" gap={5}>
               <Icon className="results-icon" icon="icomoon-free:arrow-right" width={15} />
               <Text
-                weight="bold"
+                fw="bold"
                 size="sm"
-                sx={(theme) => ({
+                style={(theme) => ({
                   color: theme.colors.gray[6],
                   lineHeight: `${theme.fontSizes.sm}px`,
                 })}
@@ -124,21 +117,18 @@ const renderRecipeSource = (recipe: Recipe, machine: Machine, category: Category
             </Stack>
           </Group>
           <Group
-            noWrap
-            spacing="xs"
-            sx={(theme) => ({
-              '& .product-output .product-icon': {
-                color: theme.colors.gray[6],
-                marginBottom: 18,
-              },
-              '& .product-output:last-child .product-icon': {
-                display: 'none',
-              },
-            })}
+            wrap="nowrap"
+            gap="xs"
+            className={`${productFlowClasses.row} ${productFlowClasses.rowIconMargin}`}
           >
             {recipe.outputs.map((product, key) => {
               return (
-                <Group className="product-output" spacing="xs" key={`input_${product.id}`} noWrap>
+                <Group
+                  className="product-output"
+                  gap="xs"
+                  key={`input_${product.id}`}
+                  wrap="nowrap"
+                >
                   <CostsIcon key={key} recipeId={recipe.id} product={product} color="red" />
                   <Icon className="product-icon" icon="icomoon-free:plus" width={10} />
                 </Group>
@@ -201,7 +191,7 @@ const Home: React.FC = () => {
     return (
       <Card
         p={0}
-        sx={(theme) => ({
+        style={(theme) => ({
           border: `1px solid ${theme.colors.gray[4]}`,
         })}
       >
@@ -213,17 +203,17 @@ const Home: React.FC = () => {
               variant="solid"
               labelPosition="center"
               color="gray"
-              sx={(theme) => ({ borderTopColor: theme.colors.gray[4] })}
+              style={(theme) => ({ borderTopColor: theme.colors.gray[4] })}
             />
             <Box p="xs">
-              <Stack spacing={5}>
+              <Stack gap={5}>
                 {Object.keys(sources).map((inputId, key) => {
                   let inputSources = sources[inputId as ProductId];
                   let product = allProducts[inputId];
                   return (
                     <Box
                       key={key}
-                      sx={{
+                      style={{
                         display: 'grid',
                         gridTemplateColumns: 'auto 1fr',
                         gap: 5,
@@ -245,21 +235,21 @@ const Home: React.FC = () => {
   return (
     <PageLayout header={<PageHeader title={`Welcome`} />}>
       <Grid columns={16}>
-        <Grid.Col md={11}>
+        <Grid.Col span={{ md: 11 }}>
           <Divider my="xs" label="Production Chain Setup" />
 
-          <Stack spacing="sm">
+          <Stack gap="sm">
             <Grid>
-              <Grid.Col md={6}>
+              <Grid.Col span={{ md: 6 }}>
                 <ProductSelect />
               </Grid.Col>
-              <Grid.Col md={6}>{renderProductSelect()}</Grid.Col>
-              <Grid.Col md={12}>{renderRecipeSelect()}</Grid.Col>
+              <Grid.Col span={{ md: 6 }}>{renderProductSelect()}</Grid.Col>
+              <Grid.Col span={{ md: 12 }}>{renderRecipeSelect()}</Grid.Col>
             </Grid>
 
             {currentRecipe && currentMachine ? (
               <Box>
-                <Stack spacing="sm">
+                <Stack gap="sm">
                   {selectedRecipies.map((selectedRecipie, key) => {
                     return (
                       <React.Fragment key={key}>{renderRecipe(selectedRecipie)}</React.Fragment>
@@ -271,7 +261,7 @@ const Home: React.FC = () => {
           </Stack>
         </Grid.Col>
 
-        <Grid.Col md={5}>
+        <Grid.Col span={{ md: 5 }}>
           <Divider my="xs" label="Production Chain Summary" />
 
           {selectedRecipies.length ? (
@@ -279,7 +269,7 @@ const Home: React.FC = () => {
           ) : (
             <Card
               p="xs"
-              sx={(theme) => ({
+              style={(theme) => ({
                 border: `1px solid ${theme.colors.gray[4]}`,
               })}
             >
@@ -410,21 +400,12 @@ const ResultsSummary = () => {
   return (
     <Card
       p="xs"
-      sx={(theme) => ({
+      style={(theme) => ({
         border: `1px solid ${theme.colors.green[4]}`,
       })}
     >
-      <Stack spacing="xs">
-        <Table
-          horizontalSpacing={6}
-          verticalSpacing={6}
-          sx={{
-            '& .fitwidth': {
-              width: 1,
-              whiteSpace: 'nowrap',
-            },
-          }}
-        >
+      <Stack gap="xs">
+        <Table horizontalSpacing={6} verticalSpacing={6}>
           <thead>
             <tr>
               <th colSpan={3}>Buildings</th>
@@ -439,7 +420,7 @@ const ResultsSummary = () => {
                     <td className="fitwidth">
                       <Box
                         p={4}
-                        sx={(theme) => ({
+                        style={(theme) => ({
                           borderRadius: theme.radius.sm,
                           border: `1px solid ${theme.colors.gray[4]}`,
                           background: theme.colors.dark[5],
@@ -450,7 +431,7 @@ const ResultsSummary = () => {
                           width={22}
                           src={`/assets/buildings/${building.icon}`}
                           alt={building.label}
-                          sx={{ display: 'block', objectFit: 'contain' }}
+                          style={{ display: 'block', objectFit: 'contain' }}
                         />
                       </Box>
                     </td>
@@ -466,16 +447,7 @@ const ResultsSummary = () => {
           </tbody>
         </Table>
 
-        <Table
-          horizontalSpacing={6}
-          verticalSpacing={6}
-          sx={{
-            '& .fitwidth': {
-              width: 1,
-              whiteSpace: 'nowrap',
-            },
-          }}
-        >
+        <Table horizontalSpacing={6} verticalSpacing={6}>
           <thead>
             <tr>
               <th colSpan={3}>Construction Costs</th>
@@ -490,7 +462,7 @@ const ResultsSummary = () => {
                     <td className="fitwidth">
                       <Box
                         p={6}
-                        sx={(theme) => ({
+                        style={(theme) => ({
                           borderRadius: theme.radius.sm,
                           border: `1px solid ${theme.colors.gray[4]}`,
                           background: theme.colors.dark[5],
@@ -501,7 +473,7 @@ const ResultsSummary = () => {
                           width={18}
                           src={`/assets/products/${cost.icon}`}
                           alt={cost.label}
-                          sx={{ display: 'block', objectFit: 'contain' }}
+                          style={{ display: 'block', objectFit: 'contain' }}
                         />
                       </Box>
                     </td>
@@ -517,16 +489,7 @@ const ResultsSummary = () => {
           </tbody>
         </Table>
 
-        <Table
-          horizontalSpacing={6}
-          verticalSpacing={6}
-          sx={{
-            '& .fitwidth': {
-              width: 1,
-              whiteSpace: 'nowrap',
-            },
-          }}
-        >
+        <Table horizontalSpacing={6} verticalSpacing={6}>
           <thead>
             <tr>
               <th colSpan={3}>Needs</th>
@@ -544,7 +507,7 @@ const ResultsSummary = () => {
                   <tr key={`needs-${needId}-${k}`}>
                     <td className="fitwidth">
                       <Box
-                        sx={(theme) => ({
+                        style={(theme) => ({
                           height: 32,
                           width: 32,
                           borderRadius: theme.radius.sm,
@@ -560,8 +523,8 @@ const ResultsSummary = () => {
                           width={18}
                           src={`/assets/ui/${need.icon}`}
                           alt={need.label}
-                          sx={{ display: 'block', objectFit: 'contain' }}
-                          styles={{ image: { filter: iconFilter } }}
+                          style={{ display: 'block', objectFit: 'contain' }}
+                          styles={{ root: { filter: iconFilter } }}
                         />
                       </Box>
                     </td>

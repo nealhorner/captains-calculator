@@ -5,14 +5,11 @@ import {
   Button,
   Divider,
   Group,
-  Header,
-  MediaQuery,
-  Navbar,
+  Stack,
   ThemeIcon,
   useMantineTheme,
+  useComputedColorScheme,
   Text,
-  Notification,
-  useMantineColorScheme,
   List,
 } from '@mantine/core';
 import React from 'react';
@@ -20,9 +17,10 @@ import { Link, NavLink, useRoutes } from 'react-router-dom';
 import { Icon } from '@iconify/react';
 import NavContext from 'components/navigation/NavContext';
 import { RenderNavigator } from 'components/navigation/Layout';
-import { useAppState } from 'state';
+import { useActions, useAppState } from 'state';
 import Icons from 'components/ui/Icons';
-import { showNotification } from '@mantine/notifications';
+import { notifications } from '@mantine/notifications';
+import classes from './AppShellLayout.module.css';
 
 type SideBarNavButtonProps = {
   to: string;
@@ -40,26 +38,13 @@ const SideBarNavButton: React.FC<SideBarNavButtonProps> = ({ to, label, icon, on
       to={to}
       component={NavLink}
       size="lg"
-      leftIcon={
+      leftSection={
         <ThemeIcon color="dark" variant="outline" size="lg">
           <Icon icon={icon} width="20" color={theme.colors.red[9]} />
         </ThemeIcon>
       }
       onClick={onClick}
-      styles={{
-        inner: {
-          justifyContent: 'flex-start',
-        },
-        label: {
-          color: theme.colorScheme === 'dark' ? theme.colors.dark[0] : theme.colors.dark[4],
-        },
-      }}
-      sx={{
-        '&.active': {
-          backgroundColor:
-            theme.colorScheme === 'dark' ? theme.colors.dark[9] : theme.colors.gray[3],
-        },
-      }}
+      className={classes.sideBarButton}
     >
       {label}
     </Button>
@@ -67,7 +52,6 @@ const SideBarNavButton: React.FC<SideBarNavButtonProps> = ({ to, label, icon, on
 };
 
 const TopBarNavButton: React.FC<SideBarNavButtonProps> = ({ to, label, icon, onClick }) => {
-  const theme = useMantineTheme();
   return (
     <Button
       variant="subtle"
@@ -75,26 +59,7 @@ const TopBarNavButton: React.FC<SideBarNavButtonProps> = ({ to, label, icon, onC
       to={to}
       component={NavLink}
       onClick={onClick}
-      styles={(theme) => ({
-        inner: {
-          justifyContent: 'flex-start',
-        },
-        label: {
-          color: theme.colorScheme === 'dark' ? theme.colors.dark[7] : theme.colors.gray[6],
-        },
-      })}
-      sx={{
-        '&.active': {
-          backgroundColor:
-            theme.colorScheme === 'dark' ? theme.colors.dark[5] : theme.colors.gray[3],
-          '.mantine-Button-label': {
-            color: theme.colorScheme === 'dark' ? theme.white : theme.colors.dark[9],
-          },
-        },
-        '&:hover .mantine-Button-label': {
-          color: theme.colorScheme === 'dark' ? theme.white : theme.colors.dark[9],
-        },
-      }}
+      className={classes.topBarButton}
     >
       {label}
     </Button>
@@ -103,43 +68,24 @@ const TopBarNavButton: React.FC<SideBarNavButtonProps> = ({ to, label, icon, onC
 
 const ColorSchemeToggle = () => {
   const theme = useMantineTheme();
-  const { toggleColorScheme } = useMantineColorScheme();
+  const colorScheme = useComputedColorScheme('light');
+  const { toggleColorScheme } = useActions();
   return (
     <Button
       variant="default"
       color="gray"
       onClick={() => toggleColorScheme()}
-      styles={(theme) => ({
-        inner: {
-          justifyContent: 'flex-start',
-        },
-        label: {
-          color: theme.colorScheme === 'dark' ? theme.colors.dark[7] : theme.colors.gray[6],
-        },
-      })}
-      sx={{
-        '&.active': {
-          backgroundColor:
-            theme.colorScheme === 'dark' ? theme.colors.dark[9] : theme.colors.gray[3],
-          '.mantine-Button-label': {
-            color: theme.colorScheme === 'dark' ? theme.white : theme.colors.dark[9],
-          },
-        },
-        '&:hover .mantine-Button-label': {
-          color: theme.colorScheme === 'dark' ? theme.white : theme.colors.dark[9],
-        },
-      }}
+      className={classes.colorSchemeToggle}
     >
       <Icon
-        icon={theme.colorScheme === 'light' ? Icons.dark : Icons.light}
-        color={theme.colorScheme === 'dark' ? theme.white : theme.black}
+        icon={colorScheme === 'light' ? Icons.dark : Icons.light}
+        color={colorScheme === 'dark' ? theme.white : theme.black}
       />
     </Button>
   );
 };
 
 const TopBarNavLink: React.FC<SideBarNavButtonProps> = ({ to, label }) => {
-  const theme = useMantineTheme();
   return (
     <Button
       variant="subtle"
@@ -147,26 +93,7 @@ const TopBarNavLink: React.FC<SideBarNavButtonProps> = ({ to, label }) => {
       href={to}
       target="_blank"
       component="a"
-      styles={(theme) => ({
-        inner: {
-          justifyContent: 'flex-start',
-        },
-        label: {
-          color: theme.colorScheme === 'dark' ? theme.colors.dark[2] : theme.colors.gray[6],
-        },
-      })}
-      sx={{
-        '&.active': {
-          backgroundColor:
-            theme.colorScheme === 'dark' ? theme.colors.dark[7] : theme.colors.gray[3],
-          '.mantine-Button-label': {
-            color: theme.colorScheme === 'dark' ? theme.white : theme.colors.dark[9],
-          },
-        },
-        '&:hover .mantine-Button-label': {
-          color: theme.colorScheme === 'dark' ? theme.white : theme.colors.dark[9],
-        },
-      }}
+      className={classes.topBarLink}
     >
       {label}
     </Button>
@@ -174,22 +101,17 @@ const TopBarNavLink: React.FC<SideBarNavButtonProps> = ({ to, label }) => {
 };
 
 const showReleaseNotes = () =>
-  showNotification({
+  notifications.show({
     id: Date.now().toString(),
     title: 'Release Notes',
     autoClose: 10000,
-    disallowClose: true,
+    withCloseButton: false,
     message: (
       <Box>
         <Box>
-          <Text weight={600}>v0.0.4 (4/1/2026)</Text>
+          <Text fw={600}>v0.0.4 (4/1/2026)</Text>
           <List size="sm">
-            <List.Item>
-              Updated for Latest Game Version (v0.8.2c)
-              {/* <List withPadding listStyleType="disc" size="xs">
-                            <List.Item>Feature is experimental, please report any bugs or crashes</List.Item>
-                        </List> */}
-            </List.Item>
+            <List.Item>Updated for Latest Game Version (v0.8.2c)</List.Item>
           </List>
         </Box>
       </Box>
@@ -208,40 +130,11 @@ const AppShellLayout: React.FC = () => {
   return (
     <React.Fragment>
       <AppShell
-        navbarOffsetBreakpoint="md"
-        fixed
+        header={{ height: 70 }}
+        navbar={{ width: 300, breakpoint: 'md', collapsed: { desktop: true, mobile: !opened } }}
         padding={0}
-        navbar={
-          <MediaQuery largerThan="md" styles={{ display: 'none' }}>
-            <Navbar p="md" mt={1} hiddenBreakpoint="xl" hidden={!opened}>
-              <Navbar.Section>
-                <Box px="xl" pt="xs">
-                  <Divider mt="lg" mb="md" variant="dashed" />
-                </Box>
-              </Navbar.Section>
-              <Navbar.Section grow>
-                <Group direction="column" spacing="xs" grow>
-                  {menu.map((i, k) => {
-                    return (
-                      <SideBarNavButton
-                        key={`nav-item-${k}`}
-                        to={i.to}
-                        label={i.label}
-                        icon={i.icon}
-                        onClick={() => setOpened((o) => !o)}
-                      />
-                    );
-                  })}
-                </Group>
-              </Navbar.Section>
-            </Navbar>
-          </MediaQuery>
-        }
         styles={{
           root: {
-            height: '100%',
-          },
-          body: {
             height: '100%',
           },
           main: {
@@ -251,39 +144,57 @@ const AppShellLayout: React.FC = () => {
           },
         }}
       >
-        <Box
-          sx={(theme) => ({
-            height: '100%',
-          })}
-        >
-          <Box>
-            <Header
-              height={70}
+        <AppShell.Navbar p="md" mt={1}>
+          <AppShell.Section>
+            <Box px="xl" pt="xs">
+              <Divider mt="lg" mb="md" variant="dashed" />
+            </Box>
+          </AppShell.Section>
+          <AppShell.Section grow>
+            <Stack gap="xs">
+              {menu.map((i, k) => {
+                return (
+                  <SideBarNavButton
+                    key={`nav-item-${k}`}
+                    to={i.to}
+                    label={i.label}
+                    icon={i.icon}
+                    onClick={() => setOpened((o) => !o)}
+                  />
+                );
+              })}
+            </Stack>
+          </AppShell.Section>
+        </AppShell.Navbar>
+
+        <AppShell.Header>
+          <Box style={{ height: '100%' }}>
+            <Box
               px="md"
-              sx={(theme) => ({
+              style={{
+                height: '100%',
                 borderImageSlice: 2,
                 borderBottomWidth: 5,
                 borderImageSource: 'linear-gradient(45deg, #FCA23A, #FCA23A)',
                 backgroundColor: theme.colors.dark[8],
-              })}
+              }}
             >
               <Box
-                sx={(theme) => ({
+                style={{
                   display: 'grid',
                   gridTemplateColumns: '1fr auto',
                   height: '100%',
-                })}
+                }}
               >
                 <Group>
-                  <MediaQuery largerThan="md" styles={{ display: 'none' }}>
-                    <Burger
-                      opened={opened}
-                      onClick={() => setOpened((o) => !o)}
-                      size="sm"
-                      color={theme.colors.gray[6]}
-                    />
-                  </MediaQuery>
-                  <Group spacing="xs" align="flex-end">
+                  <Burger
+                    hiddenFrom="md"
+                    opened={opened}
+                    onClick={() => setOpened((o) => !o)}
+                    size="sm"
+                    color={theme.colors.gray[6]}
+                  />
+                  <Group gap="xs" align="flex-end">
                     <a href="/" title="Captain's Calculator">
                       <img
                         src="/img/logo.png"
@@ -291,43 +202,43 @@ const AppShellLayout: React.FC = () => {
                         title="Captain's Calculator"
                       />
                     </a>
-                    <Text color="white" size="sm">
+                    <Text c="white" size="sm">
                       v{appVersion}
                     </Text>
                   </Group>
                 </Group>
 
                 <Box>
-                  <MediaQuery smallerThan="md" styles={{ display: 'none' }}>
-                    <Group spacing="xs" grow sx={{ height: '100%' }}>
-                      {menu.map((i, k) => {
-                        return (
-                          <TopBarNavButton
-                            key={`nav-item-${k}`}
-                            to={i.to}
-                            label={i.label}
-                            icon={i.icon}
-                            onClick={() => setOpened((o) => !o)}
-                          />
-                        );
-                      })}
-                      <TopBarNavLink
-                        to="https://github.com/David-Melo/captains-calculator/issues"
-                        label="Bugs & Issues"
-                        icon="bug"
-                      />
-                      <ColorSchemeToggle />
-                    </Group>
-                  </MediaQuery>
+                  <Group gap="xs" grow visibleFrom="md" style={{ height: '100%' }}>
+                    {menu.map((i, k) => {
+                      return (
+                        <TopBarNavButton
+                          key={`nav-item-${k}`}
+                          to={i.to}
+                          label={i.label}
+                          icon={i.icon}
+                          onClick={() => setOpened((o) => !o)}
+                        />
+                      );
+                    })}
+                    <TopBarNavLink
+                      to="https://github.com/David-Melo/captains-calculator/issues"
+                      label="Bugs & Issues"
+                      icon="bug"
+                    />
+                    <ColorSchemeToggle />
+                  </Group>
                 </Box>
               </Box>
-            </Header>
+            </Box>
           </Box>
+        </AppShell.Header>
 
-          <Box className="page-shell-wrapper" sx={{ height: '100%', overflow: 'hidden' }}>
+        <AppShell.Main style={{ height: '100%' }}>
+          <Box className="page-shell-wrapper" style={{ height: '100%', overflow: 'hidden' }}>
             <RenderNavigator navigator={navigator} />
           </Box>
-        </Box>
+        </AppShell.Main>
       </AppShell>
     </React.Fragment>
   );

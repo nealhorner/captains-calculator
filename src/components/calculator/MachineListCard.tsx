@@ -2,6 +2,7 @@ import React from 'react';
 import { Card, Group, Box, Text, Image } from '@mantine/core';
 import { Machine } from 'state/app/effects/loadJsonData';
 import { MachineId } from 'state/app/effects/loadJsonData';
+import classes from './MachineListCard.module.css';
 
 type MachineListCardProps = {
   item: Machine;
@@ -21,26 +22,16 @@ const MachineListCard: React.FC<MachineListCardProps> = ({ item, active, onSelec
       onClick={() => onItemClick(item.id)}
       shadow="xs"
       p="xs"
-      sx={(theme) => ({
-        cursor: 'pointer',
-        backgroundColor: active
-          ? theme.colorScheme === 'light'
-            ? theme.colors.gray[4]
-            : theme.colors.dark[9]
-          : '',
-        '&:hover': {
-          backgroundColor:
-            theme.colorScheme === 'light' ? theme.colors.gray[6] : theme.colors.dark[9],
-        },
-      })}
+      className={classes.card}
+      data-active={active || undefined}
     >
-      <Group position="apart">
-        <Text weight={500} size="sm">
+      <Group justify="space-between">
+        <Text fw={500} size="sm">
           {item.name}
         </Text>
         <Box
           p="xs"
-          sx={(theme) => ({
+          style={(theme) => ({
             borderRadius: theme.radius.sm,
             background: theme.colors.dark[3],
           })}

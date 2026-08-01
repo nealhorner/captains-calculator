@@ -1,26 +1,13 @@
 import React from 'react';
-import { Avatar, Group, Text, Select } from '@mantine/core';
+import { Avatar, Group, Text, Select, OptionsFilter } from '@mantine/core';
 import { useAppState, useActions } from '../../state/index';
 import { MachineId } from '../../state/app/effects/loadJsonData';
 
-interface ItemProps extends React.ComponentPropsWithoutRef<'div'> {
-  image: string;
-  label: string;
-}
-
-const SelectItem = React.forwardRef<HTMLDivElement, ItemProps>(
-  ({ image, label, ...others }: ItemProps, ref) => (
-    <div ref={ref} {...others}>
-      <Group noWrap>
-        <Avatar src={image} />
-
-        <div>
-          <Text size="sm">{label}</Text>
-        </div>
-      </Group>
-    </div>
-  ),
-);
+const labelFilter: OptionsFilter = ({ options, search }) =>
+  options.filter(
+    (option) =>
+      'label' in option && option.label.toLowerCase().includes(search.toLowerCase().trim()),
+  );
 
 export const ProductMachineSelect = () => {
   const currentProduct = useAppState((state) => state.products.currentItem);
@@ -28,13 +15,15 @@ export const ProductMachineSelect = () => {
   const selectMachine = useActions().machines.selectMachine;
   const selectRecipe = useActions().recipes.selectRecipe;
   const delectRecipesItem = useActions().recipes.delectRecipesItem;
-  const onChange = (machineId: MachineId) => {
+  const onChange = (machineId: string | null) => {
+    if (!machineId) return;
     selectRecipe(null);
     delectRecipesItem(null);
-    selectMachine(machineId);
+    selectMachine(machineId as MachineId);
   };
   if (!currentProduct) return null;
   let filteredMachines = itemsList.filter((m) => currentProduct.machines.output.indexOf(m.id) >= 0);
+  const machinesById = new Map(filteredMachines.map((m) => [m.id, m]));
   return (
     <Select
       size="md"
@@ -42,18 +31,25 @@ export const ProductMachineSelect = () => {
       onChange={onChange}
       label="2. Select Building"
       placeholder="Make Selection..."
-      itemComponent={SelectItem}
+      renderOption={({ option }) => {
+        const machine = machinesById.get(option.value as MachineId);
+        return (
+          <Group wrap="nowrap">
+            <Avatar src={machine ? `/assets/buildings/${machine.icon}` : undefined} />
+            <div>
+              <Text size="sm">{option.label}</Text>
+            </div>
+          </Group>
+        );
+      }}
       data={filteredMachines.map((p) => ({
         label: p.name,
-        image: `/assets/buildings/${p.icon}`,
         value: p.id,
       }))}
       searchable
       maxDropdownHeight={400}
-      nothingFound="No Match Found"
-      filter={(value, item) =>
-        item.label ? item.label.toLowerCase().includes(value.toLowerCase().trim()) : false
-      }
+      nothingFoundMessage="No Match Found"
+      filter={labelFilter}
     />
   );
 };
