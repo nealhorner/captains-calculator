@@ -83,10 +83,10 @@ Located at `src/state/recipes/ProductionNode.ts`. Encapsulates a single producti
 ## Commands
 
 ```bash
-yarn dev       # Dev server (Vite)
-yarn build     # Production build (outputs to dist/)
-yarn preview   # Serve the production build locally
-yarn test      # Vitest
+pnpm dev       # Dev server (Vite)
+pnpm build     # Production build (outputs to dist/)
+pnpm preview   # Serve the production build locally
+pnpm test      # Vitest
 ```
 
 ## Conventions

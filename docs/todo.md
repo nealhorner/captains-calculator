@@ -21,7 +21,7 @@
 
 ### Package Manager Migration
 
-- [ ] Migrate off `yarn` to `pnpm` (or `npm`) — regenerate lockfile, update `package.json` scripts/engines, update CI workflow (`.github/workflows/`), and update any docs/README referencing `yarn` commands
+- [x] Migrate off `yarn` to `pnpm` (or `npm`) — regenerate lockfile, update `package.json` scripts/engines, update CI workflow (`.github/workflows/`), and update any docs/README referencing `yarn` commands
 
 ### CRA to Vite Migration
 
@@ -58,7 +58,7 @@ The project has testing libraries installed (`@testing-library/react`, `jest-dom
 - [x] Add unit tests for key Overmind action: `linkRecipe`
 - [x] Add integration tests for the Editor flow (select product -> machine -> recipe -> link nodes) — see `src/state/recipes/editorFlow.test.ts`
 - [x] Add smoke tests for each route/screen rendering without crashing — see `App.test.tsx` and `src/screens/app/screens.test.tsx`
-- [x] Add Playwright E2E tests covering the main production-chain workflow (product -> building -> recipe -> results summary, plus localStorage persistence across reload) — see `e2e/production-chain.spec.ts`, run with `yarn test:e2e`
+- [x] Add Playwright E2E tests covering the main production-chain workflow (product -> building -> recipe -> results summary, plus localStorage persistence across reload) — see `e2e/production-chain.spec.ts`, run with `pnpm test:e2e`
 
 Upgraded `@testing-library/react` (12 -> 16) and `@testing-library/user-event` (13 -> 14) as part of this work — they didn't support React 19's `createRoot`-based test rendering, which blocked any DOM-level test. This also closes the corresponding item under Phase 4.
 
@@ -175,7 +175,7 @@ This is a large migration. Mantine v7 is a near-full rewrite.
 
 ### CI
 
-- [ ] Add `yarn typecheck` to `.github/workflows/ci.yml` — CI currently runs `format:check`, `lint`, and `test:ci` but never type-checks, so TS errors can merge to `main` silently mid-migration
+- [ ] Add `pnpm typecheck` to `.github/workflows/ci.yml` — CI currently runs `format:check`, `lint`, and `test:ci` but never type-checks, so TS errors can merge to `main` silently mid-migration
 
 ### Data Integrity
 

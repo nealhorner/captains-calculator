@@ -3,5 +3,5 @@ dist
 build
 coverage
 captain-of-data
-yarn.lock
+pnpm-lock.yaml
 .vscode
