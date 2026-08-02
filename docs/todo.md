@@ -25,7 +25,7 @@
 
 ### Runtime Upgrade
 
-- [ ] Migrate to Node 26 — update `engines` in `package.json`, `.nvmrc`/Dockerfile pins, and `node-version: 20` in **both** `.github/workflows/ci.yml` job blocks (`checks` and `e2e` each pin it separately)
+- [x] Migrate to Node 26 — updated `engines` in `package.json`, `.nvmrc` (no Dockerfile present), and `node-version` in **both** `.github/workflows/ci.yml` job blocks (`checks` and `e2e`)
 
 ### CRA to Vite Migration
 
