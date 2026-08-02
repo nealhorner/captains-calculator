@@ -11,7 +11,7 @@ export type RenderNavigatorProps = {
 
 export const Portal = () => {
   return (
-    <AnimatePresence exitBeforeEnter initial={true} presenceAffectsLayout={false}>
+    <AnimatePresence mode="wait" initial={true} presenceAffectsLayout={false}>
       <Outlet />
     </AnimatePresence>
   );
@@ -19,7 +19,7 @@ export const Portal = () => {
 
 export const RenderNavigator: React.FC<RenderNavigatorProps> = ({ navigator }) => {
   return (
-    <AnimatePresence exitBeforeEnter initial={true} presenceAffectsLayout={false}>
+    <AnimatePresence mode="wait" initial={true} presenceAffectsLayout={false}>
       {navigator}
     </AnimatePresence>
   );

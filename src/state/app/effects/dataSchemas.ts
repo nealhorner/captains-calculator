@@ -105,10 +105,10 @@ export const recipeDatasetSchema = yup.array().of(recipeSchema).required();
  ** are logged for context and then thrown to stop `loadJsonData` before state is mutated.
  ****************** */
 
-export const validateDataset = (
+export const validateDataset = <T extends { id?: string }>(
   datasetName: string,
-  schema: yup.ArraySchema<any>,
-  data: Record<string, { id?: string }>,
+  schema: yup.Schema<T[]>,
+  data: Record<string, T>,
 ): void => {
   const entries = Object.entries(data);
 

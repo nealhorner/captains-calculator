@@ -100,14 +100,19 @@ This is a large migration. Mantine v7 is a near-full rewrite.
 
 ### Other Dependency Upgrades
 
-- [ ] `framer-motion` 3.x -> 11+ (currently pinned to exact `3.10.6` — likely a compat hack)
-- [x] `formik` 2.x — removed. Its only consumers (`src/components/forms/` and `src/utils/forms.ts`) were dead code with no callers anywhere in the app; deleted rather than upgraded/replaced.
-- [ ] `yup` 0.x -> 1.x (breaking changes in schema API)
-- [ ] `@iconify/react` 3.x -> 4.x
+- [x] `framer-motion` 3.x -> 12.43.0 (was pinned to exact `3.10.6` for a TS-types workaround). Removed `src/types/framer-motion.d.ts` and the `framer-motion/internal-types` `paths` alias in `tsconfig.json` — v12 ships proper `exports`-map types, the shim is no longer needed. Only breaking change hit: `AnimatePresence`'s `exitBeforeEnter` boolean was replaced with `mode="wait"` (fixed in `src/components/navigation/Layout.tsx`). `presenceAffectsLayout` is unchanged.
+- [x] `formik` — evaluated replacing with `react-hook-form`, decided **not** to migrate, then **removed entirely**. `formik` was only ever imported inside `src/components/forms/` (`FormDrawer.tsx`, `FormInline.tsx`, `FieldRenderer.tsx`, `PhoneField.tsx`) — a generic Formik+Yup form-builder abstraction (~1700 lines total incl. `src/utils/forms.ts`) that no screen, drawer, or modal in the app actually imported. It had been dead code since the initial commit. Migrating dead code to a new library made no sense, so this merges in [PR #22](https://github.com/nealhorner/captains-calculator/pull/22)'s deletion of that dead code and the `formik` dependency rather than duplicating it.
+- [x] `yup` 0.32.11 -> 1.7.1. Only real API break in this codebase: the `validateDataset` helper in `src/state/app/effects/dataSchemas.ts` typed its schema param as `yup.ArraySchema<any>`, which no longer type-checks (v1's `ArraySchema` needs 2-4 generic args). Made `validateDataset` generic instead — `<T extends { id?: string }>(datasetName, schema: yup.Schema<T[]>, data: Record<string, T>)` — which ties the schema's element type to the data record's value type, so passing a mismatched schema/dataset pair (e.g. `productDatasetSchema` against `machineData`) is now a compile-time error instead of only a runtime one. All the `.string()/.number()/.mixed()/.required()/.email()/.matches()/.test()` calls and the object/array schemas in `dataSchemas.ts` were already forward-compatible with v1 — no `.when()` usage anywhere in the repo, which is where most v0->v1 breakage usually lives.
+- [x] `@iconify/react` — the todo's target of "4.x" was already stale; latest is 6.0.2 (four majors happened since this doc was written). Upgraded straight to 6.0.2 — the only usage pattern in this app is `<Icon icon="..." width={} className="" />` across ~20 files, which is unaffected by the v3->v6 changes (those removed deprecated caching functions like `enableCache()`/`disableCache()`/`iconExists()`, none of which this codebase calls). Also moved it from `devDependencies` to `dependencies` — it's imported throughout production UI code, not just tooling, so it belongs in the runtime dependency graph.
 - [x] `@testing-library/react` 12 -> 16+ (done in Phase 3, was blocking React 19 DOM tests)
-- [ ] `dagre` 0.8.5 — check if still maintained, consider `@dagrejs/dagre` or `elkjs` exclusively
-- [ ] `dayjs` 1.10 -> 1.11+ (minor)
-- [ ] Audit all dependencies for necessity and currency — check `package.json` for unused packages (beyond Phase 1's dead-weight pass) and compare installed vs. latest versions across the full dependency tree (known-CVE scanning is covered separately by the security audit item in Phase 8)
+- [x] `dagre` 0.8.5 — confirmed unmaintained (last published 2022-06-14, no security patches since). Replaced with `@dagrejs/dagre` 3.0.0, the actively maintained community fork (last publish 2026-03-22). API is a drop-in match (`graphlib.Graph`, `setDefaultEdgeLabel`, `setGraph`, `setNode`, `setEdge`, `layout` all unchanged) — only the import in `src/components/calculator/Editor.tsx` changed. `@dagrejs/dagre` ships its own types, so `@types/dagre` devDependency was removed. (`elkjs` mentioned elsewhere in project docs as an alternative layout engine isn't actually installed or used anywhere in `src/` — nothing to consolidate there.)
+- [x] `dayjs` 1.10.7 -> 1.11.21 (minor, no code changes needed — sole usage in `src/utils/dates.ts` unaffected)
+- [x] Audit all dependencies for necessity and currency:
+  - **Removed `web-worker`** — zero imports anywhere in `src/`, no `*.worker.ts` files, not referenced in `vite.config.ts`. Pure dead weight, same pattern as the `zod`/`xstate` removals in Phase 1.
+  - **`react-router`** is listed as an explicit direct dependency but nothing imports from the bare `react-router` package (only `react-router-dom`, which already declares `react-router` as its own dependency). Left as-is rather than removed — redundant but not broken, and pinning it directly isn't unreasonable; flagging here rather than acting unilaterally.
+  - **`web-vitals`** is real (wired up in `src/index.tsx` via `reportWebVitals()`, though it only logs to console — never sent anywhere) but very outdated (2.1.4, latest is 6.x). Left alone: the 3.x rewrite renamed the whole API (`getCLS`/`getFID`/etc. -> `onCLS`/`onFID`/etc.), which is a breaking change out of scope for this pass since it wasn't in the original list.
+  - Full outstanding-major-version list from `pnpm outdated` (all out of scope here, called out for future phases): `@mantine/core` et al. 7.17.8 -> 9.5.0, `react-router`/`react-router-dom` 6.x -> 7/8.x, `vite` 5.x -> 8.x, `vitest` 3.x -> 4.x, `eslint` 8.x -> 10.x, `typescript` 6.x -> 7.x (already tracked above as blocked on `typescript-eslint`).
+  - Typecheck baseline actually **improved** as a side effect of these upgrades: 57 -> 44 pre-existing errors (none of the remaining 44 are new — all match the categories already documented in Phase 4's "Gaps / follow-ups" and Phase 8).
 
 ---
 
@@ -117,7 +122,6 @@ This is a large migration. Mantine v7 is a near-full rewrite.
 
 - [ ] Eliminate `any` usage — 66 instances across the codebase
   - Priority: `src/state/recipes/state.ts` (lines 24, 29) — `Node<any>[]` and `Edge<any>[]` should use proper generics
-  - Audit `src/components/forms/FieldRenderer.tsx` for loose typing
 
 ### State Management Patterns
 
@@ -196,7 +200,7 @@ This is a large migration. Mantine v7 is a near-full rewrite.
 
 - [ ] Add error-tracking/monitoring (e.g. Sentry) for production crash visibility — today `console.error` is the only mechanism
 - [ ] Evaluate i18n needs — all UI strings are hardcoded English with no i18n framework in place
-- [ ] Evaluate mobile/responsive support for the three-panel Editor layout — `useMediaQuery` is used in `FieldRenderer.tsx` only; the core editor has no mobile adaptation
+- [ ] Evaluate mobile/responsive support for the three-panel Editor layout — no `useMediaQuery` usage remains anywhere in the app (its only caller, `FieldRenderer.tsx`, was deleted as dead code); the core editor has no mobile adaptation
 - [ ] Run a security audit — `yarn audit`/`npm audit` for known CVEs in dependencies, review localStorage-persisted data for sensitive content, check for XSS vectors in user-provided graph data (import/export)
 
 ---

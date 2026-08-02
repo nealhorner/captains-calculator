@@ -14,7 +14,7 @@ import {
   Node,
 } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
-import dagre from 'dagre';
+import dagre from '@dagrejs/dagre';
 
 import { useAppState } from 'state';
 import ProductionNode from 'state/recipes/ProductionNode';
