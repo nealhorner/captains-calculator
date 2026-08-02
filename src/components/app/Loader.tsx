@@ -3,7 +3,7 @@ import { Box } from '@mantine/core';
 const Loader = () => {
   return (
     <Box
-      sx={(theme) => ({
+      style={(theme) => ({
         backgroundColor: theme.colors.dark[8],
         '--main-bg-color': theme.colors.red[8],
       })}

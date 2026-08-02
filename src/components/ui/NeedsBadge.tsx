@@ -71,7 +71,7 @@ const NeedsBage: React.FC<NeedsBageProps> = ({ need, value, mode = 'short', suff
       <Box
         pl={3}
         pr={5}
-        sx={(theme) => ({
+        style={(theme) => ({
           borderRadius: theme.radius.sm,
           background: needMap[need].color,
           height: 30,
@@ -80,8 +80,12 @@ const NeedsBage: React.FC<NeedsBageProps> = ({ need, value, mode = 'short', suff
         })}
       >
         {mode === 'long' ? (
-          <Group position="left" spacing={5}>
-            <Image sx={{ display: 'block' }} height={16} src={`/assets/ui/${needMap[need].icon}`} />
+          <Group justify="flex-start" gap={5}>
+            <Image
+              style={{ display: 'block' }}
+              height={16}
+              src={`/assets/ui/${needMap[need].icon}`}
+            />
             <Text color="white" size="xs">
               {needMap[need].label}
             </Text>
@@ -89,10 +93,10 @@ const NeedsBage: React.FC<NeedsBageProps> = ({ need, value, mode = 'short', suff
         ) : (
           <Box px={6}>
             <Image
-              sx={{ display: 'block' }}
+              style={{ display: 'block' }}
               height={16}
               src={`/assets/ui/${needMap[need].icon}`}
-              styles={{ image: { filter: iconFilter } }}
+              styles={{ root: { filter: iconFilter } }}
             />
           </Box>
         )}
@@ -100,12 +104,12 @@ const NeedsBage: React.FC<NeedsBageProps> = ({ need, value, mode = 'short', suff
         <Box
           px={4}
           py={1}
-          sx={(theme) => ({
+          style={(theme) => ({
             borderRadius: theme.radius.sm,
             background: '#141517',
           })}
         >
-          <Text color="white" weight="lighter" sx={{ fontSize: 12 }}>
+          <Text color="white" fw="lighter" style={{ fontSize: 12 }}>
             {value}
             {suffix ? ` ${suffix}` : ''}
           </Text>

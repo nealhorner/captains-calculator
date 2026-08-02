@@ -1,26 +1,13 @@
 import React from 'react';
-import { Avatar, Group, Text, Select } from '@mantine/core';
+import { Avatar, Group, Text, Select, OptionsFilter } from '@mantine/core';
 import { useAppState, useActions } from '../../state/index';
 import { ProductId } from '../../state/app/effects/loadJsonData';
 
-interface ItemProps extends React.ComponentPropsWithoutRef<'div'> {
-  image: string;
-  label: string;
-}
-
-const SelectItem = React.forwardRef<HTMLDivElement, ItemProps>(
-  ({ image, label, ...others }: ItemProps, ref) => (
-    <div ref={ref} {...others}>
-      <Group noWrap>
-        <Avatar src={image} />
-
-        <div>
-          <Text size="sm">{label}</Text>
-        </div>
-      </Group>
-    </div>
-  ),
-);
+const labelFilter: OptionsFilter = ({ options, search }) =>
+  options.filter(
+    (option) =>
+      'label' in option && option.label.toLowerCase().includes(search.toLowerCase().trim()),
+  );
 
 export const ProductSelect = () => {
   const { itemsList, currentItemId } = useAppState((state) => state.products);
@@ -28,34 +15,41 @@ export const ProductSelect = () => {
   const selectMachine = useActions().machines.selectMachine;
   const setCurrentRecipe = useActions().recipes.setCurrentRecipe;
   const deSelectRecipesItem = useActions().recipes.deSelectRecipesItem;
-  const onChange = (productId: ProductId) => {
+  const onChange = (productId: string | null) => {
     selectMachine(null);
     setCurrentRecipe(null);
     deSelectRecipesItem(null);
-    selectProduct(productId);
+    selectProduct(productId as ProductId | null);
   };
+  const productsById = new Map(itemsList.map((p) => [p.id, p]));
   return (
     <Select
-      shadow="sm"
       size="md"
-      withinPortal
+      comboboxProps={{ withinPortal: true, shadow: 'sm' }}
       value={currentItemId}
       onChange={onChange}
       label="1. Select Product"
       placeholder="Make Selection..."
-      itemComponent={SelectItem}
+      renderOption={({ option }) => {
+        const product = productsById.get(option.value as ProductId);
+        return (
+          <Group wrap="nowrap">
+            <Avatar src={product ? `/assets/products/${product.icon}` : undefined} />
+            <div>
+              <Text size="sm">{option.label}</Text>
+            </div>
+          </Group>
+        );
+      }}
       data={itemsList.map((p) => ({
         label: p.name,
-        image: `/assets/products/${p.icon}`,
         value: p.id,
       }))}
       searchable
       clearable
       maxDropdownHeight={400}
-      nothingFound="No Match Found"
-      filter={(value, item) =>
-        item.label ? item.label.toLowerCase().includes(value.toLowerCase().trim()) : false
-      }
+      nothingFoundMessage="No Match Found"
+      filter={labelFilter}
     />
   );
 };

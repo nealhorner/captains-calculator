@@ -11,7 +11,7 @@ const ProductIcon: React.FC<CostsIconProps> = ({ product }) => {
     <Tooltip label={product.name} withArrow withinPortal>
       <Box
         p={5}
-        sx={(theme) => ({
+        style={(theme) => ({
           borderRadius: theme.radius.sm,
           background: theme.colors.dark[4],
         })}

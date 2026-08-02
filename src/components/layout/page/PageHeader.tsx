@@ -3,6 +3,7 @@ import { Title, Box, Group, Container } from '@mantine/core';
 import BreadCrumbs from './BreadCrumbs';
 import ResponsiveView from 'components/ui/ResponsiveView';
 import { BackButton } from 'components/navigation/BackButton';
+import classes from './PageHeader.module.css';
 type PageHeaderProps = {
   title: string;
   badge?: ReactElement;
@@ -11,36 +12,15 @@ type PageHeaderProps = {
 
 const PageHeader: React.FC<PageHeaderProps> = ({ title, renderAction, badge }) => {
   return (
-    <Container
-      size="lg"
-      sx={(theme) => ({
-        height: '100%',
-        [theme.fn.smallerThan('md')]: {
-          padding: 0,
-        },
-      })}
-    >
-      <Box
-        sx={(theme) => ({
-          background: theme.colorScheme === 'dark' ? theme.colors.dark[7] : theme.colors.gray[1],
-          display: 'flex',
-          flexDirection: 'column',
-          justifyContent: 'center',
-          [theme.fn.smallerThan('md')]: {
-            height: 70,
-          },
-          [theme.fn.largerThan('md')]: {
-            height: 90,
-          },
-        })}
-      >
+    <Container size="lg" className={classes.container}>
+      <Box className={classes.headerBox}>
         <ResponsiveView
           renderDesktop={
-            <Group position="apart">
+            <Group justify="space-between">
               <Box>
                 <BreadCrumbs />
                 <Group>
-                  <Title order={2} sx={{ lineHeight: '30px' }}>
+                  <Title order={2} style={{ lineHeight: '30px' }}>
                     {title}
                   </Title>
                   {badge}
@@ -51,11 +31,11 @@ const PageHeader: React.FC<PageHeaderProps> = ({ title, renderAction, badge }) =
           }
           renderMobile={
             <Box>
-              <Group position="apart">
-                <Group spacing="xs">
+              <Group justify="space-between">
+                <Group gap="xs">
                   <BackButton />
                   <Group>
-                    <Title order={2} sx={(theme) => ({ fontSize: theme.fontSizes.lg })}>
+                    <Title order={2} style={(theme) => ({ fontSize: theme.fontSizes.lg })}>
                       {title}
                     </Title>
                     {badge}

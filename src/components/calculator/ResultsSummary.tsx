@@ -1,5 +1,16 @@
 import { MAINTENANCE_I, MAINTENANCE_II } from 'state/app/effects';
-import { Box, Image, Stack, Table, Alert, ScrollArea, Divider, Text, Tooltip } from '@mantine/core';
+import {
+  Box,
+  Image,
+  Stack,
+  Table,
+  Alert,
+  ScrollArea,
+  Divider,
+  Text,
+  Tooltip,
+  useComputedColorScheme,
+} from '@mantine/core';
 
 import { useAppState } from 'state';
 import { needMap } from 'components/ui/NeedsBadge';
@@ -13,6 +24,7 @@ import { ChainTarget } from 'state/_types';
 import React from 'react';
 
 export const ResultsSummary = () => {
+  const colorScheme = useComputedColorScheme('light');
   const { nodesList, targetsList, nodes: allNodes } = useAppState((state) => state.recipes);
   const { items: allProducts } = useAppState((state) => state.products);
 
@@ -180,16 +192,7 @@ export const ResultsSummary = () => {
 
   const renderBuildings = () => {
     return (
-      <Table
-        horizontalSpacing={4}
-        verticalSpacing={4}
-        sx={{
-          '& .fitwidth': {
-            width: 1,
-            whiteSpace: 'nowrap',
-          },
-        }}
-      >
+      <Table horizontalSpacing={4} verticalSpacing={4}>
         <thead>
           <tr>
             <th colSpan={3}>Buildings</th>
@@ -204,9 +207,9 @@ export const ResultsSummary = () => {
                   <td className="fitwidth">
                     <Box
                       p={4}
-                      sx={(theme) => ({
+                      style={(theme) => ({
                         borderRadius: theme.radius.sm,
-                        border: `1px solid ${theme.colorScheme === 'light' ? theme.colors.gray[4] : theme.colors.dark[9]}`,
+                        border: `1px solid ${colorScheme === 'light' ? theme.colors.gray[4] : theme.colors.dark[9]}`,
                         background: theme.colors.dark[5],
                       })}
                     >
@@ -215,7 +218,7 @@ export const ResultsSummary = () => {
                         width={16}
                         src={`/assets/buildings/${building.icon}`}
                         alt={building.label}
-                        sx={{ display: 'block', objectFit: 'contain' }}
+                        style={{ display: 'block', objectFit: 'contain' }}
                       />
                     </Box>
                   </td>
@@ -248,16 +251,7 @@ export const ResultsSummary = () => {
 
   const renderCosts = () => {
     return (
-      <Table
-        horizontalSpacing={4}
-        verticalSpacing={4}
-        sx={{
-          '& .fitwidth': {
-            width: 1,
-            whiteSpace: 'nowrap',
-          },
-        }}
-      >
+      <Table horizontalSpacing={4} verticalSpacing={4}>
         <thead>
           <tr>
             <th colSpan={3}>Construction Costs</th>
@@ -272,9 +266,9 @@ export const ResultsSummary = () => {
                   <td className="fitwidth">
                     <Box
                       p={6}
-                      sx={(theme) => ({
+                      style={(theme) => ({
                         borderRadius: theme.radius.sm,
-                        border: `1px solid ${theme.colorScheme === 'light' ? theme.colors.gray[4] : theme.colors.dark[9]}`,
+                        border: `1px solid ${colorScheme === 'light' ? theme.colors.gray[4] : theme.colors.dark[9]}`,
                         background: theme.colors.dark[5],
                       })}
                     >
@@ -283,7 +277,7 @@ export const ResultsSummary = () => {
                         width={12}
                         src={`/assets/products/${cost.icon}`}
                         alt={cost.label}
-                        sx={{ display: 'block', objectFit: 'contain' }}
+                        style={{ display: 'block', objectFit: 'contain' }}
                       />
                     </Box>
                   </td>
@@ -303,16 +297,7 @@ export const ResultsSummary = () => {
 
   const renderNeeds = () => {
     return (
-      <Table
-        horizontalSpacing={4}
-        verticalSpacing={4}
-        sx={{
-          '& .fitwidth': {
-            width: 1,
-            whiteSpace: 'nowrap',
-          },
-        }}
-      >
+      <Table horizontalSpacing={4} verticalSpacing={4}>
         <thead>
           <tr>
             <th colSpan={3}>Needs</th>
@@ -330,11 +315,11 @@ export const ResultsSummary = () => {
                 <tr key={`needs-${needId}-${k}`}>
                   <td className="fitwidth">
                     <Box
-                      sx={(theme) => ({
+                      style={(theme) => ({
                         height: 24,
                         width: 24,
                         borderRadius: theme.radius.sm,
-                        border: `1px solid ${theme.colorScheme === 'light' ? theme.colors.gray[4] : theme.colors.dark[9]}`,
+                        border: `1px solid ${colorScheme === 'light' ? theme.colors.gray[4] : theme.colors.dark[9]}`,
                         background: need.color,
                         display: 'flex',
                         justifyContent: 'center',
@@ -346,8 +331,8 @@ export const ResultsSummary = () => {
                         width={12}
                         src={`/assets/ui/${need.icon}`}
                         alt={need.label}
-                        sx={{ display: 'block', objectFit: 'contain' }}
-                        styles={{ image: { filter: iconFilter } }}
+                        style={{ display: 'block', objectFit: 'contain' }}
+                        styles={{ root: { filter: iconFilter } }}
                       />
                     </Box>
                   </td>
@@ -367,16 +352,7 @@ export const ResultsSummary = () => {
 
   const renderTotalOutputs = () => {
     return (
-      <Table
-        horizontalSpacing={4}
-        verticalSpacing={4}
-        sx={{
-          '& .fitwidth': {
-            width: 1,
-            whiteSpace: 'nowrap',
-          },
-        }}
-      >
+      <Table horizontalSpacing={4} verticalSpacing={4}>
         <thead>
           <tr>
             <th colSpan={3}>Gross Outputs (60s)</th>
@@ -391,9 +367,9 @@ export const ResultsSummary = () => {
                   <td className="fitwidth">
                     <Box
                       p={6}
-                      sx={(theme) => ({
+                      style={(theme) => ({
                         borderRadius: theme.radius.sm,
-                        border: `1px solid ${theme.colorScheme === 'light' ? theme.colors.gray[4] : theme.colors.dark[9]}`,
+                        border: `1px solid ${colorScheme === 'light' ? theme.colors.gray[4] : theme.colors.dark[9]}`,
                         background: theme.colors.dark[5],
                       })}
                     >
@@ -402,7 +378,7 @@ export const ResultsSummary = () => {
                         width={12}
                         src={`/assets/products/${item.icon}`}
                         alt={item.label}
-                        sx={{ display: 'block', objectFit: 'contain' }}
+                        style={{ display: 'block', objectFit: 'contain' }}
                       />
                     </Box>
                   </td>
@@ -422,16 +398,7 @@ export const ResultsSummary = () => {
 
   const renderTotalInputs = () => {
     return (
-      <Table
-        horizontalSpacing={4}
-        verticalSpacing={4}
-        sx={{
-          '& .fitwidth': {
-            width: 1,
-            whiteSpace: 'nowrap',
-          },
-        }}
-      >
+      <Table horizontalSpacing={4} verticalSpacing={4}>
         <thead>
           <tr>
             <th colSpan={3}>Gross Inputs (60s)</th>
@@ -446,9 +413,9 @@ export const ResultsSummary = () => {
                   <td className="fitwidth">
                     <Box
                       p={6}
-                      sx={(theme) => ({
+                      style={(theme) => ({
                         borderRadius: theme.radius.sm,
-                        border: `1px solid ${theme.colorScheme === 'light' ? theme.colors.gray[4] : theme.colors.dark[9]}`,
+                        border: `1px solid ${colorScheme === 'light' ? theme.colors.gray[4] : theme.colors.dark[9]}`,
                         background: theme.colors.dark[5],
                       })}
                     >
@@ -457,7 +424,7 @@ export const ResultsSummary = () => {
                         width={12}
                         src={`/assets/products/${item.icon}`}
                         alt={item.label}
-                        sx={{ display: 'block', objectFit: 'contain' }}
+                        style={{ display: 'block', objectFit: 'contain' }}
                       />
                     </Box>
                   </td>
@@ -478,16 +445,7 @@ export const ResultsSummary = () => {
   /** What each target asked for against what the chain actually produces. */
   const renderTargets = () => {
     return (
-      <Table
-        horizontalSpacing={4}
-        verticalSpacing={4}
-        sx={{
-          '& .fitwidth': {
-            width: 1,
-            whiteSpace: 'nowrap',
-          },
-        }}
-      >
+      <Table horizontalSpacing={4} verticalSpacing={4}>
         <thead>
           <tr>
             <th colSpan={3}>Targets (60s)</th>
@@ -501,9 +459,9 @@ export const ResultsSummary = () => {
                 <td className="fitwidth">
                   <Box
                     p={6}
-                    sx={(theme) => ({
+                    style={(theme) => ({
                       borderRadius: theme.radius.sm,
-                      border: `1px solid ${theme.colorScheme === 'light' ? theme.colors.gray[4] : theme.colors.dark[9]}`,
+                      border: `1px solid ${colorScheme === 'light' ? theme.colors.gray[4] : theme.colors.dark[9]}`,
                       background: theme.colors.dark[5],
                     })}
                   >
@@ -512,7 +470,7 @@ export const ResultsSummary = () => {
                       width={12}
                       src={`/assets/products/${item.icon}`}
                       alt={item.label}
-                      sx={{ display: 'block', objectFit: 'contain' }}
+                      style={{ display: 'block', objectFit: 'contain' }}
                     />
                   </Box>
                 </td>
@@ -544,16 +502,7 @@ export const ResultsSummary = () => {
   /** Products the chain cannot make itself, i.e. what it must be fed. */
   const renderRawInputs = () => {
     return (
-      <Table
-        horizontalSpacing={4}
-        verticalSpacing={4}
-        sx={{
-          '& .fitwidth': {
-            width: 1,
-            whiteSpace: 'nowrap',
-          },
-        }}
-      >
+      <Table horizontalSpacing={4} verticalSpacing={4}>
         <thead>
           <tr>
             <th colSpan={3}>Raw Inputs (60s)</th>
@@ -567,9 +516,9 @@ export const ResultsSummary = () => {
                 <td className="fitwidth">
                   <Box
                     p={6}
-                    sx={(theme) => ({
+                    style={(theme) => ({
                       borderRadius: theme.radius.sm,
-                      border: `1px solid ${theme.colorScheme === 'light' ? theme.colors.gray[4] : theme.colors.dark[9]}`,
+                      border: `1px solid ${colorScheme === 'light' ? theme.colors.gray[4] : theme.colors.dark[9]}`,
                       background: theme.colors.dark[5],
                     })}
                   >
@@ -578,7 +527,7 @@ export const ResultsSummary = () => {
                       width={12}
                       src={`/assets/products/${item.icon}`}
                       alt={item.label}
-                      sx={{ display: 'block', objectFit: 'contain' }}
+                      style={{ display: 'block', objectFit: 'contain' }}
                     />
                   </Box>
                 </td>
@@ -595,7 +544,7 @@ export const ResultsSummary = () => {
   };
 
   return (
-    <Box sx={{ position: 'relative', height: 'calc(100vh - 70px)' }}>
+    <Box style={{ position: 'relative', height: 'calc(100vh - 70px)' }}>
       <ScrollArea
         style={{
           position: 'absolute',
@@ -608,7 +557,7 @@ export const ResultsSummary = () => {
         <Box p="md">
           <Divider label="Production Chain Summary" mb="sm" />
 
-          <Stack spacing="xs">
+          <Stack gap="xs">
             {nodesList.length ? (
               <React.Fragment>
                 {!!targetRows.length && renderTargets()}

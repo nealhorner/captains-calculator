@@ -46,7 +46,7 @@ export const BuildingSelectDrawer = () => {
     return (
       <DrawerBody>
         <Box
-          sx={{
+          style={{
             display: 'grid',
             gridTemplateRows: 'auto 1fr',
           }}
@@ -55,14 +55,14 @@ export const BuildingSelectDrawer = () => {
             <Input
               value={filter}
               onChange={handleFilterChange}
-              icon={<Icon icon={Icons.search} />}
+              leftSection={<Icon icon={Icons.search} />}
               placeholder="Building Search"
               size="lg"
             />
           </Box>
           <DrawerBodyScrollArea>
             <Box p="md" pt={0}>
-              <Stack spacing="xs">
+              <Stack gap="xs">
                 {filteredItems.map((i, k) => (
                   <MachineListCard
                     key={k}
@@ -87,14 +87,14 @@ export const BuildingSelectDrawer = () => {
         title="Select Production Building"
         padding={0}
         size="xl"
-        overlayBlur={3}
+        overlayProps={{ blur: 3 }}
         position="left"
       >
         {renderBody()}
       </Drawer>
 
       <Box>
-        <Text weight="bold" mb="xs">
+        <Text fw="bold" mb="xs">
           2. Production Building
         </Text>
         {currentItem ? (

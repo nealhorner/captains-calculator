@@ -1,0 +1,11 @@
+.card {
+  cursor: pointer;
+}
+
+.card[data-active] {
+  background-color: light-dark(var(--mantine-color-gray-4), var(--mantine-color-dark-9));
+}
+
+.card:hover {
+  background-color: light-dark(var(--mantine-color-gray-6), var(--mantine-color-dark-9));
+}

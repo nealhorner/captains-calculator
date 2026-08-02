@@ -22,7 +22,7 @@ const PageLayoutBlank: React.FC = ({ children }) => {
 
   return (
     <Box
-      sx={{
+      style={{
         height: '100%',
       }}
     >

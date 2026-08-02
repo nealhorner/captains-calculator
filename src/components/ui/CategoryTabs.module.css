@@ -1,0 +1,28 @@
+.categoryCard {
+  cursor: pointer;
+}
+
+.categoryCard:hover {
+  background-color: light-dark(var(--mantine-color-dark-9), var(--mantine-color-gray-2));
+}
+
+.list {
+  background-color: light-dark(var(--mantine-color-dark-9), var(--mantine-color-gray-2));
+  padding: 3px;
+  border-radius: var(--mantine-radius-sm);
+}
+
+.tab {
+  font-weight: 500;
+  border-radius: var(--mantine-radius-sm);
+  color: light-dark(var(--mantine-color-dark-4), var(--mantine-color-gray-6));
+}
+
+.tab:hover {
+  color: light-dark(var(--mantine-color-white), var(--mantine-color-black));
+}
+
+.tab[data-active] {
+  background-color: light-dark(var(--mantine-color-dark-5), var(--mantine-color-gray-0));
+  color: light-dark(var(--mantine-color-dark-1), var(--mantine-color-gray-8));
+}

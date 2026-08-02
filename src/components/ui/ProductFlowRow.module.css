@@ -1,0 +1,12 @@
+.row :global(.product-icon) {
+  color: var(--mantine-color-gray-6);
+}
+
+.row :global(.product-input):last-child :global(.product-icon),
+.row :global(.product-output):last-child :global(.product-icon) {
+  display: none;
+}
+
+.rowIconMargin :global(.product-icon) {
+  margin-bottom: 18px;
+}

@@ -1,11 +1,12 @@
 import React from 'react';
-import { Box, Text, MediaQuery, ScrollArea, Container } from '@mantine/core';
+import { Box, Text, ScrollArea, Container } from '@mantine/core';
 import NavContext from 'components/navigation/NavContext';
 import { NavLink } from 'react-router-dom';
 import { MobileNavIcon } from 'components/ui/Misc';
 import { useReaction } from 'state';
 import Loader from 'components/app/Loader';
 import { motion } from 'framer-motion';
+import classes from './PageLayout.module.css';
 
 type PageLayoutProps = {
   header?: React.ReactElement;
@@ -34,18 +35,7 @@ const PageLayout: React.FC<PageLayoutProps> = ({
   );
 
   return (
-    <Box
-      sx={(theme) => ({
-        height: '100%',
-        display: 'grid',
-        [theme.fn.smallerThan('md')]: {
-          gridTemplateRows: showFooterNav ? 'auto 1fr auto' : 'auto 1fr',
-        },
-        [theme.fn.largerThan('md')]: {
-          gridTemplateRows: 'auto 1fr',
-        },
-      })}
-    >
+    <Box className={classes.root} data-show-footer-nav={showFooterNav || undefined}>
       <motion.div
         variants={{
           enter: { y: 0, opacity: 0, transition: { duration: 0.25 } },
@@ -60,7 +50,7 @@ const PageLayout: React.FC<PageLayoutProps> = ({
         {header}
       </motion.div>
 
-      <Box sx={{ position: 'relative', height: '100%', overflow: 'hidden' }}>
+      <Box style={{ position: 'relative', height: '100%', overflow: 'hidden' }}>
         <motion.div
           variants={{
             enter: { y: -100, opacity: 0, transition: { duration: 0.25 } },
@@ -82,15 +72,7 @@ const PageLayout: React.FC<PageLayoutProps> = ({
                 right: 0,
               }}
             >
-              <Container
-                size="lg"
-                sx={(theme) => ({
-                  height: '100%',
-                  [theme.fn.smallerThan('md')]: {
-                    padding: 0,
-                  },
-                })}
-              >
+              <Container size="lg" className={classes.contentContainer}>
                 {children}
               </Container>
             </ScrollArea>
@@ -101,48 +83,23 @@ const PageLayout: React.FC<PageLayoutProps> = ({
       </Box>
 
       {showFooterNav && (
-        <MediaQuery largerThan="md" styles={{ display: 'none' }}>
+        <Box className={classes.footerNav}>
           <Box
-            sx={(theme) => ({
-              backgroundColor: theme.colors.dark[9],
-            })}
+            className={classes.footerNavGrid}
+            style={{ gridTemplateColumns: `repeat(${mobile.length}, 1fr)` }}
           >
-            <Box
-              sx={(theme) => ({
-                height: 70,
-                display: 'grid',
-                gridTemplateColumns: `repeat(${mobile.length}, 1fr)`,
-                '& .mobile-nav-item': {
-                  display: 'flex',
-                  flexDirection: 'column',
-                  justifyContent: 'center',
-                  alignItems: 'center',
-                  textTransform: 'uppercase',
-                  color: theme.colors.gray[0],
-                  textDecoration: 'none',
-                  fontWeight: 800,
-                  '&.active': {
-                    backgroundColor: theme.colors.dark[6],
-                  },
-                  '&:hover': {
-                    backgroundColor: theme.colors.dark[6],
-                  },
-                },
-              })}
-            >
-              {mobile.map((i, k) => {
-                return (
-                  <NavLink key={`mobile-nav-item-${k}`} to={i.to} className="mobile-nav-item">
-                    <MobileNavIcon icon={i.icon} />
-                    <Text size="xs" mt={2}>
-                      {i.label}
-                    </Text>
-                  </NavLink>
-                );
-              })}
-            </Box>
+            {mobile.map((i, k) => {
+              return (
+                <NavLink key={`mobile-nav-item-${k}`} to={i.to} className="mobile-nav-item">
+                  <MobileNavIcon icon={i.icon} />
+                  <Text size="xs" mt={2}>
+                    {i.label}
+                  </Text>
+                </NavLink>
+              );
+            })}
           </Box>
-        </MediaQuery>
+        </Box>
       )}
     </Box>
   );

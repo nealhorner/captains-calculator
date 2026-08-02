@@ -39,8 +39,8 @@ export const SetupBar = () => {
       <Divider label="Production Targets" my="sm" />
 
       {isEditing ? (
-        <Stack spacing="md">
-          <Stack spacing="sm">
+        <Stack gap="md">
+          <Stack gap="sm">
             <ProductSelectDrawer />
             {activeTarget?.productId && <BuildingSelectDrawer />}
             {activeTarget?.machineId && <RecipeSelectDrawer />}
@@ -57,7 +57,7 @@ export const SetupBar = () => {
           {!!otherTargets.length && (
             <Box>
               <Divider label="Other Targets" mb="sm" />
-              <Stack spacing="xs">
+              <Stack gap="xs">
                 {otherTargets.map((target: ChainTarget) => (
                   <TargetListCard key={target.id} target={target} />
                 ))}
@@ -66,9 +66,9 @@ export const SetupBar = () => {
           )}
         </Stack>
       ) : (
-        <Stack spacing="sm">
+        <Stack gap="sm">
           {currentTargets.length ? (
-            <Stack spacing="xs">
+            <Stack gap="xs">
               {currentTargets.map((target: ChainTarget) => (
                 <TargetListCard key={target.id} target={target} />
               ))}
@@ -83,7 +83,7 @@ export const SetupBar = () => {
           )}
 
           <Button onClick={() => createTarget()}>
-            <Group spacing={6} noWrap>
+            <Group gap={6} wrap="nowrap">
               <Icon icon={Icons.add} width={14} />
               <span>Add Target Product</span>
             </Group>

@@ -1,10 +1,11 @@
 import React from 'react';
 import { createOvermind } from 'overmind';
 import { Provider as StateProvider } from 'overmind-react';
-import { ColorSchemeProvider, MantineProvider } from '@mantine/core';
+import { MantineProvider } from '@mantine/core';
 import { ModalsProvider } from '@mantine/modals';
 
 import { AppStateConfig } from 'state';
+import theme from 'theme/theme';
 
 export type TestOvermind = ReturnType<typeof createOvermind<typeof AppStateConfig>> & {
   initialized: Promise<unknown>;
@@ -27,20 +28,11 @@ export const TestProviders: React.FC<{
   children: React.ReactNode;
   overmind: TestOvermind;
 }> = ({ children, overmind }) => {
-  const [colorScheme, setColorScheme] = React.useState<'light' | 'dark'>('light');
-
   return (
     <StateProvider value={overmind}>
-      <ColorSchemeProvider
-        colorScheme={colorScheme}
-        toggleColorScheme={(value) =>
-          setColorScheme(value ?? (colorScheme === 'light' ? 'dark' : 'light'))
-        }
-      >
-        <MantineProvider theme={{ colorScheme }} withNormalizeCSS withGlobalStyles>
-          <ModalsProvider>{children}</ModalsProvider>
-        </MantineProvider>
-      </ColorSchemeProvider>
+      <MantineProvider theme={theme} forceColorScheme="light">
+        <ModalsProvider>{children}</ModalsProvider>
+      </MantineProvider>
     </StateProvider>
   );
 };

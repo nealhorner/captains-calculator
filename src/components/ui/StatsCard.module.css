@@ -1,0 +1,7 @@
+.cardHoverable:hover {
+  background-color: light-dark(var(--mantine-color-gray-2), var(--mantine-color-dark-9));
+}
+
+.iconWrapper :global(.stats-card-icon) {
+  color: var(--stats-icon-color);
+}

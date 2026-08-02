@@ -1,0 +1,20 @@
+.card {
+  opacity: var(--card-opacity, 1);
+}
+
+.card[data-available] {
+  cursor: pointer;
+}
+
+.card[data-active] {
+  background-color: light-dark(var(--mantine-color-gray-4), var(--mantine-color-dark-9));
+}
+
+.card[data-available]:hover {
+  background-color: light-dark(var(--mantine-color-gray-3), var(--mantine-color-dark-9));
+}
+
+.machineIcon {
+  background-color: light-dark(var(--mantine-color-white), var(--mantine-color-dark-9));
+  border: 1px dashed light-dark(var(--mantine-color-gray-4), var(--mantine-color-dark-9));
+}

@@ -1,7 +1,7 @@
 import React from 'react';
 import { Formik, FormikHelpers } from 'formik';
 import { Alert, Box, Button, Divider, Grid, Group } from '@mantine/core';
-import { useNotifications } from '@mantine/notifications';
+import { notifications } from '@mantine/notifications';
 import { Icon } from '@iconify/react';
 
 import { buildFormConfig, FormConfig } from 'utils/forms';
@@ -43,7 +43,6 @@ function FormInline<PayloadType extends GenericDictionary, IDType extends any>({
   requiredDirty = true,
   validators = {},
 }: React.PropsWithChildren<FormInlineProps<PayloadType, IDType>>): React.ReactElement | null {
-  const notifications = useNotifications();
   const [formMode, setFormMode] = React.useState<'create' | 'update' | null>(null);
   const [initialState] = React.useState<PayloadType>(currentItemData || initialData);
   const [formConfig, setFormConfig] = React.useState<FormConfig | null>(null);
@@ -75,7 +74,7 @@ function FormInline<PayloadType extends GenericDictionary, IDType extends any>({
     if (formMode === 'create' && createAction) {
       success = await createAction(payload);
       if (success) {
-        notifications.showNotification({
+        notifications.show({
           icon: <Icon icon={Icons.warningCircle} width={24} />,
           color: 'green',
           autoClose: 1000,
@@ -87,7 +86,7 @@ function FormInline<PayloadType extends GenericDictionary, IDType extends any>({
           onClose();
         }
       } else {
-        notifications.showNotification({
+        notifications.show({
           icon: <Icon icon={Icons.warningCircle} width={24} />,
           color: 'red',
           autoClose: 1000,
@@ -100,7 +99,7 @@ function FormInline<PayloadType extends GenericDictionary, IDType extends any>({
       let editablePayload = getEditablePayload(payload);
       success = await updateAction({ id: currentItemId, _set: editablePayload });
       if (success) {
-        notifications.showNotification({
+        notifications.show({
           icon: <Icon icon={Icons.warningCircle} width={24} />,
           color: 'green',
           autoClose: 1000,
@@ -113,7 +112,7 @@ function FormInline<PayloadType extends GenericDictionary, IDType extends any>({
           onClose();
         }
       } else {
-        notifications.showNotification({
+        notifications.show({
           icon: <Icon icon={Icons.warningCircle} width={24} />,
           color: 'red',
           autoClose: 1000,
@@ -169,7 +168,7 @@ function FormInline<PayloadType extends GenericDictionary, IDType extends any>({
           return (
             <Box component="form" onSubmit={handleSubmit}>
               <Box>
-                <Grid gutter="xs" sx={{ margin: 0 }}>
+                <Grid gutter="xs" style={{ margin: 0 }}>
                   <FieldRenderer
                     formConfig={formConfig}
                     formMode={formMode}
@@ -187,7 +186,7 @@ function FormInline<PayloadType extends GenericDictionary, IDType extends any>({
               <Divider my="sm" mt="xs" variant="dashed" />
 
               <Box>
-                <Group position="right">
+                <Group justify="flex-end">
                   <Group>
                     <Button
                       color="green"

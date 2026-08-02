@@ -1,4 +1,4 @@
-import { MediaQuery } from '@mantine/core';
+import { Box } from '@mantine/core';
 import React from 'react';
 
 type ResponsiveViewProps = {
@@ -14,12 +14,8 @@ const ResponsiveView: React.FC<ResponsiveViewProps> = ({
 }) => {
   return (
     <React.Fragment>
-      <MediaQuery smallerThan={breakPoint} styles={{ display: 'none' }}>
-        {renderDesktop}
-      </MediaQuery>
-      <MediaQuery largerThan={breakPoint} styles={{ display: 'none' }}>
-        {renderMobile}
-      </MediaQuery>
+      <Box visibleFrom={breakPoint}>{renderDesktop}</Box>
+      <Box hiddenFrom={breakPoint}>{renderMobile}</Box>
     </React.Fragment>
   );
 };

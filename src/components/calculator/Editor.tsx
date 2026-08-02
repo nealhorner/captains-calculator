@@ -23,7 +23,7 @@ import { colorFromKey } from 'utils/colors';
 
 import { RecipeNodeType } from './RecipeNodeType';
 import { RecipeEdgeType } from './RecipeEdgeType';
-import { Box, Loader, useMantineTheme } from '@mantine/core';
+import { Box, Loader, useComputedColorScheme } from '@mantine/core';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Icon } from '@iconify/react';
 import Icons from 'components/ui/Icons';
@@ -117,6 +117,7 @@ type EditorProps = {
 
 export const Editor: React.FC<EditorProps> = ({ nodesData, edgesData }) => {
   const [loading, setLoading] = React.useState(true);
+  const colorScheme = useComputedColorScheme('light');
 
   const [nodes, setNodes, onNodesChange] = useNodesState(nodesData);
   const [edges, setEdges, onEdgesChange] = useEdgesState(edgesData);
@@ -190,10 +191,9 @@ export const Editor: React.FC<EditorProps> = ({ nodesData, edgesData }) => {
             }}
           >
             <Box
-              sx={(theme) => ({
-                background:
-                  theme.colorScheme === 'light' ? theme.colors.white : theme.colors.dark[7],
-                backgroundImage: `url("/img/${theme.colorScheme === 'light' ? 'squared-metal.png' : 'squared-metal-inverted.png'}")`,
+              style={(theme) => ({
+                background: colorScheme === 'light' ? theme.colors.white : theme.colors.dark[7],
+                backgroundImage: `url("/img/${colorScheme === 'light' ? 'squared-metal.png' : 'squared-metal-inverted.png'}")`,
                 position: 'absolute',
                 top: 0,
                 left: 0,
@@ -244,7 +244,7 @@ export const Editor: React.FC<EditorProps> = ({ nodesData, edgesData }) => {
 };
 
 export const EditorWrapper = () => {
-  const theme = useMantineTheme();
+  const colorScheme = useComputedColorScheme('light');
   const { nodesData, edgesData } = useAppState((state) => state.recipes);
 
   // Colour each edge from its own id rather than at random, and only rebuild
@@ -255,11 +255,11 @@ export const EditorWrapper = () => {
       edgesData.map((edge: Edge<any>) => ({
         ...edge,
         style: {
-          stroke: colorFromKey(edge.id, theme.colorScheme === 'light' ? 'light' : 'dark'),
+          stroke: colorFromKey(edge.id, colorScheme === 'light' ? 'light' : 'dark'),
           strokeWidth: 3,
         },
       })),
-    [edgesData, theme.colorScheme],
+    [edgesData, colorScheme],
   );
 
   // Keyed on which nodes exist, not how many nodes and edges there are. Re-sizing

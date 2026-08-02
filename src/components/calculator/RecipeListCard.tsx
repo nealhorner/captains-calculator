@@ -1,9 +1,12 @@
 import React from 'react';
+import type { CSSProperties } from 'react';
 import { Card, Group, Box, Text, Image, Tooltip, Indicator, Divider } from '@mantine/core';
 import { Recipe } from 'state/app/effects/loadJsonData';
 import { RecipeId } from 'state/app/effects/loadJsonData';
 import { useAppState } from 'state';
 import { Icon } from '@iconify/react';
+import productFlowClasses from 'components/ui/ProductFlowRow.module.css';
+import classes from './RecipeListCard.module.css';
 
 type RecipeListCardProps = {
   item: Recipe;
@@ -46,25 +49,13 @@ const RecipeListCard: React.FC<RecipeListCardProps> = ({ item, active, available
     <Card
       onClick={() => onItemClick(item.id)}
       shadow="xs"
-      sx={(theme) => ({
-        cursor: available ? 'pointer' : 'initial',
-        backgroundColor: active
-          ? theme.colorScheme === 'light'
-            ? theme.colors.gray[4]
-            : theme.colors.dark[9]
-          : '',
-        opacity: available ? 1 : 0.4,
-        '&:hover': {
-          backgroundColor: available
-            ? theme.colorScheme === 'light'
-              ? theme.colors.gray[3]
-              : theme.colors.dark[9]
-            : '',
-        },
-      })}
+      className={classes.card}
+      data-active={active || undefined}
+      data-available={available || undefined}
+      style={{ '--card-opacity': available ? 1 : 0.4 } as CSSProperties}
     >
       <Box
-        sx={{
+        style={{
           display: 'grid',
           gridGap: 20,
           gridTemplateColumns: 'auto 1fr',
@@ -73,45 +64,33 @@ const RecipeListCard: React.FC<RecipeListCardProps> = ({ item, active, available
         <Box>
           <Box
             p={8}
-            sx={(theme) => ({
+            className={classes.machineIcon}
+            style={(theme) => ({
               display: 'flex',
               justifyContent: 'center',
               alignItems: 'center',
-              backgroundColor: theme.colorScheme === 'light' ? theme.white : theme.colors.dark[9],
               borderRadius: theme.radius.sm,
               pointerEvents: 'none',
-              border: `1px dashed ${theme.colorScheme === 'light' ? theme.colors.gray[4] : theme.colors.dark[9]}`,
             })}
           >
             <Image src={`/assets/buildings/${currentMachine.icon}`} height={62} width={62} />
           </Box>
         </Box>
         <Box>
-          <Group spacing="xs">
-            <Text sx={{ fontSize: 16, lineHeight: '16px' }} weight="bold">
+          <Group gap="xs">
+            <Text style={{ fontSize: 16, lineHeight: '16px' }} fw="bold">
               {currentMachine.name}
             </Text>
-            <Text sx={{ fontSize: 16, lineHeight: '16px' }} color="dimmed">
+            <Text style={{ fontSize: 16, lineHeight: '16px' }} color="dimmed">
               - {item.name}
             </Text>
           </Group>
           <Divider mt="xs" />
-          <Group noWrap mt={15}>
-            <Group
-              noWrap
-              spacing="xs"
-              sx={(theme) => ({
-                '& .product-input .product-icon': {
-                  color: theme.colors.gray[6],
-                },
-                '& .product-input:last-child .product-icon': {
-                  display: 'none',
-                },
-              })}
-            >
+          <Group wrap="nowrap" mt={15}>
+            <Group wrap="nowrap" gap="xs" className={productFlowClasses.row}>
               {recipeInputs.map((product) => {
                 return (
-                  <Group className="product-input" key={`input_${product.id}`} noWrap>
+                  <Group className="product-input" key={`input_${product.id}`} wrap="nowrap">
                     <Tooltip label={product.name} withArrow color="green" withinPortal>
                       <Indicator
                         label={product.quantity}
@@ -129,7 +108,7 @@ const RecipeListCard: React.FC<RecipeListCardProps> = ({ item, active, available
                       >
                         <Box
                           p={8}
-                          sx={(theme) => ({
+                          style={(theme) => ({
                             borderRadius: theme.radius.sm,
                             background: theme.colors.dark[3],
                           })}
@@ -143,28 +122,17 @@ const RecipeListCard: React.FC<RecipeListCardProps> = ({ item, active, available
                 );
               })}
             </Group>
-            <Group spacing="xs">
+            <Group gap="xs">
               <Icon className="results-icon" icon="icomoon-free:arrow-right" width={15} />
             </Group>
-            <Group
-              noWrap
-              spacing="xs"
-              sx={(theme) => ({
-                '& .product-output .product-icon': {
-                  color: theme.colors.gray[6],
-                },
-                '& .product-output:last-child .product-icon': {
-                  display: 'none',
-                },
-              })}
-            >
+            <Group wrap="nowrap" gap="xs" className={productFlowClasses.row}>
               {recipeOutputs.map((product) => {
                 return (
                   <Group
                     className="product-output"
-                    spacing="xs"
+                    gap="xs"
                     key={`output_${product.id}`}
-                    noWrap
+                    wrap="nowrap"
                   >
                     <Tooltip label={product.name} withArrow color="red" withinPortal>
                       <Indicator
@@ -183,7 +151,7 @@ const RecipeListCard: React.FC<RecipeListCardProps> = ({ item, active, available
                       >
                         <Box
                           p={8}
-                          sx={(theme) => ({
+                          style={(theme) => ({
                             borderRadius: theme.radius.sm,
                             background: theme.colors.dark[3],
                           })}

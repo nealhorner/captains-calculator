@@ -1,0 +1,25 @@
+.card {
+  border: 1px solid light-dark(var(--mantine-color-gray-3), var(--mantine-color-dark-5));
+}
+
+.iconButton {
+  display: flex;
+  padding: 4px;
+  border-radius: var(--mantine-radius-sm);
+  color: light-dark(var(--mantine-color-gray-7), var(--mantine-color-gray-5));
+}
+
+.iconButton:hover {
+  background-color: light-dark(var(--mantine-color-gray-2), var(--mantine-color-dark-6));
+}
+
+.deleteButton {
+  display: flex;
+  padding: 4px;
+  border-radius: var(--mantine-radius-sm);
+  color: var(--mantine-color-red-7);
+}
+
+.deleteButton:hover {
+  background-color: light-dark(var(--mantine-color-gray-2), var(--mantine-color-dark-6));
+}

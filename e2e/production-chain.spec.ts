@@ -6,7 +6,7 @@ import { test, expect, Page } from '@playwright/test';
 // one flow that must never silently break.
 
 const firstDrawerCard = (page: Page) =>
-  page.locator('.mantine-Drawer-drawer .mantine-Card-root').first();
+  page.locator('.mantine-Drawer-content .mantine-Card-root').first();
 
 /** Walks the setup flow: product, then building, then recipe. */
 const addTarget = async (page: Page) => {
@@ -80,7 +80,7 @@ test('removing a target clears its chain', async ({ page }) => {
   await expect(page.locator('.react-flow__node')).toHaveCount(1);
 
   await page.getByRole('button', { name: 'Remove target' }).click();
-  await page.getByRole('button', { name: 'Remove Target' }).click();
+  await page.getByRole('dialog').getByRole('button', { name: 'Remove Target' }).click();
 
   await expect(page.locator('.react-flow__node')).toHaveCount(0);
 });

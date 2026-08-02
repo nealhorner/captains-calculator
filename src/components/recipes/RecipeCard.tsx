@@ -1,8 +1,8 @@
 import React from 'react';
-import { Box, Group, Text, Select, Image, Tooltip, Indicator, Stack } from '@mantine/core';
-import { useAppState, useActions } from '../../state/index';
-import { Recipe, RecipeId } from '../../state/app/effects/loadJsonData';
+import { Box, Group, Text, Image, Indicator, Stack } from '@mantine/core';
+import { useAppState } from '../../state/index';
 import { Icon } from '@iconify/react';
+import productFlowClasses from 'components/ui/ProductFlowRow.module.css';
 
 export const RecipeCard = () => {
   const { currentItem: currentRecipe } = useAppState((state) => state.recipes);
@@ -24,23 +24,12 @@ export const RecipeCard = () => {
   });
 
   return (
-    <Group spacing="xs" noWrap>
-      <Group
-        noWrap
-        spacing="xs"
-        sx={(theme) => ({
-          '& .product-input .product-icon': {
-            color: theme.colors.gray[6],
-          },
-          '& .product-input:last-child .product-icon': {
-            display: 'none',
-          },
-        })}
-      >
+    <Group gap="xs" wrap="nowrap">
+      <Group wrap="nowrap" gap="xs" className={productFlowClasses.row}>
         {recipeInputs.map((product) => {
           return (
-            <Group className="product-input" spacing="xs" key={`input_${product.id}`} noWrap>
-              <Stack spacing={5} align="center">
+            <Group className="product-input" gap="xs" key={`input_${product.id}`} wrap="nowrap">
+              <Stack gap={5} align="center">
                 <Indicator
                   label={product.quantity}
                   color="green"
@@ -52,7 +41,7 @@ export const RecipeCard = () => {
                 >
                   <Box
                     p={8}
-                    sx={(theme) => ({
+                    style={(theme) => ({
                       borderRadius: theme.radius.md,
                       border: `1px solid ${theme.colors.gray[1]}`,
                       background: theme.colors.gray[7],
@@ -68,25 +57,14 @@ export const RecipeCard = () => {
           );
         })}
       </Group>
-      <Group spacing="xs">
+      <Group gap="xs">
         <Icon className="results-icon" icon="icomoon-free:arrow-right" width={15} />
       </Group>
-      <Group
-        noWrap
-        spacing="xs"
-        sx={(theme) => ({
-          '& .product-output .product-icon': {
-            color: theme.colors.gray[6],
-          },
-          '& .product-output:last-child .product-icon': {
-            display: 'none',
-          },
-        })}
-      >
+      <Group wrap="nowrap" gap="xs" className={productFlowClasses.row}>
         {recipeOutputs.map((product) => {
           return (
-            <Group className="product-output" spacing="xs" key={`output_${product.id}`} noWrap>
-              <Stack spacing={5}>
+            <Group className="product-output" gap="xs" key={`output_${product.id}`} wrap="nowrap">
+              <Stack gap={5}>
                 <Indicator
                   label={product.quantity}
                   color="red"
@@ -98,7 +76,7 @@ export const RecipeCard = () => {
                 >
                   <Box
                     p={8}
-                    sx={(theme) => ({
+                    style={(theme) => ({
                       borderRadius: theme.radius.md,
                       border: `1px solid ${theme.colors.gray[1]}`,
                       background: theme.colors.gray[7],

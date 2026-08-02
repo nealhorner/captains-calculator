@@ -1,9 +1,10 @@
 import React from 'react';
-import { createStyles, Divider, Tabs } from '@mantine/core';
+import { Divider, Tabs } from '@mantine/core';
 import { matchPath, useLocation, useNavigate } from 'react-router-dom';
 import { Icon } from '@iconify/react';
 
 import Icons, { IconNames } from 'components/ui/Icons';
+import classes from './Tabs.module.css';
 
 type PageTab = {
   label: string;
@@ -18,7 +19,6 @@ type PageTabsProps = {
 };
 
 export const PageTabs: React.FC<PageTabsProps> = ({ tabs, urlRoot, parentId }) => {
-  const { classes } = useTabStyles();
   const navigate = useNavigate();
   const location = useLocation();
   const match = matchPath({ path: `${urlRoot}/:id/:page`, end: true }, location.pathname);
@@ -44,50 +44,32 @@ export const PageTabs: React.FC<PageTabsProps> = ({ tabs, urlRoot, parentId }) =
 
   return (
     <Tabs
-      active={activeTab}
-      onTabChange={onChange}
-      grow
+      value={String(activeTab)}
+      onChange={(value) => value !== null && onChange(Number(value))}
       variant="unstyled"
       mb="md"
       classNames={{
-        tabsListWrapper: classes.tabsListWrapper,
-        tabControl: classes.tabControl,
-        tabActive: classes.tabActive,
+        list: classes.list,
+        tab: classes.tab,
       }}
     >
-      {Object.keys(tabs).map((tabKey) => {
-        let tab = tabs[tabKey];
-        return (
-          <Tabs.Tab
-            key={tabKey}
-            label={tab.label}
-            icon={tab.icon ? <Icon icon={Icons[tab.icon]} width={17} /> : null}
-          />
-        );
-      })}
+      <Tabs.List grow>
+        {Object.keys(tabs).map((tabKey, index) => {
+          let tab = tabs[tabKey];
+          return (
+            <Tabs.Tab
+              key={tabKey}
+              value={String(index)}
+              leftSection={tab.icon ? <Icon icon={Icons[tab.icon]} width={17} /> : null}
+            >
+              {tab.label}
+            </Tabs.Tab>
+          );
+        })}
+      </Tabs.List>
     </Tabs>
   );
 };
-
-export const useTabStyles = createStyles((theme) => ({
-  tabsListWrapper: {
-    backgroundColor: theme.colorScheme === 'light' ? theme.colors.gray[2] : theme.colors.dark[9],
-    padding: 3,
-    borderRadius: theme.radius.sm,
-  },
-  tabActive: {
-    backgroundColor: theme.colorScheme === 'light' ? theme.colors.gray[0] : theme.colors.dark[5],
-    color: theme.colorScheme === 'light' ? theme.colors.gray[8] : theme.colors.dark[1],
-  },
-  tabControl: {
-    fontWeight: 500,
-    borderRadius: theme.radius.sm,
-    color: theme.colorScheme === 'light' ? theme.colors.gray[6] : theme.colors.dark[4],
-    '&:hover': {
-      color: theme.colorScheme === 'light' ? theme.black : theme.white,
-    },
-  },
-}));
 
 export const TabDivider: React.FC<{ label: string }> = ({ label }) => (
   <Divider my="xs" mt={0} mb="md" label={label} variant="dashed" labelPosition="center" />
@@ -100,22 +82,14 @@ export const TabDividerStatus: React.FC<{ label: string; valid: boolean }> = ({ 
     label={label}
     variant="dashed"
     labelPosition="center"
-    styles={(theme) => ({
-      label: {
-        color: !valid
-          ? theme.colors.red[9]
-          : theme.colorScheme === 'light'
-            ? theme.colors.gray[2]
-            : theme.colors.dark[5],
-        '&:before,&:after': {
-          borderTopColor: !valid
-            ? theme.colors.red[9]
-            : theme.colorScheme === 'light'
-              ? theme.colors.gray[2]
-              : theme.colors.dark[5],
-        },
-      },
-    })}
+    className={classes.statusDivider}
+    style={
+      {
+        '--status-divider-color': !valid
+          ? 'var(--mantine-color-red-9)'
+          : 'light-dark(var(--mantine-color-gray-2), var(--mantine-color-dark-5))',
+      } as React.CSSProperties
+    }
   />
 );
 export const TabDividerSpacing: React.FC<{ label: string }> = ({ label }) => (

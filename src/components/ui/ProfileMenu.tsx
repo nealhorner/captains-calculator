@@ -1,33 +1,32 @@
-import { Menu, Button, useMantineTheme, Divider, useMantineColorScheme } from '@mantine/core';
+import { Menu, Button, useMantineTheme, Divider, useComputedColorScheme } from '@mantine/core';
 import { Icon } from '@iconify/react';
+import { useActions } from 'state';
 import Icons from './Icons';
 
 const ProfileMenu = () => {
   const theme = useMantineTheme();
-  const { toggleColorScheme } = useMantineColorScheme();
+  const { toggleColorScheme } = useActions();
+  const colorScheme = useComputedColorScheme('light');
   return (
-    <Menu
-      withArrow
-      control={
-        <Button px={7} variant="subtle" color={theme.colorScheme === 'light' ? 'dark' : 'dark'}>
+    <Menu withArrow>
+      <Menu.Target>
+        <Button px={7} variant="subtle" color={colorScheme === 'light' ? 'dark' : 'dark'}>
           <Icon
             icon={Icons.user}
-            color={theme.colorScheme === 'light' ? theme.colors.red[9] : theme.colors.dark[5]}
+            color={colorScheme === 'light' ? theme.colors.red[9] : theme.colors.dark[5]}
             width={28}
           />
         </Button>
-      }
-      sx={{
-        display: 'flex',
-      }}
-    >
-      <Menu.Item
-        icon={<Icon icon={theme.colorScheme === 'light' ? Icons.dark : Icons.light} />}
-        onClick={() => toggleColorScheme()}
-      >
-        Toggle {theme.colorScheme === 'light' ? 'Dark' : 'Light'} Theme
-      </Menu.Item>
-      <Divider />
+      </Menu.Target>
+      <Menu.Dropdown style={{ display: 'flex' }}>
+        <Menu.Item
+          leftSection={<Icon icon={colorScheme === 'light' ? Icons.dark : Icons.light} />}
+          onClick={() => toggleColorScheme()}
+        >
+          Toggle {colorScheme === 'light' ? 'Dark' : 'Light'} Theme
+        </Menu.Item>
+        <Divider />
+      </Menu.Dropdown>
     </Menu>
   );
 };

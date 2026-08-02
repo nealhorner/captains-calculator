@@ -1,8 +1,10 @@
+import type { CSSProperties } from 'react';
 import { Icon } from '@iconify/react';
 import { MantineColor } from '@mantine/core';
 import { Box, Card, Group, Text } from '@mantine/core';
 import { Link } from 'react-router-dom';
 import Icons, { IconNames } from './Icons';
+import classes from './StatsCard.module.css';
 
 type StatsCardProps = {
   icon?: IconNames;
@@ -26,30 +28,25 @@ const StatsCard: React.FC<StatsCardProps> = ({
         <Text color="gray" size="xs">
           {label}
         </Text>
-        <Group position="apart">
+        <Group justify="space-between">
           {icon && (
             <Box
               py="3px"
-              sx={(theme) => ({
-                lineHeight: `${theme.fontSizes.md}px`,
-                '& .stats-card-icon': {
-                  color: iconColor
-                    ? theme.colors[iconColor as MantineColor][9]
-                    : theme.colorScheme === 'dark'
-                      ? theme.colors.dark[2]
-                      : theme.colors.gray[6],
-                },
-              })}
+              className={classes.iconWrapper}
+              style={
+                {
+                  lineHeight: 'var(--mantine-font-size-md)',
+                  '--stats-icon-color': iconColor
+                    ? `var(--mantine-color-${iconColor}-9)`
+                    : 'light-dark(var(--mantine-color-gray-6), var(--mantine-color-dark-2))',
+                } as CSSProperties
+              }
             >
               <Icon icon={Icons[icon]} width="24" className="stats-card-icon" />
             </Box>
           )}
           <Box>
-            <Text
-              weight={700}
-              size="xl"
-              sx={(theme) => ({ lineHeight: `${theme.fontSizes.lg}px` })}
-            >
+            <Text fw={700} size="xl" style={(theme) => ({ lineHeight: `${theme.fontSizes.lg}px` })}>
               {value}
             </Text>
           </Box>
@@ -65,12 +62,7 @@ const StatsCard: React.FC<StatsCardProps> = ({
         to={link as string}
         shadow="sm"
         p="md"
-        sx={(theme) => ({
-          '&:hover': {
-            backgroundColor:
-              theme.colorScheme === 'light' ? theme.colors.gray[2] : theme.colors.dark[9],
-          },
-        })}
+        className={classes.cardHoverable}
       >
         {renderCardContent()}
       </Card>

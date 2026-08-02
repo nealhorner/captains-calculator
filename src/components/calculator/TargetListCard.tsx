@@ -17,6 +17,7 @@ import { useActions, useAppState } from 'state';
 import { ChainTarget } from 'state/_types';
 import Icons from 'components/ui/Icons';
 import { formatCount } from 'utils/numbers';
+import classes from './TargetListCard.module.css';
 
 type TargetListCardProps = {
   target: ChainTarget;
@@ -60,24 +61,18 @@ export const TargetListCard: React.FC<TargetListCardProps> = ({ target }) => {
     });
   };
 
-  const handleQuantityChange = (value: number | undefined) => {
-    setTargetQuantity({ targetId: target.id, quantity: value ?? 0 });
+  const handleQuantityChange = (value: number | string) => {
+    setTargetQuantity({ targetId: target.id, quantity: Number(value) || 0 });
   };
 
   return (
-    <Card
-      shadow="xs"
-      p="xs"
-      sx={(theme) => ({
-        border: `1px solid ${theme.colorScheme === 'light' ? theme.colors.gray[3] : theme.colors.dark[5]}`,
-      })}
-    >
-      <Stack spacing={6}>
-        <Group position="apart" noWrap>
-          <Group spacing={8} noWrap sx={{ overflow: 'hidden' }}>
+    <Card shadow="xs" p="xs" className={classes.card}>
+      <Stack gap={6}>
+        <Group justify="space-between" wrap="nowrap">
+          <Group gap={8} wrap="nowrap" style={{ overflow: 'hidden' }}>
             <Box
               p={4}
-              sx={(theme) => ({
+              style={(theme) => ({
                 borderRadius: theme.radius.sm,
                 background: theme.colors.dark[3],
                 flexShrink: 0,
@@ -88,30 +83,20 @@ export const TargetListCard: React.FC<TargetListCardProps> = ({ target }) => {
                 width={20}
                 src={`/assets/products/${product ? product.icon : 'Placeholder.png'}`}
                 alt={product ? product.name : 'No product selected'}
-                sx={{ display: 'block', objectFit: 'contain' }}
+                style={{ display: 'block', objectFit: 'contain' }}
               />
             </Box>
-            <Text weight={600} size="sm" sx={{ lineHeight: 1.2 }}>
+            <Text fw={600} size="sm" style={{ lineHeight: 1.2 }}>
               {product ? product.name : 'Select a product'}
             </Text>
           </Group>
 
-          <Group spacing={2} noWrap sx={{ flexShrink: 0 }}>
+          <Group gap={2} wrap="nowrap" style={{ flexShrink: 0 }}>
             <Tooltip label="Change product, building or recipe" withArrow withinPortal>
               <UnstyledButton
                 aria-label="Edit target"
                 onClick={() => setActiveTarget(target.id)}
-                sx={(theme) => ({
-                  display: 'flex',
-                  padding: 4,
-                  borderRadius: theme.radius.sm,
-                  color:
-                    theme.colorScheme === 'light' ? theme.colors.gray[7] : theme.colors.gray[5],
-                  '&:hover': {
-                    backgroundColor:
-                      theme.colorScheme === 'light' ? theme.colors.gray[2] : theme.colors.dark[6],
-                  },
-                })}
+                className={classes.iconButton}
               >
                 <Icon icon={Icons.edit} width={16} />
               </UnstyledButton>
@@ -120,16 +105,7 @@ export const TargetListCard: React.FC<TargetListCardProps> = ({ target }) => {
               <UnstyledButton
                 aria-label="Remove target"
                 onClick={handleRemove}
-                sx={(theme) => ({
-                  display: 'flex',
-                  padding: 4,
-                  borderRadius: theme.radius.sm,
-                  color: theme.colors.red[7],
-                  '&:hover': {
-                    backgroundColor:
-                      theme.colorScheme === 'light' ? theme.colors.gray[2] : theme.colors.dark[6],
-                  },
-                })}
+                className={classes.deleteButton}
               >
                 <Icon icon={Icons.delete} width={16} />
               </UnstyledButton>
@@ -138,7 +114,7 @@ export const TargetListCard: React.FC<TargetListCardProps> = ({ target }) => {
         </Group>
 
         {(machine || recipe) && (
-          <Text size="xs" color="dimmed" sx={{ lineHeight: 1.3 }}>
+          <Text size="xs" c="dimmed" style={{ lineHeight: 1.3 }}>
             {[recipe?.name, machine?.name].filter(Boolean).join(' · ')}
           </Text>
         )}
@@ -152,18 +128,18 @@ export const TargetListCard: React.FC<TargetListCardProps> = ({ target }) => {
               onChange={handleQuantityChange}
               min={0}
               step={1}
-              precision={2}
-              noClampOnBlur
+              decimalScale={2}
+              clampBehavior="none"
               rightSection={
-                <Text size="xs" color="dimmed" pr={4}>
+                <Text size="xs" c="dimmed" pr={4}>
                   /60s
                 </Text>
               }
               rightSectionWidth={44}
-              styles={{ rightSection: { pointerEvents: 'none' } }}
+              rightSectionPointerEvents="none"
             />
             {node && (
-              <Text size="xs" color="dimmed">
+              <Text size="xs" c="dimmed">
                 {`${formatCount(node.machinesCount)} × ${node.machine.name}`}
                 {node.buildingsRequired !== node.machinesCount &&
                   ` (build ${node.buildingsRequired})`}
@@ -171,7 +147,7 @@ export const TargetListCard: React.FC<TargetListCardProps> = ({ target }) => {
             )}
           </React.Fragment>
         ) : (
-          <Text size="xs" color="dimmed">
+          <Text size="xs" c="dimmed">
             Pick a building and recipe to finish this target.
           </Text>
         )}
