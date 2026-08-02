@@ -14,7 +14,6 @@
     "@tisoap/react-flow-smart-edge": "^4.13.1",
     "@xyflow/react": "^12",
     "dayjs": "^1.11.21",
-    "formik": "^2.4.9",
     "framer-motion": "^12.43.0",
     "overmind": "^28.0.1",
     "overmind-react": "^29.0.1",

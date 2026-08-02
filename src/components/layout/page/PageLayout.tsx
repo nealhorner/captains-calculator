@@ -13,8 +13,8 @@ type PageLayoutProps = {
   showFooterNav?: boolean;
 };
 
-const PageLayout: React.FC<PageLayoutProps> = ({
-  header = null,
+const PageLayout: React.FC<React.PropsWithChildren<PageLayoutProps>> = ({
+  header,
   children,
   showFooterNav = true,
 }) => {

@@ -93,7 +93,9 @@ jobs:
               repo: context.repo.repo,
               issue_number: context.issue.number,
             });
-            const already = comments.some(c => c.body?.includes('@coderabbitai review'));
+            const already = comments.some(
+              c => c.user?.login === 'github-actions[bot]' && c.body?.trim() === '@coderabbitai review'
+            );
             core.setOutput('already_requested', already);
 
       - name: Comment requesting review

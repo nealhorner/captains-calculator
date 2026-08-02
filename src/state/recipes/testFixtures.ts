@@ -8,7 +8,7 @@ import {
   RecipeId,
   RecipeProduct,
 } from 'state/app/effects';
-import { ChainTarget } from 'state/_types';
+import { ChainTarget, ProductRecipes } from 'state/_types';
 import ProductionNode from './ProductionNode';
 
 export const makeProduct = (id: string, name = id): Product => ({
@@ -111,8 +111,8 @@ export const buildTestWorld = () => {
       category,
       inputs,
       outputs,
-      sources: {},
-      targets: {},
+      sources: {} as ProductRecipes,
+      targets: {} as ProductRecipes,
     });
   };
 
