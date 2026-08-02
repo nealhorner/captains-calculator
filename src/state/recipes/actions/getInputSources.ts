@@ -10,7 +10,7 @@ export const getInputSources: Action<RecipeId, ProductRecipes> = ({ state }, rec
       : [];
     if (inputRecipes[input.id]) {
       return recipeSources.length
-        ? { ...inputRecipes, [input.id]: [...inputRecipes[input.id], recipeSources] }
+        ? { ...inputRecipes, [input.id]: [...inputRecipes[input.id], ...recipeSources] }
         : inputRecipes;
     } else {
       return recipeSources.length ? { ...inputRecipes, [input.id]: recipeSources } : inputRecipes;

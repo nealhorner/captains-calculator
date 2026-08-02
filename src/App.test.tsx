@@ -27,7 +27,9 @@ describe('App routing', () => {
       </TestProviders>,
     );
 
-    expect(screen.getByText('Production Chain Setup')).toBeInTheDocument();
+    // The setup bar is now a list of production targets rather than a single
+    // product, so its heading changed with it.
+    expect(screen.getByText('Production Targets')).toBeInTheDocument();
   });
 
   it('renders NotFound for an unmatched route without crashing', async () => {

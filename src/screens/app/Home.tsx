@@ -9,7 +9,15 @@ import {
 } from 'components/recipes/MachineRecipeSelect';
 import { ProductSelect } from 'components/products/ProductSelect';
 import { useActions, useAppState } from 'state';
-import { Category, Machine, ProductId, Recipe, RecipeId } from 'state/app/effects';
+import {
+  Category,
+  Machine,
+  ProductId,
+  Recipe,
+  RecipeId,
+  MAINTENANCE_I,
+  MAINTENANCE_II,
+} from 'state/app/effects';
 import CostsIcon from 'components/ui/CostsIcons';
 import productFlowClasses from 'components/ui/ProductFlowRow.module.css';
 import NeedsBage, { needMap } from 'components/ui/NeedsBadge';
@@ -64,10 +72,10 @@ const renderRecipeSource = (recipe: Recipe, machine: Machine, category: Category
             return <CostsBadge key={key} product={product} />;
           })}
           <NeedsBage need="workers" value={machine.workers} />
-          {machine.maintenance_cost_units === 'maintenance_i' && (
+          {machine.maintenance_cost_units === MAINTENANCE_I && (
             <NeedsBage need="maintenance1" value={machine.maintenance_cost_quantity} />
           )}
-          {machine.maintenance_cost_units === 'maintenance_iI' && (
+          {machine.maintenance_cost_units === MAINTENANCE_II && (
             <NeedsBage need="maintenance2" value={machine.maintenance_cost_quantity} />
           )}
           <NeedsBage need="electricity" value={machine.electricity_consumed} />
@@ -371,10 +379,10 @@ const ResultsSummary = () => {
 
     needs.workers.total += machine.workers;
     needs.electricity.total += machine.electricity_consumed;
-    if (machine.maintenance_cost_units === 'maintenance_i') {
+    if (machine.maintenance_cost_units === MAINTENANCE_I) {
       needs.maintenance1.total += machine.maintenance_cost_quantity;
     }
-    if (machine.maintenance_cost_units === 'maintenance_ii') {
+    if (machine.maintenance_cost_units === MAINTENANCE_II) {
       needs.maintenance2.total += machine.maintenance_cost_quantity;
     }
 

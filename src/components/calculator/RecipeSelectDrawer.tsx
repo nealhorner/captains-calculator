@@ -8,21 +8,22 @@ import { RecipeId } from 'state/app/effects';
 import classes from './RecipeSelectDrawer.module.css';
 
 export const RecipeSelectDrawer = () => {
-  const currentProduct = useAppState((state) => state.products.currentItem);
-  const currentMachine = useAppState((state) => state.machines.currentItem);
+  const allProducts = useAppState((state) => state.products.items);
+  const allMachines = useAppState((state) => state.machines.items);
+  const activeTarget = useAppState((state) => state.recipes.activeTarget);
 
-  const { itemsList, currentItem } = useAppState((state) => state.recipes);
+  const { itemsList, items } = useAppState((state) => state.recipes);
 
-  const selectRecipe = useActions().recipes.selectRecipe;
-  const selectRecipesItem = useActions().recipes.selectRecipesItem;
-  const resetNodes = useActions().recipes.resetNodes;
+  const setTargetRecipe = useActions().recipes.setTargetRecipe;
 
   const [opened, setOpened] = React.useState(false);
 
+  const currentProduct = activeTarget?.productId ? allProducts[activeTarget.productId] : null;
+  const currentMachine = activeTarget?.machineId ? allMachines[activeTarget.machineId] : null;
+  const currentItem = activeTarget?.recipeId ? items[activeTarget.recipeId] : null;
+
   const handleSelectRecipe = (id: RecipeId) => {
-    resetNodes();
-    selectRecipe(id);
-    selectRecipesItem(id);
+    setTargetRecipe(id);
     setOpened(false);
   };
 

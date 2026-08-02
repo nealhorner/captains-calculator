@@ -130,12 +130,7 @@ const SelectItemWithMachine: React.FC<{ recipe: Recipe; machine: Machine | null 
                 background: theme.colors.gray[0],
               })}
             >
-              <Image
-                height={35}
-                radius="md"
-                src={`/assets/buildings/${machine.icon}`}
-                alt={machine.name}
-              />
+              <Image height={35} radius="md" src={`/assets/buildings/${machine.icon}`} alt={machine.name} />
             </Box>
             <Box>
               <Text fw={500} size="md" style={{ lineHeight: '1em' }}>
@@ -153,12 +148,7 @@ const SelectItemWithMachine: React.FC<{ recipe: Recipe; machine: Machine | null 
                 background: theme.colors.gray[0],
               })}
             >
-              <Image
-                height={35}
-                radius="md"
-                src={`/assets/buildings/Placeholder.png`}
-                alt={recipe.name}
-              />
+              <Image height={35} radius="md" src={`/assets/buildings/Placeholder.png`} alt={recipe.name} />
             </Box>
             <Box>
               <Text fw={500} size="md" style={{ lineHeight: '1em' }}>
@@ -248,20 +238,17 @@ const SelectItemWithMachine: React.FC<{ recipe: Recipe; machine: Machine | null 
 };
 
 const labelFilter: OptionsFilter = ({ options, search }) =>
-  options.filter(
-    (option) =>
-      'label' in option && option.label.toLowerCase().includes(search.toLowerCase().trim()),
-  );
+  options.filter((option) => 'label' in option && option.label.toLowerCase().includes(search.toLowerCase().trim()));
 
 export const MachineRecipeSelect = () => {
   const currentProduct = useAppState((state) => state.products.currentItem);
   const currentMachine = useAppState((state) => state.machines.currentItem);
   const { itemsList: allRecipes, currentItemId } = useAppState((state) => state.recipes);
-  const selectRecipe = useActions().recipes.selectRecipe;
+  const setCurrentRecipe = useActions().recipes.setCurrentRecipe;
   const selectRecipesItem = useActions().recipes.selectRecipesItem;
   const onChange = (recipeId: string | null) => {
     if (!recipeId) return;
-    selectRecipe(recipeId as RecipeId);
+    setCurrentRecipe(recipeId as RecipeId);
     selectRecipesItem(recipeId as RecipeId);
   };
   if (!currentMachine || !currentProduct) return null;

@@ -4,21 +4,18 @@ import { useAppState, useActions } from '../../state/index';
 import { ProductId } from '../../state/app/effects/loadJsonData';
 
 const labelFilter: OptionsFilter = ({ options, search }) =>
-  options.filter(
-    (option) =>
-      'label' in option && option.label.toLowerCase().includes(search.toLowerCase().trim()),
-  );
+  options.filter((option) => 'label' in option && option.label.toLowerCase().includes(search.toLowerCase().trim()));
 
 export const ProductSelect = () => {
   const { itemsList, currentItemId } = useAppState((state) => state.products);
   const selectProduct = useActions().products.selectProduct;
   const selectMachine = useActions().machines.selectMachine;
-  const selectRecipe = useActions().recipes.selectRecipe;
-  const delectRecipesItem = useActions().recipes.delectRecipesItem;
+  const setCurrentRecipe = useActions().recipes.setCurrentRecipe;
+  const deSelectRecipesItem = useActions().recipes.deSelectRecipesItem;
   const onChange = (productId: string | null) => {
     selectMachine(null);
-    selectRecipe(null);
-    delectRecipesItem(null);
+    setCurrentRecipe(null);
+    deSelectRecipesItem(null);
     selectProduct(productId as ProductId | null);
   };
   const productsById = new Map(itemsList.map((p) => [p.id, p]));

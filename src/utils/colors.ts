@@ -47,3 +47,19 @@ export function generateLightColorHex() {
     color += ('0' + Math.floor(((1 + Math.random()) * Math.pow(16, 2)) / 2).toString(16)).slice(-2);
   return color;
 }
+
+/**
+ * A stable colour derived from a string, so the same key always gets the same
+ * colour. Used for graph edges: a random colour per render makes them flicker
+ * every time the chain is re-sized.
+ */
+export function colorFromKey(key: string, scheme: 'light' | 'dark' = 'light') {
+  let hash = 0;
+  for (let i = 0; i < key.length; i++) {
+    hash = (hash << 5) - hash + key.charCodeAt(i);
+    hash |= 0;
+  }
+  const hue = Math.abs(hash) % 360;
+  // Dark scheme needs lighter strokes to stay visible against the background.
+  return scheme === 'light' ? `hsl(${hue}, 65%, 35%)` : `hsl(${hue}, 70%, 65%)`;
+}

@@ -10,7 +10,7 @@ export const getOutputTargets: Action<RecipeId, ProductRecipes> = ({ state }, re
       : [];
     if (outputRecipes[output.id]) {
       return recipeTargets.length
-        ? { ...outputRecipes, [output.id]: [...outputRecipes[output.id], recipeTargets] }
+        ? { ...outputRecipes, [output.id]: [...outputRecipes[output.id], ...recipeTargets] }
         : outputRecipes;
     } else {
       return recipeTargets.length

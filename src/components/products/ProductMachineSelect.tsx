@@ -4,21 +4,18 @@ import { useAppState, useActions } from '../../state/index';
 import { MachineId } from '../../state/app/effects/loadJsonData';
 
 const labelFilter: OptionsFilter = ({ options, search }) =>
-  options.filter(
-    (option) =>
-      'label' in option && option.label.toLowerCase().includes(search.toLowerCase().trim()),
-  );
+  options.filter((option) => 'label' in option && option.label.toLowerCase().includes(search.toLowerCase().trim()));
 
 export const ProductMachineSelect = () => {
   const currentProduct = useAppState((state) => state.products.currentItem);
   const { itemsList, currentItemId } = useAppState((state) => state.machines);
   const selectMachine = useActions().machines.selectMachine;
-  const selectRecipe = useActions().recipes.selectRecipe;
-  const delectRecipesItem = useActions().recipes.delectRecipesItem;
+  const setCurrentRecipe = useActions().recipes.setCurrentRecipe;
+  const deSelectRecipesItem = useActions().recipes.deSelectRecipesItem;
   const onChange = (machineId: string | null) => {
     if (!machineId) return;
-    selectRecipe(null);
-    delectRecipesItem(null);
+    setCurrentRecipe(null);
+    deSelectRecipesItem(null);
     selectMachine(machineId as MachineId);
   };
   if (!currentProduct) return null;

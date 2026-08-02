@@ -29,6 +29,7 @@ const Icons = {
   delete: 'ph:trash-duotone',
   download: 'ph:download-simple-bold',
   upload: 'ph:upload-simple-bold',
+  layout: 'ph:graph-duotone',
 };
 
 export type IconNames = keyof typeof Icons;

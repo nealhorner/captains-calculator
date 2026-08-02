@@ -1,3 +1,4 @@
+import { MAINTENANCE_I, MAINTENANCE_II } from 'state/app/effects';
 import { Box, Card, Grid, Group, Text, Image, Stack } from '@mantine/core';
 import PageHeader from 'components/layout/page/PageHeader';
 import PageLayout from 'components/layout/page/PageLayout';
@@ -52,13 +53,13 @@ const Buildings: React.FC = () => {
                               </Text>
                               <Group gap={2}>
                                 <NeedsBage need="workers" value={i.workers} />
-                                {i.maintenance_cost_units === 'maintenance_i' && (
+                                {i.maintenance_cost_units === MAINTENANCE_I && (
                                   <NeedsBage
                                     need="maintenance1"
                                     value={i.maintenance_cost_quantity}
                                   />
                                 )}
-                                {i.maintenance_cost_units === 'maintenance_iI' && (
+                                {i.maintenance_cost_units === MAINTENANCE_II && (
                                   <NeedsBage
                                     need="maintenance2"
                                     value={i.maintenance_cost_quantity}
