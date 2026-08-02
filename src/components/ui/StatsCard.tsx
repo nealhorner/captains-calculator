@@ -7,14 +7,14 @@ import Icons, { IconNames } from './Icons';
 import classes from './StatsCard.module.css';
 
 type StatsCardProps = {
-  icon?: IconNames;
-  label?: string;
-  value?: number;
-  link?: string;
-  iconColor?: MantineColor;
+  icon?: IconNames | null;
+  label?: string | null;
+  value?: number | null;
+  link?: string | false;
+  iconColor?: MantineColor | false;
 };
 
-const StatsCard: React.FC<StatsCardProps> = ({
+const StatsCard: React.FC<React.PropsWithChildren<StatsCardProps>> = ({
   icon = null,
   label = null,
   value = null,

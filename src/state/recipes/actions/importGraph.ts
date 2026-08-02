@@ -4,7 +4,16 @@ import { RestoreGraphResult } from './restoreGraph';
 
 export type ImportGraphResult = RestoreGraphResult;
 
-export const importGraph: Action<unknown, ImportGraphResult> = ({ actions }, data) => {
+/**
+ * Parsed-JSON shape for imported data. Deliberately not `unknown`: Overmind's
+ * action-binding types treat a bare `unknown` payload as structurally
+ * assignable to `void` (an unknown-accepting function is a supertype of a
+ * void-accepting one), which collapses the bound action to a zero-arg
+ * function and breaks call sites like `actions.importGraph(data)`.
+ */
+export type UnknownJson = string | number | boolean | null | { [key: string]: unknown } | unknown[];
+
+export const importGraph: Action<UnknownJson, ImportGraphResult> = ({ actions }, data) => {
   if (!isExportedGraph(data)) {
     return {
       imported: 0,

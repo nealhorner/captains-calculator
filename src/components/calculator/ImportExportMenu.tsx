@@ -7,6 +7,7 @@ import { notifications } from '@mantine/notifications';
 import { useActions, useAppState } from 'state';
 import Icons from 'components/ui/Icons';
 import { downloadTextFile } from 'utils/download';
+import { UnknownJson } from 'state/recipes/actions/importGraph';
 
 export const ImportExportMenu = () => {
   const { nodesList } = useAppState((state) => state.recipes);
@@ -41,7 +42,7 @@ export const ImportExportMenu = () => {
   };
 
   const runImport = (text: string) => {
-    let data: unknown;
+    let data: UnknownJson;
     try {
       data = JSON.parse(text);
     } catch {
