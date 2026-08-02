@@ -1,6 +1,6 @@
 import { Category, Machine, Product, Recipe, RecipeProduct } from 'state/app/effects';
 import { ProductRecipes } from 'state/_types';
-import { Edge } from 'react-flow-renderer';
+import { Edge } from '@xyflow/react';
 import { generateDarkColorHex } from 'utils/colors';
 import { RecipeNode } from 'components/calculator/Editor';
 
@@ -234,10 +234,10 @@ class ProductionNode {
   }
 
   get nodeData(): RecipeNode[] {
-    let mainNode = {
+    let mainNode: RecipeNode = {
       id: this.id,
       type: 'RecipeNode',
-      data: this,
+      data: this as RecipeNode['data'],
       position: { x: 0, y: 0 },
     };
     return [mainNode];

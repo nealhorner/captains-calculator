@@ -13,7 +13,7 @@ import {
   Button,
   useComputedColorScheme,
 } from '@mantine/core';
-import { Handle, Position, NodeProps } from 'react-flow-renderer';
+import { Handle, Position, NodeProps } from '@xyflow/react';
 import { Icon } from '@iconify/react';
 
 import { sortArray } from 'utils/objects';
@@ -30,7 +30,7 @@ import CostsBadge from 'components/ui/CostsBadge';
 import NeedsBage from 'components/ui/NeedsBadge';
 import Icons from 'components/ui/Icons';
 import { NodeRecipeLink } from 'components/calculator/NodeRecipeSelect';
-import { RecipeNodeData } from './Editor';
+import { RecipeNode } from './Editor';
 import { useModals } from '@mantine/modals';
 import { useActions } from 'state';
 import classes from './RecipeNodeType.module.css';
@@ -52,7 +52,7 @@ const handleStyle: React.CSSProperties = {
 export const RecipeNodeType = ({
   id,
   data: { recipe, machine, category, inputs, outputs, sources, targets },
-}: NodeProps<RecipeNodeData>) => {
+}: NodeProps<RecipeNode>) => {
   const [modalOpened, setModalOpened] = React.useState(false);
   const [selectedDirection, setSelectedDirection] = React.useState<'input' | 'output'>('input');
   const [selectedProduct, setSelectedProduct] = React.useState<

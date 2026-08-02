@@ -19,6 +19,10 @@
 
 ## Phase 2 — Build System & Core Upgrades (Critical)
 
+### Package Manager Migration
+
+- [ ] Migrate off `yarn` to `pnpm` (or `npm`) — regenerate lockfile, update `package.json` scripts/engines, update CI workflow (`.github/workflows/`), and update any docs/README referencing `yarn` commands
+
 ### CRA to Vite Migration
 
 - [x] Replace `react-scripts` with `vite` + `@vitejs/plugin-react`
@@ -46,14 +50,17 @@
 
 ## Phase 3 — Test Coverage
 
-The project has testing libraries installed (`@testing-library/react`, `jest-dom`, `user-event`); test coverage is still minimal but no longer zero — see `src/state/recipes/actions/linkRecipe.test.ts`.
+The project has testing libraries installed (`@testing-library/react`, `jest-dom`, `user-event`) and now has real coverage across unit, integration, and E2E layers.
 
 - [x] Set up Vitest (replaces Jest after Vite migration)
-- [ ] Add unit tests for `ProductionNode` class (`src/state/recipes/ProductionNode.ts`) — it's the core domain logic
-- [ ] Add unit tests for key Overmind actions: `selectRecipe`, `calculateGraph`, `deleteNode`
+- [x] Add unit tests for `ProductionNode` class (`src/state/recipes/ProductionNode.ts`) — see `ProductionNode.test.ts`
+- [x] Add unit tests for key Overmind actions: `selectRecipe`, `calculateGraph`, `deleteNode`
 - [x] Add unit tests for key Overmind action: `linkRecipe`
-- [ ] Add integration tests for the Editor flow (select product -> machine -> recipe -> link nodes)
-- [ ] Add smoke tests for each route/screen rendering without crashing
+- [x] Add integration tests for the Editor flow (select product -> machine -> recipe -> link nodes) — see `src/state/recipes/editorFlow.test.ts`
+- [x] Add smoke tests for each route/screen rendering without crashing — see `App.test.tsx` and `src/screens/app/screens.test.tsx`
+- [x] Add Playwright E2E tests covering the main production-chain workflow (product -> building -> recipe -> results summary, plus localStorage persistence across reload) — see `e2e/production-chain.spec.ts`, run with `yarn test:e2e`
+
+Upgraded `@testing-library/react` (12 -> 16) and `@testing-library/user-event` (13 -> 14) as part of this work — they didn't support React 19's `createRoot`-based test rendering, which blocked any DOM-level test. This also closes the corresponding item under Phase 4.
 
 ---
 
@@ -82,10 +89,10 @@ This is a large migration. Mantine v7 is a near-full rewrite.
 
 ### react-flow-renderer -> @xyflow/react
 
-- [ ] Rename `react-flow-renderer` (deprecated) to `@xyflow/react` (v11+)
-- [ ] Update custom node/edge type APIs (`RecipeNodeType.tsx`, `RecipeEdgeType.tsx`)
-- [ ] Verify `@tisoap/react-flow-smart-edge` compatibility or find alternative
-- [ ] Update Dagre layout integration for new React Flow API
+- [x] Rename `react-flow-renderer` (deprecated) to `@xyflow/react` — the package was renamed twice (`react-flow-renderer` v10 → `reactflow` v11 → `@xyflow/react` v12); installed `@xyflow/react@12.11.2` (the current major; smart-edge itself now requires `>=12`)
+- [x] Update custom node/edge type APIs (`RecipeNodeType.tsx`, `RecipeEdgeType.tsx`)
+- [x] Verify `@tisoap/react-flow-smart-edge` compatibility or find alternative — upgraded to `4.13.1`, which targets `@xyflow/react` directly
+- [x] Update Dagre layout integration for new React Flow API — sizing now reads `node.measured` instead of the old `node.width`/`node.height`
 
 ### Other Dependency Upgrades
 
@@ -93,7 +100,7 @@ This is a large migration. Mantine v7 is a near-full rewrite.
 - [ ] `formik` 2.x — evaluate replacing with `react-hook-form` (lighter, more actively maintained)
 - [ ] `yup` 0.x -> 1.x (breaking changes in schema API)
 - [ ] `@iconify/react` 3.x -> 4.x
-- [ ] `@testing-library/react` 12 -> 16+
+- [x] `@testing-library/react` 12 -> 16+ (done in Phase 3, was blocking React 19 DOM tests)
 - [ ] `dagre` 0.8.5 — check if still maintained, consider `@dagrejs/dagre` or `elkjs` exclusively
 - [ ] `dayjs` 1.10 -> 1.11+ (minor)
 
@@ -156,6 +163,35 @@ This is a large migration. Mantine v7 is a near-full rewrite.
 - [ ] Test keyboard navigation through the React Flow graph editor
 - [ ] Add meaningful alt text or `role="img"` + `aria-label` to background images in `Editor.tsx`
 - [ ] Audit Mantine component usage for missing ARIA attributes (only 18 ARIA instances found across codebase)
+
+---
+
+## Phase 8 — Untracked Gaps (from follow-up audit, 2026-08-01)
+
+### Crash Risk
+
+- [ ] Wrap `JSON.parse(settings)` in `src/state/app/effects/loadLocaStorageSettings.ts` in a try/catch — unlike the sibling `loadGraphState.ts`, corrupted or manually-edited `app-settings` localStorage throws uncaught on every app boot, causing a full white-screen crash with no recovery
+- [ ] React Error Boundary — see Phase 5's "Add a React Error Boundary" item (canonical, not duplicated here)
+
+### CI
+
+- [ ] Add `yarn typecheck` to `.github/workflows/ci.yml` — CI currently runs `format:check`, `lint`, and `test:ci` but never type-checks, so TS errors can merge to `main` silently mid-migration
+
+### Data Integrity
+
+- [ ] Validate imported JSON chains against the real `RecipeIODictInput`/`RecipeIODictOutput` shapes in `src/state/recipes/actions/importGraph.ts` / `importExport.ts` — current validation only checks `typeof === 'object'`, so a malformed export can pass validation and fail later
+- [ ] Add a schema/version field to the values stored under the `production-graph` and `app-settings` localStorage keys (the export format already has one) so a future state-shape change has a migration path instead of silently loading stale/incompatible data
+
+### Repo Hygiene
+
+- [ ] Remove or relocate `notes.txt` (41KB) and `parse.js` (11KB, hardcoded local paths) from repo root — unreferenced scratch/migration leftovers
+- [ ] Add a `LICENSE` file and `CONTRIBUTING.md` — app is publicly hosted at captains-calculator.com with neither
+
+### Untracked Categories
+
+- [ ] Add error-tracking/monitoring (e.g. Sentry) for production crash visibility — today `console.error` is the only mechanism
+- [ ] Evaluate i18n needs — all UI strings are hardcoded English with no i18n framework in place
+- [ ] Evaluate mobile/responsive support for the three-panel Editor layout — `useMediaQuery` is used in `FieldRenderer.tsx` only; the core editor has no mobile adaptation
 
 ---
 

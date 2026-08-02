@@ -1,5 +1,5 @@
 import Elk, { ElkNode, ElkPrimitiveEdge } from 'elkjs';
-import { Node, Edge } from 'react-flow-renderer';
+import { Node, Edge } from '@xyflow/react';
 
 /* From https://github.com/wbkd/react-flow/issues/5#issuecomment-954001434 */
 /* 
@@ -21,10 +21,10 @@ const elk = new Elk({
   },
 });
 
-export const createGraphLayout = async (
-  nodes: Array<Node>,
+export const createGraphLayout = async <NodeType extends Node = Node>(
+  nodes: Array<NodeType>,
   edges: Array<Edge>,
-): Promise<Array<Node>> => {
+): Promise<Array<NodeType>> => {
   const elkNodes: ElkNode[] = [];
   const elkEdges: ElkPrimitiveEdge[] = [];
 
