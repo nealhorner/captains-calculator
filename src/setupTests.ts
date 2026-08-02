@@ -25,7 +25,7 @@ if (typeof globalThis.ResizeObserver === 'undefined') {
 // = global`, so `window.localStorage` just points back at the same shadowed
 // global. Vitest stashes the real JSDOM instance at `global.jsdom`, which
 // still holds the actual, unaliased Window — pull the storages from there.
-const realWindow = (globalThis as unknown as { jsdom?: { window: Window } }).jsdom?.window;
+const realWindow = typeof jsdom !== 'undefined' ? jsdom.window : undefined;
 if (realWindow) {
   Object.defineProperty(globalThis, 'localStorage', {
     value: realWindow.localStorage,
