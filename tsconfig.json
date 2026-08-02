@@ -4,7 +4,7 @@
       "*": ["./src/*"]
     },
     "target": "es2020",
-    "types": ["vite/client"],
+    "types": ["vite/client", "vitest/jsdom"],
     "lib": ["dom", "dom.iterable", "esnext"],
     "allowJs": true,
     "skipLibCheck": true,
