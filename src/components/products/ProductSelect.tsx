@@ -4,7 +4,10 @@ import { useAppState, useActions } from '../../state/index';
 import { ProductId } from '../../state/app/effects/loadJsonData';
 
 const labelFilter: OptionsFilter = ({ options, search }) =>
-  options.filter((option) => 'label' in option && option.label.toLowerCase().includes(search.toLowerCase().trim()));
+  options.filter(
+    (option) =>
+      'label' in option && option.label.toLowerCase().includes(search.toLowerCase().trim()),
+  );
 
 export const ProductSelect = () => {
   const { itemsList, currentItemId } = useAppState((state) => state.products);

@@ -192,10 +192,7 @@ export const ResultsSummary = () => {
 
   const renderBuildings = () => {
     return (
-      <Table
-        horizontalSpacing={4}
-        verticalSpacing={4}
-      >
+      <Table horizontalSpacing={4} verticalSpacing={4}>
         <thead>
           <tr>
             <th colSpan={3}>Buildings</th>
@@ -254,10 +251,7 @@ export const ResultsSummary = () => {
 
   const renderCosts = () => {
     return (
-      <Table
-        horizontalSpacing={4}
-        verticalSpacing={4}
-      >
+      <Table horizontalSpacing={4} verticalSpacing={4}>
         <thead>
           <tr>
             <th colSpan={3}>Construction Costs</th>
@@ -303,10 +297,7 @@ export const ResultsSummary = () => {
 
   const renderNeeds = () => {
     return (
-      <Table
-        horizontalSpacing={4}
-        verticalSpacing={4}
-      >
+      <Table horizontalSpacing={4} verticalSpacing={4}>
         <thead>
           <tr>
             <th colSpan={3}>Needs</th>
@@ -361,10 +352,7 @@ export const ResultsSummary = () => {
 
   const renderTotalOutputs = () => {
     return (
-      <Table
-        horizontalSpacing={4}
-        verticalSpacing={4}
-      >
+      <Table horizontalSpacing={4} verticalSpacing={4}>
         <thead>
           <tr>
             <th colSpan={3}>Gross Outputs (60s)</th>
@@ -410,10 +398,7 @@ export const ResultsSummary = () => {
 
   const renderTotalInputs = () => {
     return (
-      <Table
-        horizontalSpacing={4}
-        verticalSpacing={4}
-      >
+      <Table horizontalSpacing={4} verticalSpacing={4}>
         <thead>
           <tr>
             <th colSpan={3}>Gross Inputs (60s)</th>
@@ -460,10 +445,7 @@ export const ResultsSummary = () => {
   /** What each target asked for against what the chain actually produces. */
   const renderTargets = () => {
     return (
-      <Table
-        horizontalSpacing={4}
-        verticalSpacing={4}
-      >
+      <Table horizontalSpacing={4} verticalSpacing={4}>
         <thead>
           <tr>
             <th colSpan={3}>Targets (60s)</th>
@@ -520,10 +502,7 @@ export const ResultsSummary = () => {
   /** Products the chain cannot make itself, i.e. what it must be fed. */
   const renderRawInputs = () => {
     return (
-      <Table
-        horizontalSpacing={4}
-        verticalSpacing={4}
-      >
+      <Table horizontalSpacing={4} verticalSpacing={4}>
         <thead>
           <tr>
             <th colSpan={3}>Raw Inputs (60s)</th>

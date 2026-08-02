@@ -198,8 +198,7 @@ export const RecipeNodeType = ({
               p={4}
               style={(theme) => ({
                 borderRadius: theme.radius.sm,
-                background:
-                  colorScheme === 'light' ? theme.colors.dark[3] : theme.colors.dark[5],
+                background: colorScheme === 'light' ? theme.colors.dark[3] : theme.colors.dark[5],
               })}
             >
               <Image
@@ -243,8 +242,7 @@ export const RecipeNodeType = ({
               p={4}
               style={(theme) => ({
                 borderRadius: theme.radius.sm,
-                background:
-                  colorScheme === 'light' ? theme.colors.dark[3] : theme.colors.dark[5],
+                background: colorScheme === 'light' ? theme.colors.dark[3] : theme.colors.dark[5],
               })}
             >
               <Image
@@ -411,11 +409,7 @@ export const RecipeNodeType = ({
                           />
                         </Box>
                         {product.satisfied ? (
-                          <Tooltip
-                            label="Input Satisfied"
-                            withArrow
-                            withinPortal
-                          >
+                          <Tooltip label="Input Satisfied" withArrow withinPortal>
                             <Box
                               style={(theme) => ({
                                 display: 'flex',
@@ -469,11 +463,7 @@ export const RecipeNodeType = ({
                     <Group gap={5} wrap="nowrap">
                       <Group gap={5} wrap="nowrap">
                         {machine.isStorage || machine.isMine || product.satisfied ? (
-                          <Tooltip
-                            label="Fully Consumed Downstream"
-                            withArrow
-                            withinPortal
-                          >
+                          <Tooltip label="Fully Consumed Downstream" withArrow withinPortal>
                             <Box
                               style={(theme) => ({
                                 display: 'flex',
@@ -577,12 +567,7 @@ export const RecipeNodeType = ({
                         </Tooltip>
                       </Handle>
                       {!product.satisfied && (
-                        <Tooltip
-                          label="Add Output Target"
-                          withArrow
-                          withinPortal
-                          position="right"
-                        >
+                        <Tooltip label="Add Output Target" withArrow withinPortal position="right">
                           <Box
                             onClick={() => handleLinkCreate('output', product)}
                             className={classes.linkButton}

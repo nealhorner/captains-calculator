@@ -130,7 +130,12 @@ const SelectItemWithMachine: React.FC<{ recipe: Recipe; machine: Machine | null 
                 background: theme.colors.gray[0],
               })}
             >
-              <Image height={35} radius="md" src={`/assets/buildings/${machine.icon}`} alt={machine.name} />
+              <Image
+                height={35}
+                radius="md"
+                src={`/assets/buildings/${machine.icon}`}
+                alt={machine.name}
+              />
             </Box>
             <Box>
               <Text fw={500} size="md" style={{ lineHeight: '1em' }}>
@@ -148,7 +153,12 @@ const SelectItemWithMachine: React.FC<{ recipe: Recipe; machine: Machine | null 
                 background: theme.colors.gray[0],
               })}
             >
-              <Image height={35} radius="md" src={`/assets/buildings/Placeholder.png`} alt={recipe.name} />
+              <Image
+                height={35}
+                radius="md"
+                src={`/assets/buildings/Placeholder.png`}
+                alt={recipe.name}
+              />
             </Box>
             <Box>
               <Text fw={500} size="md" style={{ lineHeight: '1em' }}>
@@ -238,7 +248,10 @@ const SelectItemWithMachine: React.FC<{ recipe: Recipe; machine: Machine | null 
 };
 
 const labelFilter: OptionsFilter = ({ options, search }) =>
-  options.filter((option) => 'label' in option && option.label.toLowerCase().includes(search.toLowerCase().trim()));
+  options.filter(
+    (option) =>
+      'label' in option && option.label.toLowerCase().includes(search.toLowerCase().trim()),
+  );
 
 export const MachineRecipeSelect = () => {
   const currentProduct = useAppState((state) => state.products.currentItem);
