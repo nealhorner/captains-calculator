@@ -10,6 +10,8 @@ const setup = () => buildTestContext(buildTestWorld());
  * product, building and recipe, then set how much is wanted.
  */
 describe('editor flow', () => {
+  // Deliberately plain strings: buildTestWorld invents its own recipes and
+  // products, so these ids are not members of the game-data id unions.
   const chooseTarget = async (ctx: ReturnType<typeof setup>, recipeId: string, product: string) => {
     ctx.actions.createTarget();
     await ctx.actions.setTargetProduct(product);

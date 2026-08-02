@@ -55,7 +55,8 @@ test('changing the target volume re-sizes the chain', async ({ page }) => {
 
   // The summary is driven by the target, so it has to follow the new volume.
   await expect(page.getByText('Targets (60s)', { exact: true })).toBeVisible();
-  await expect(page.locator('td', { hasText: String(doubled) }).first()).toBeVisible();
+  // Exact match: a substring could hit a longer number in another row.
+  await expect(page.locator('td', { hasText: new RegExp(`^${doubled}$`) }).first()).toBeVisible();
 });
 
 test('reloading the page keeps the production chain and its target', async ({ page }) => {

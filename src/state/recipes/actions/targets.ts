@@ -1,20 +1,9 @@
 import { Action, AsyncAction, ChainTarget } from 'state/_types';
 import { MachineId, ProductId, RecipeId } from 'state/app/effects/loadJsonData';
 import { RecipeIOExportProduct, RecipeIOImportProduct } from '../ProductionNode';
+import { nextTargetId } from '../targetIds';
 import { dictValues } from 'utils/objects';
 import { RecipeProduct } from 'state/app/effects/loadJsonData';
-
-let targetSequence = 0;
-
-/**
- * Keeps the target id counter ahead of anything restored from a file or
- * localStorage. Without this a restored `target_1` would be silently
- * overwritten by the next target the user adds, taking its chain with it.
- */
-export const reserveTargetId = (id: string): void => {
-  const suffix = Number(id.slice(id.lastIndexOf('_') + 1));
-  if (Number.isFinite(suffix) && suffix > targetSequence) targetSequence = suffix;
-};
 
 /**
  * Starts a new, empty target and makes it the one the setup drawers are editing.
@@ -22,7 +11,7 @@ export const reserveTargetId = (id: string): void => {
  */
 export const createTarget: Action<void, string> = ({ state }) => {
   let target: ChainTarget = {
-    id: `target_${++targetSequence}`,
+    id: nextTargetId(),
     productId: null,
     machineId: null,
     recipeId: null,
@@ -41,7 +30,7 @@ export const setActiveTarget: Action<string | null> = ({ state }, targetId) => {
 };
 
 /** Choosing a product invalidates the building and recipe below it. */
-export const setTargetProduct: AsyncAction<ProductId> = async ({ state, actions }, productId) => {
+export const setTargetProduct: Action<ProductId> = ({ state, actions }, productId) => {
   let target = state.recipes.activeTarget;
   if (!target) return;
 
@@ -56,7 +45,7 @@ export const setTargetProduct: AsyncAction<ProductId> = async ({ state, actions 
   if (previousNodeId) actions.recipes.releaseTargetNode();
 };
 
-export const setTargetMachine: AsyncAction<MachineId> = async ({ state, actions }, machineId) => {
+export const setTargetMachine: Action<MachineId> = ({ state, actions }, machineId) => {
   let target = state.recipes.activeTarget;
   if (!target) return;
 

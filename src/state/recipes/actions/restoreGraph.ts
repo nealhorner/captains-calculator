@@ -1,6 +1,6 @@
 import { Action, ChainTarget } from 'state/_types';
 import ProductionNode, { SerializedProductionNode } from '../ProductionNode';
-import { reserveTargetId } from './targets';
+import { reserveTargetId } from '../targetIds';
 import { ExportedTarget } from '../importExport';
 
 export type RestoreGraphParams = {

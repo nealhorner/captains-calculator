@@ -59,7 +59,11 @@ describe('ProductionNode', () => {
 
   it('keeps generated ids clear of any restored from a saved graph', () => {
     reserveNodeId('acid_mixing_9999');
-    expect(buildNode('acid_mixing').id).toBe('acid_mixing_10000');
+    // The counter is module state, so assert it moved past the reservation
+    // rather than pinning an exact value that other tests could shift.
+    const id = buildNode('acid_mixing').id;
+    expect(id).toMatch(/^acid_mixing_\d+$/);
+    expect(Number(id.slice(id.lastIndexOf('_') + 1))).toBeGreaterThan(9999);
   });
 
   describe('links', () => {
@@ -137,6 +141,9 @@ describe('ProductionNode', () => {
     expect(flowNode.type).toBe('RecipeNode');
 
     const [edge] = node.edgeData;
+    // The id format is a consumed contract: EditorWrapper derives each edge's
+    // colour from it.
+    expect(edge.id).toBe(`source-1-${node.id}-sulfur`);
     expect(edge.source).toBe('source-1');
     expect(edge.target).toBe(node.id);
     expect(edge.sourceHandle).toBe('source-1-sulfur-output');
