@@ -1,0 +1,6 @@
+allowBuilds:
+  '@parcel/watcher': true
+  esbuild: true
+
+overrides:
+  '@types/d3-dispatch': 3.0.6

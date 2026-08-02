@@ -2,6 +2,7 @@
   "name": "captains-calculator",
   "version": "0.0.4",
   "private": true,
+  "packageManager": "pnpm@11.18.0",
   "dependencies": {
     "@mantine/core": "^7.17.8",
     "@mantine/dates": "^7.17.8",
@@ -26,8 +27,9 @@
     "web-worker": "^1.2.0",
     "yup": "^0.32.11"
   },
-  "resolutions": {
-    "@types/d3-dispatch": "3.0.6"
+  "engines": {
+    "node": ">=20",
+    "pnpm": ">=9"
   },
   "scripts": {
     "dev": "vite",
