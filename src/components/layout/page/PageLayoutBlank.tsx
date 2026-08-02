@@ -4,7 +4,7 @@ import { motion } from 'framer-motion';
 import { useReaction } from 'state';
 import Loader from 'components/app/Loader';
 
-const PageLayoutBlank: React.FC = ({ children }) => {
+const PageLayoutBlank: React.FC<React.PropsWithChildren> = ({ children }) => {
   const [navigating, setNavigating] = React.useState<boolean>(false);
   const reaction = useReaction();
 

@@ -1,6 +1,6 @@
 import { AnimatePresence, motion } from 'framer-motion';
 
-const AnimatedList: React.FC = ({ children }) => {
+const AnimatedList: React.FC<React.PropsWithChildren> = ({ children }) => {
   const transition = { duration: 0.15, staggerChildren: 0.04 };
   return (
     <AnimatePresence>
@@ -21,7 +21,10 @@ const AnimatedList: React.FC = ({ children }) => {
   );
 };
 
-export const AnimateListItem: React.FC<{ itemKey: string }> = ({ itemKey, children }) => {
+export const AnimateListItem: React.FC<React.PropsWithChildren<{ itemKey: string }>> = ({
+  itemKey,
+  children,
+}) => {
   return (
     <motion.div
       key={itemKey}

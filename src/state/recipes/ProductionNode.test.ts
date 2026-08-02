@@ -8,6 +8,7 @@ import {
   loadCategoryData,
 } from 'state/app/effects/loadJsonData';
 import { RecipeId } from 'state/app/effects';
+import { ProductRecipes } from 'state/_types';
 
 const recipeData = loadRecipeData();
 const machineData = loadMachineData();
@@ -26,8 +27,8 @@ const buildNode = (recipeId: RecipeId): ProductionNode => {
     category,
     inputs,
     outputs,
-    sources: {},
-    targets: {},
+    sources: {} as ProductRecipes,
+    targets: {} as ProductRecipes,
   });
 };
 

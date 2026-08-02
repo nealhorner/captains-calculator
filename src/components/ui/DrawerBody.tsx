@@ -1,7 +1,7 @@
 import React from 'react';
 import { Box, ScrollArea } from '@mantine/core';
 
-export const DrawerBodyScrollArea: React.FC = ({ children }) => {
+export const DrawerBodyScrollArea: React.FC<React.PropsWithChildren> = ({ children }) => {
   return (
     <Box
       style={{
@@ -25,7 +25,7 @@ export const DrawerBodyScrollArea: React.FC = ({ children }) => {
   );
 };
 
-export const DrawerBody: React.FC = ({ children }) => {
+export const DrawerBody: React.FC<React.PropsWithChildren> = ({ children }) => {
   return (
     <Box
       style={{

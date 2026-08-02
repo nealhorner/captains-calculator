@@ -14,7 +14,7 @@ type StatsCardProps = {
   iconColor?: MantineColor;
 };
 
-const StatsCard: React.FC<StatsCardProps> = ({
+const StatsCard: React.FC<React.PropsWithChildren<StatsCardProps>> = ({
   icon = null,
   label = null,
   value = null,
