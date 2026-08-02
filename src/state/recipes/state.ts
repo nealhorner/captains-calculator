@@ -14,12 +14,14 @@ export const state: RecipesState = {
   selectedRecipies: derived((state: RecipesState) =>
     state.selectedRecipeIds.map((id) => state.items[id]),
   ),
+  targets: {},
+  targetsList: derived((state: RecipesState) => Object.values(state.targets)),
+  activeTargetId: null,
+  get activeTarget() {
+    return this.activeTargetId ? (this.targets[this.activeTargetId] ?? null) : null;
+  },
   nodes: {},
   nodesList: derived((state: RecipesState) => Object.values(state.nodes)),
-  currentNodeId: null,
-  get currentNode() {
-    return this.currentNodeId ? this.nodes[this.currentNodeId] : null;
-  },
   nodesData: derived((state: RecipesState) => {
     return Object.values(state.nodes).reduce((edges, node) => {
       return [...edges, ...node.nodeData];
@@ -30,5 +32,4 @@ export const state: RecipesState = {
       return [...edges, ...node.edgeData];
     }, [] as Edge<any>[]);
   }),
-  graphData: [],
 };

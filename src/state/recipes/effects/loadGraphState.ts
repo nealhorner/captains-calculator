@@ -1,12 +1,10 @@
-import { SerializedProductionNode } from '../ProductionNode';
 import logger from 'utils/logger';
 
-export const loadGraphState = (): SerializedProductionNode[] | null => {
+export const loadGraphState = (): unknown => {
   const graph = localStorage.getItem('production-graph');
   if (!graph) return null;
   try {
-    const parsed = JSON.parse(graph);
-    return Array.isArray(parsed) ? parsed : null;
+    return JSON.parse(graph);
   } catch (error) {
     logger('Failed to parse persisted production graph, ignoring', error, 'warn');
     return null;

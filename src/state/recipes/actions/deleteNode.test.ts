@@ -1,119 +1,82 @@
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect } from 'vitest';
 
-import { deleteNode } from './deleteNode';
-import ProductionNode from 'state/recipes/ProductionNode';
-import {
-  loadMachineData,
-  loadProductData,
-  loadRecipeData,
-  loadCategoryData,
-} from 'state/app/effects/loadJsonData';
-import { RecipeId } from 'state/app/effects';
+import { buildTestWorld, makeChainTarget } from '../testFixtures';
+import { buildTestContext } from '../testContext';
 
-const recipeData = loadRecipeData();
-const machineData = loadMachineData();
-const productData = loadProductData();
-const categoryData = loadCategoryData();
-
-type DeleteNodeContext = Parameters<typeof deleteNode>[0];
-
-const buildNode = (recipeId: RecipeId): ProductionNode => {
-  const recipe = recipeData[recipeId];
-  const machine = machineData[recipe.machine];
-  const category = categoryData[machine.category_id];
-  const inputs = recipe.inputs.map(({ id, quantity }) => ({ ...productData[id], quantity }));
-  const outputs = recipe.outputs.map(({ id, quantity }) => ({ ...productData[id], quantity }));
-  return new ProductionNode({
-    recipe,
-    machine,
-    category,
-    inputs,
-    outputs,
-    sources: {},
-    targets: {},
-  });
-};
-
-const buildContext = (nodes: { [id: string]: ProductionNode }) => {
-  const state = { recipes: { nodes } };
-  const saveGraphState = vi.fn();
-  const linkExistingRecipe = vi.fn();
-  const actions = { recipes: { saveGraphState, linkExistingRecipe } };
-
-  const context = { state, actions } as unknown as DeleteNodeContext;
-  return { context, state, saveGraphState, linkExistingRecipe };
-};
+const setup = () => buildTestContext(buildTestWorld());
 
 describe('deleteNode', () => {
-  it('removes an unconnected node from state and saves graph state', async () => {
-    const node = buildNode('acid_mixing');
-    const { context, state, saveGraphState } = buildContext({ [node.id]: node });
+  it('removes an unconnected node and persists the change', async () => {
+    const { state, actions, getStoredGraph } = setup();
+    const node = actions.createProductionNode({ recipeId: 'cast_steel' });
 
-    await deleteNode(context, node.id);
+    await actions.deleteNode(node.id);
 
-    expect(state.recipes.nodes).toEqual({});
-    expect(saveGraphState).toHaveBeenCalledTimes(1);
+    expect(Object.keys(state.recipes.nodes)).toHaveLength(0);
+    expect((getStoredGraph() as any).nodes).toHaveLength(0);
   });
 
-  it('unmaxes the source node export when a node with an import is deleted', async () => {
-    const source = buildNode('acid_mixing');
-    const target = buildNode('acid_dumping');
-    const [inputId] = Object.keys(target.inputs);
+  it('drops the supplier link when the consumer is deleted', async () => {
+    const { state, actions } = setup();
+    const caster = actions.createProductionNode({ recipeId: 'cast_steel' });
+    await actions.linkRecipe({
+      currentNodeId: caster.id,
+      newNodeId: 'smelt_steel',
+      productId: 'molten_steel',
+      direction: 'input',
+    });
+    const smelter = Object.values(state.recipes.nodes).find((n) => n.id !== caster.id)!;
 
-    source.addExport(inputId, target.id, 10);
-    target.addImport(inputId, source.id, 10);
-    source.outputs[inputId].maxed = true;
+    await actions.deleteNode(caster.id);
 
-    const { context, state } = buildContext({ [source.id]: source, [target.id]: target });
-
-    await deleteNode(context, target.id);
-
-    expect(source.outputs[inputId].maxed).toBe(false);
-    expect(state.recipes.nodes).toEqual({ [source.id]: source });
+    // No dangling export pointing at a node that no longer exists.
+    expect(smelter.outputs['molten_steel'].exports).toEqual([]);
   });
 
-  it('resets a downstream import and relinks remaining sources when a re-exporting node is deleted', async () => {
-    const sourceA = buildNode('acid_mixing');
-    const sourceB = buildNode('acid_mixing');
-    // Node ids are derived from Date.now(); force distinct ids so the two
-    // don't collide when created within the same millisecond.
-    sourceB.id = `${sourceB.id}_b`;
-    const target = buildNode('acid_dumping');
-    const [inputId] = Object.keys(target.inputs);
+  it('leaves the consumer needing an outside supply when its supplier is deleted', async () => {
+    const { state, actions } = setup();
+    const caster = actions.createProductionNode({ recipeId: 'cast_steel' });
+    await actions.linkRecipe({
+      currentNodeId: caster.id,
+      newNodeId: 'smelt_steel',
+      productId: 'molten_steel',
+      direction: 'input',
+    });
+    const smelter = Object.values(state.recipes.nodes).find((n) => n.id !== caster.id)!;
 
-    // target imports acid from both sourceA and sourceB
-    target.inputs[inputId].imported = 20;
-    target.inputs[inputId].maxed = true;
-    target.inputs[inputId].imports = [
-      { source: sourceA.id, quantity: 10 },
-      { source: sourceB.id, quantity: 10 },
-    ];
-    sourceB.outputs[inputId].exported = 10;
-    sourceB.outputs[inputId].exports = [{ target: target.id, quantity: 10 }];
+    state.recipes.targets['t1'] = makeChainTarget({
+      id: 't1',
+      productId: 'steel',
+      machineId: 'caster',
+      recipeId: 'cast_steel',
+      quantity: 12,
+      nodeId: caster.id,
+    });
+    actions.recalculate();
+    expect(caster.inputs['molten_steel'].satisfied).toBe(true);
 
-    const { context, state, linkExistingRecipe, saveGraphState } = buildContext({
-      [sourceA.id]: sourceA,
-      [sourceB.id]: sourceB,
-      [target.id]: target,
+    await actions.deleteNode(smelter.id);
+
+    expect(caster.inputs['molten_steel'].imports).toEqual([]);
+    // The chain is re-solved, so the gap shows up as a raw input.
+    expect(caster.inputs['molten_steel'].satisfied).toBe(false);
+    expect(caster.inputs['molten_steel'].deficit).toBeCloseTo(12, 6);
+  });
+
+  it('removes the target when its own node is deleted', async () => {
+    const { state, actions } = setup();
+    const caster = actions.createProductionNode({ recipeId: 'cast_steel' });
+    state.recipes.targets['t1'] = makeChainTarget({
+      id: 't1',
+      productId: 'steel',
+      machineId: 'caster',
+      recipeId: 'cast_steel',
+      quantity: 12,
+      nodeId: caster.id,
     });
 
-    await deleteNode(context, sourceB.id);
+    await actions.deleteNode(caster.id);
 
-    // sourceB removed, sourceA/target remain
-    expect(state.recipes.nodes).toEqual({ [sourceA.id]: sourceA, [target.id]: target });
-
-    // target's import is reset before being relinked to its remaining source
-    expect(target.inputs[inputId].maxed).toBe(false);
-    expect(target.inputs[inputId].imported).toBe(0);
-    expect(target.inputs[inputId].imports).toEqual([]);
-
-    expect(linkExistingRecipe).toHaveBeenCalledWith({
-      currentNodeId: sourceA.id,
-      existingNodeId: target.id,
-      productId: inputId,
-      direction: 'output',
-    });
-
-    expect(saveGraphState).toHaveBeenCalledTimes(1);
+    expect(Object.keys(state.recipes.targets)).toHaveLength(0);
   });
 });

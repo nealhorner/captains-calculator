@@ -10,16 +10,15 @@ import { DrawerBody, DrawerBodyScrollArea } from 'components/ui/DrawerBody';
 import { ProductId } from 'state/app/effects';
 
 export const ProductSelectDrawer = () => {
-  const { itemsList, currentItem } = useAppState((state) => state.products);
+  const { itemsList, items } = useAppState((state) => state.products);
+  const activeTarget = useAppState((state) => state.recipes.activeTarget);
 
-  const selectProduct = useActions().products.selectProduct;
-  const selectMachine = useActions().machines.selectMachine;
-  const selectRecipe = useActions().recipes.selectRecipe;
-  const delectRecipesItem = useActions().recipes.delectRecipesItem;
-  const resetNodes = useActions().recipes.resetNodes;
+  const setTargetProduct = useActions().recipes.setTargetProduct;
 
   const [opened, setOpened] = React.useState(false);
   const [filter, setFilter] = React.useState('');
+
+  const currentItem = activeTarget?.productId ? items[activeTarget.productId] : null;
 
   const handleFilterChange = (e: ChangeEvent<HTMLInputElement>) => {
     setFilter(e.target.value);
@@ -27,11 +26,7 @@ export const ProductSelectDrawer = () => {
 
   const handleSelectProduct = (id: ProductId) => {
     setFilter('');
-    selectMachine(null);
-    selectRecipe(null);
-    delectRecipesItem(null);
-    resetNodes();
-    selectProduct(id);
+    setTargetProduct(id);
     setOpened(false);
   };
 
@@ -93,7 +88,7 @@ export const ProductSelectDrawer = () => {
 
       <Box>
         <Text weight="bold" mb="xs">
-          1. Desired Product
+          1. Target Product
         </Text>
         {currentItem ? (
           <ProductListCard item={currentItem} active={false} onSelect={() => setOpened(true)} />

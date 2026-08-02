@@ -11,13 +11,15 @@ import {
   ScrollArea,
   Modal,
   Button,
+  NumberInput,
 } from '@mantine/core';
 import { Handle, Position, NodeProps } from '@xyflow/react';
 import { Icon } from '@iconify/react';
 
 import { sortArray } from 'utils/objects';
+import { EPSILON, formatRate } from 'utils/numbers';
 
-import { ProductId } from 'state/app/effects';
+import { ProductId, MAINTENANCE_I, MAINTENANCE_II } from 'state/app/effects';
 import {
   RecipeIOImportProduct,
   RecipeIOExportProduct,
@@ -47,9 +49,23 @@ const handleStyle: React.CSSProperties = {
   backgroundColor: 'transparent',
 };
 
+/** A mine or well carries a zero output quantity: it supplies whatever is drawn. */
+const isUnlimited = (quantity: number) => quantity === 0;
+
 export const RecipeNodeType = ({
   id,
-  data: { recipe, machine, category, inputs, outputs, sources, targets },
+  data: {
+    recipe,
+    machine,
+    category,
+    inputs,
+    outputs,
+    sources,
+    targets,
+    machinesCount,
+    pinnedMachinesCount,
+    buildingsRequired,
+  },
 }: NodeProps<RecipeNode>) => {
   const [modalOpened, setModalOpened] = React.useState(false);
   const [selectedDirection, setSelectedDirection] = React.useState<'input' | 'output'>('input');
@@ -60,7 +76,11 @@ export const RecipeNodeType = ({
     RecipeIODictInput | RecipeIODictOutput | {}
   >({});
   const deleteNode = useActions().recipes.deleteNode;
+  const setNodeMachinesCount = useActions().recipes.setNodeMachinesCount;
   const modals = useModals();
+
+  // Mines and storage have no meaningful building count to scale.
+  const scalable = !machine.isMine && !machine.isStorage;
 
   const handleLinkCreate = (
     direction: 'input' | 'output',
@@ -102,7 +122,7 @@ export const RecipeNodeType = ({
         backgroundColor: theme.colorScheme === 'light' ? theme.white : theme.colors.dark[8],
         borderRadius: theme.radius.sm,
         boxShadow: theme.shadows.sm,
-        minWidth: 240,
+        minWidth: 280,
       })}
     >
       {selectedProduct && (
@@ -234,7 +254,54 @@ export const RecipeNodeType = ({
         </Group>
       </Box>
 
-      <Divider py="xs" variant="solid" labelPosition="center" label="Inputs & Outputs" />
+      {scalable && (
+        <React.Fragment>
+          <Divider py="xs" variant="solid" labelPosition="center" label="Buildings" />
+          <Box px="md" className="nodrag">
+            <Group spacing={8} position="center" noWrap align="flex-end">
+              <NumberInput
+                size="xs"
+                value={Math.round(machinesCount * 100) / 100}
+                // Mantine hands back undefined for an empty field; that means "back to auto", not zero.
+                onChange={(value) =>
+                  setNodeMachinesCount({ nodeId: id, count: value === undefined ? null : value })
+                }
+                min={0}
+                step={0.25}
+                precision={2}
+                noClampOnBlur
+                sx={{ width: 100 }}
+              />
+              <Tooltip
+                label={
+                  pinnedMachinesCount !== null
+                    ? 'Set by hand — click to size from demand again'
+                    : 'Sized automatically from target demand'
+                }
+                withArrow
+                withinPortal
+              >
+                <Button
+                  size="xs"
+                  variant={pinnedMachinesCount !== null ? 'filled' : 'light'}
+                  color={pinnedMachinesCount !== null ? 'orange' : 'gray'}
+                  onClick={() => setNodeMachinesCount({ nodeId: id, count: null })}
+                  disabled={pinnedMachinesCount === null}
+                >
+                  {pinnedMachinesCount !== null ? 'Pinned' : 'Auto'}
+                </Button>
+              </Tooltip>
+              {Math.abs(buildingsRequired - machinesCount) > EPSILON && (
+                <Tooltip label="Whole buildings you need to construct" withArrow withinPortal>
+                  <Text size="xs" color="dimmed" pb={6}>{`build ${buildingsRequired}`}</Text>
+                </Tooltip>
+              )}
+            </Group>
+          </Box>
+        </React.Fragment>
+      )}
+
+      <Divider py="xs" variant="solid" labelPosition="center" label="Inputs & Outputs (per 60s)" />
       <Grid gutter={40}>
         <Grid.Col span={6}>
           <Stack spacing="sm" justify="space-around">
@@ -245,11 +312,11 @@ export const RecipeNodeType = ({
                 return (
                   <Box
                     key={`recipe-handle-input-${productId}`}
-                    sx={{ marginLeft: product.maxed ? -14 : -47 }}
+                    sx={{ marginLeft: product.satisfied ? -14 : -47 }}
                     className="nodrag"
                   >
                     <Group spacing={5} noWrap>
-                      {!product.maxed && (
+                      {!product.satisfied && (
                         <Tooltip
                           label="Add Input Source"
                           withArrow
@@ -290,41 +357,47 @@ export const RecipeNodeType = ({
                         position={Position.Left}
                         style={handleStyle}
                       >
+                        <Tooltip label="Supplied by linked sources, per 60s" withArrow withinPortal>
+                          <Box
+                            sx={(theme) => ({
+                              minWidth: 36,
+                              height: 28,
+                              padding: '0 4px',
+                              display: 'flex',
+                              justifyContent: 'center',
+                              alignItems: 'center',
+                              backgroundColor: theme.colors.green[8],
+                              borderRadius: theme.radius.sm,
+                              pointerEvents: 'none',
+                            })}
+                          >
+                            <Text color="white" align="center" size="sm" sx={{ lineHeight: 24 }}>
+                              {formatRate(product.imported)}
+                            </Text>
+                          </Box>
+                        </Tooltip>
+                      </Handle>
+                      <Tooltip label="Needed, per 60s" withArrow withinPortal>
                         <Box
                           sx={(theme) => ({
-                            width: 28,
+                            minWidth: 36,
                             height: 28,
+                            padding: '0 4px',
                             display: 'flex',
                             justifyContent: 'center',
                             alignItems: 'center',
-                            backgroundColor: theme.colors.green[8],
+                            backgroundColor:
+                              theme.colorScheme === 'light' ? theme.white : theme.colors.dark[7],
                             borderRadius: theme.radius.sm,
                             pointerEvents: 'none',
+                            border: `1px dashed ${theme.colorScheme === 'light' ? theme.colors.gray[4] : theme.colors.dark[4]}`,
                           })}
                         >
-                          <Text color="white" align="center" size="sm" sx={{ lineHeight: 24 }}>
-                            {product.imported}
+                          <Text align="center" size="sm" sx={{ lineHeight: 24 }}>
+                            {formatRate(product.rate)}
                           </Text>
                         </Box>
-                      </Handle>
-                      <Box
-                        sx={(theme) => ({
-                          width: 28,
-                          height: 28,
-                          display: 'flex',
-                          justifyContent: 'center',
-                          alignItems: 'center',
-                          backgroundColor:
-                            theme.colorScheme === 'light' ? theme.white : theme.colors.dark[7],
-                          borderRadius: theme.radius.sm,
-                          pointerEvents: 'none',
-                          border: `1px dashed ${theme.colorScheme === 'light' ? theme.colors.gray[4] : theme.colors.dark[4]}`,
-                        })}
-                      >
-                        <Text align="center" size="sm" sx={{ lineHeight: 24 }}>
-                          {product.quantity}
-                        </Text>
-                      </Box>
+                      </Tooltip>
                       <Group spacing={5} noWrap>
                         <Box
                           sx={(theme) => ({
@@ -341,7 +414,7 @@ export const RecipeNodeType = ({
                             style={{ pointerEvents: 'none' }}
                           />
                         </Box>
-                        {machine.isStorage || product.quantity === product.imported ? (
+                        {product.satisfied ? (
                           <Tooltip
                             label="Input Satisfied"
                             withArrow
@@ -361,7 +434,12 @@ export const RecipeNodeType = ({
                             </Box>
                           </Tooltip>
                         ) : (
-                          <Tooltip label="Missing Input" withArrow withinPortal allowPointerEvents>
+                          <Tooltip
+                            label={`Needs ${formatRate(product.deficit)} more per 60s`}
+                            withArrow
+                            withinPortal
+                            allowPointerEvents
+                          >
                             <Box
                               sx={(theme) => ({
                                 display: 'flex',
@@ -391,16 +469,14 @@ export const RecipeNodeType = ({
                 return (
                   <Box
                     key={`recipe-handle-output-${productId}`}
-                    sx={{ marginRight: product.maxed ? -14 : -47 }}
+                    sx={{ marginRight: product.satisfied ? -14 : -47 }}
                     className="nodrag"
                   >
                     <Group spacing={5} noWrap>
                       <Group spacing={5} noWrap>
-                        {machine.isStorage ||
-                        machine.isMine ||
-                        product.quantity === product.exported ? (
+                        {machine.isStorage || machine.isMine || product.satisfied ? (
                           <Tooltip
-                            label="Output Satisfied"
+                            label="Fully Consumed Downstream"
                             withArrow
                             withinPortal
                             allowPointerEvents
@@ -418,14 +494,19 @@ export const RecipeNodeType = ({
                             </Box>
                           </Tooltip>
                         ) : (
-                          <Tooltip label="Output Is Full" withArrow withinPortal allowPointerEvents>
+                          <Tooltip
+                            label={`${formatRate(product.surplus)} per 60s unused`}
+                            withArrow
+                            withinPortal
+                            allowPointerEvents
+                          >
                             <Box
                               sx={(theme) => ({
                                 display: 'flex',
                                 justifyContent: 'center',
                                 alignItems: 'center',
                                 pointerEvents: 'none',
-                                color: theme.colors.red[9],
+                                color: theme.colors.yellow[7],
                               })}
                             >
                               <Icon icon={Icons.warningCircle} />
@@ -448,28 +529,34 @@ export const RecipeNodeType = ({
                           />
                         </Box>
                       </Group>
-                      <Box
-                        sx={(theme) => ({
-                          width: 28,
-                          height: 28,
-                          display: 'flex',
-                          justifyContent: 'center',
-                          alignItems: 'center',
-                          backgroundColor:
-                            theme.colorScheme === 'light' ? theme.white : theme.colors.dark[7],
-                          borderRadius: theme.radius.sm,
-                          pointerEvents: 'none',
-                          border: `1px dashed ${theme.colorScheme === 'light' ? theme.colors.gray[4] : theme.colors.dark[4]}`,
-                        })}
-                      >
-                        <Text
-                          align="center"
-                          size="sm"
-                          sx={{ lineHeight: 24, fontFamily: product.quantity < 1 ? 'Verdana' : '' }}
+                      <Tooltip label="Produced, per 60s" withArrow withinPortal>
+                        <Box
+                          sx={(theme) => ({
+                            minWidth: 36,
+                            height: 28,
+                            padding: '0 4px',
+                            display: 'flex',
+                            justifyContent: 'center',
+                            alignItems: 'center',
+                            backgroundColor:
+                              theme.colorScheme === 'light' ? theme.white : theme.colors.dark[7],
+                            borderRadius: theme.radius.sm,
+                            pointerEvents: 'none',
+                            border: `1px dashed ${theme.colorScheme === 'light' ? theme.colors.gray[4] : theme.colors.dark[4]}`,
+                          })}
                         >
-                          {product.quantity < 1 ? '∞' : product.quantity}
-                        </Text>
-                      </Box>
+                          <Text
+                            align="center"
+                            size="sm"
+                            sx={{
+                              lineHeight: 24,
+                              fontFamily: isUnlimited(product.quantity) ? 'Verdana' : '',
+                            }}
+                          >
+                            {isUnlimited(product.quantity) ? '∞' : formatRate(product.rate)}
+                          </Text>
+                        </Box>
+                      </Tooltip>
                       <Handle
                         key={`${id}-${product.id}-output`}
                         id={`${id}-${product.id}-output`}
@@ -477,24 +564,27 @@ export const RecipeNodeType = ({
                         position={Position.Right}
                         style={handleStyle}
                       >
-                        <Box
-                          sx={(theme) => ({
-                            width: 28,
-                            height: 28,
-                            display: 'flex',
-                            justifyContent: 'center',
-                            alignItems: 'center',
-                            backgroundColor: theme.colors.red[8],
-                            borderRadius: theme.radius.sm,
-                            pointerEvents: 'none',
-                          })}
-                        >
-                          <Text color="white" align="center" size="sm" sx={{ lineHeight: 24 }}>
-                            {product.exported}
-                          </Text>
-                        </Box>
+                        <Tooltip label="Drawn by linked targets, per 60s" withArrow withinPortal>
+                          <Box
+                            sx={(theme) => ({
+                              minWidth: 36,
+                              height: 28,
+                              padding: '0 4px',
+                              display: 'flex',
+                              justifyContent: 'center',
+                              alignItems: 'center',
+                              backgroundColor: theme.colors.red[8],
+                              borderRadius: theme.radius.sm,
+                              pointerEvents: 'none',
+                            })}
+                          >
+                            <Text color="white" align="center" size="sm" sx={{ lineHeight: 24 }}>
+                              {formatRate(product.exported)}
+                            </Text>
+                          </Box>
+                        </Tooltip>
                       </Handle>
-                      {!product.maxed && (
+                      {!product.satisfied && (
                         <Tooltip
                           label="Add Output Target"
                           withArrow
@@ -539,18 +629,38 @@ export const RecipeNodeType = ({
       <Box pb="md" px="md">
         <Group spacing={4} position="center" noWrap={false}>
           {machine.build_costs.map((product, key) => {
-            return <CostsBadge key={key} product={product} />;
+            // Construction costs are paid per building actually built.
+            return (
+              <CostsBadge
+                key={key}
+                product={{ ...product, quantity: product.quantity * buildingsRequired }}
+              />
+            );
           })}
-          <NeedsBage need="workers" value={machine.workers} />
-          {machine.maintenance_cost_units === 'maintenance_i' && (
-            <NeedsBage need="maintenance1" value={machine.maintenance_cost_quantity} />
+          <NeedsBage need="workers" value={machine.workers * buildingsRequired} />
+          {machine.maintenance_cost_units === MAINTENANCE_I && (
+            <NeedsBage
+              need="maintenance1"
+              value={machine.maintenance_cost_quantity * buildingsRequired}
+            />
           )}
-          {machine.maintenance_cost_units === 'maintenance_iI' && (
-            <NeedsBage need="maintenance2" value={machine.maintenance_cost_quantity} />
+          {machine.maintenance_cost_units === MAINTENANCE_II && (
+            <NeedsBage
+              need="maintenance2"
+              value={machine.maintenance_cost_quantity * buildingsRequired}
+            />
           )}
-          <NeedsBage need="electricity" value={machine.electricity_consumed} />
-          <NeedsBage need="unity" value={machine.unity_cost} />
-          <NeedsBage need="computing" value={machine.computing_consumed} suffix="tf" />
+          {/* Power and computing draw scale with how hard the buildings run. */}
+          <NeedsBage
+            need="electricity"
+            value={Math.round(machine.electricity_consumed * machinesCount * 10) / 10}
+          />
+          <NeedsBage need="unity" value={machine.unity_cost * buildingsRequired} />
+          <NeedsBage
+            need="computing"
+            value={Math.round(machine.computing_consumed * machinesCount * 10) / 10}
+            suffix="tf"
+          />
         </Group>
       </Box>
     </Box>

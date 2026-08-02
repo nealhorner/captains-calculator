@@ -310,10 +310,10 @@ export const MachineRecipeSelect = () => {
   const currentProduct = useAppState((state) => state.products.currentItem);
   const currentMachine = useAppState((state) => state.machines.currentItem);
   const { itemsList: allRecipes, currentItemId } = useAppState((state) => state.recipes);
-  const selectRecipe = useActions().recipes.selectRecipe;
+  const setCurrentRecipe = useActions().recipes.setCurrentRecipe;
   const selectRecipesItem = useActions().recipes.selectRecipesItem;
   const onChange = (recipeId: RecipeId) => {
-    selectRecipe(recipeId);
+    setCurrentRecipe(recipeId);
     selectRecipesItem(recipeId);
   };
   if (!currentMachine || !currentProduct) return null;

@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 
-import ProductionNode from './ProductionNode';
+import ProductionNode, { reserveNodeId } from './ProductionNode';
 import {
   loadMachineData,
   loadProductData,
@@ -32,124 +32,121 @@ const buildNode = (recipeId: RecipeId): ProductionNode => {
 };
 
 describe('ProductionNode', () => {
-  it('initializes inputs/outputs from the recipe with zeroed import/export state', () => {
+  it('initialises inputs and outputs from the recipe, unsupplied', () => {
     const node = buildNode('acid_mixing');
 
     expect(node.machinesCount).toBe(1);
+    expect(node.pinnedMachinesCount).toBeNull();
     expect(node.id).toContain('acid_mixing_');
 
     Object.values(node.inputs).forEach((input) => {
       expect(input.imported).toBe(0);
-      expect(input.maxed).toBe(false);
+      expect(input.satisfied).toBe(false);
       expect(input.imports).toEqual([]);
     });
 
     Object.values(node.outputs).forEach((output) => {
       expect(output.exported).toBe(0);
-      expect(output.maxed).toBe(false);
+      expect(output.satisfied).toBe(false);
       expect(output.exports).toEqual([]);
     });
   });
 
-  it('canImport/canExport reflect maxed state', () => {
-    const node = buildNode('acid_mixing');
-    const [outputId] = Object.keys(node.outputs);
-
-    expect(node.canImport('nonexistent-product')).toBe(false);
-    expect(node.canExport('nonexistent-product')).toBe(false);
-    expect(node.canExport(outputId)).toBe(true);
-
-    node.outputs[outputId].maxed = true;
-    expect(node.canExport(outputId)).toBe(false);
+  it('gives every node a distinct id, even within the same millisecond', () => {
+    const ids = new Set([1, 2, 3, 4, 5].map(() => buildNode('acid_mixing').id));
+    expect(ids.size).toBe(5);
   });
 
-  it('addImport imports up to the remaining quantity needed and marks maxed once satisfied', () => {
-    const node = buildNode('acid_dumping');
-    const [inputId] = Object.keys(node.inputs);
-    const needed = node.inputs[inputId].quantity;
-
-    // Import less than needed - not maxed yet
-    const partial = node.addImport(inputId, 'source-a', needed / 2);
-    expect(partial).toBe(needed / 2);
-    expect(node.inputs[inputId].imported).toBe(needed / 2);
-    expect(node.inputs[inputId].maxed).toBe(false);
-
-    // Import more than the remainder - clamps to what's left and maxes out
-    const remainder = node.addImport(inputId, 'source-b', needed * 10);
-    expect(remainder).toBe(needed / 2);
-    expect(node.inputs[inputId].imported).toBe(needed);
-    expect(node.inputs[inputId].maxed).toBe(true);
-    expect(node.inputs[inputId].imports).toEqual([
-      { source: 'source-a', quantity: needed / 2 },
-      { source: 'source-b', quantity: needed / 2 },
-    ]);
-
-    // Already maxed - can't import any more
-    expect(node.addImport(inputId, 'source-c', 1)).toBe(false);
+  it('keeps generated ids clear of any restored from a saved graph', () => {
+    reserveNodeId('acid_mixing_9999');
+    // The counter is module state, so assert it moved past the reservation
+    // rather than pinning an exact value that other tests could shift.
+    const id = buildNode('acid_mixing').id;
+    expect(id).toMatch(/^acid_mixing_\d+$/);
+    expect(Number(id.slice(id.lastIndexOf('_') + 1))).toBeGreaterThan(9999);
   });
 
-  it('addExport accumulates exports and marks maxed once quantity is met', () => {
-    const node = buildNode('acid_mixing');
-    const [outputId] = Object.keys(node.outputs);
-    const quantity = node.outputs[outputId].quantity;
+  describe('links', () => {
+    it('records an import link without assigning a quantity', () => {
+      const node = buildNode('acid_mixing');
 
-    node.addExport(outputId, 'target-a', quantity);
-
-    expect(node.outputs[outputId].exported).toBe(quantity);
-    expect(node.outputs[outputId].maxed).toBe(true);
-    expect(node.outputs[outputId].exports).toEqual([{ target: 'target-a', quantity }]);
-  });
-
-  it('removeExport reverses a prior export for the given target and leaves others intact', async () => {
-    const node = buildNode('acid_mixing');
-    const [outputId] = Object.keys(node.outputs);
-
-    node.addExport(outputId, 'target-a', 10);
-    node.addExport(outputId, 'target-b', 20);
-    expect(node.outputs[outputId].exported).toBe(30);
-
-    await node.removeExport(outputId, 'target-a');
-
-    expect(node.outputs[outputId].exported).toBe(20);
-    expect(node.outputs[outputId].exports).toEqual([{ target: 'target-b', quantity: 20 }]);
-  });
-
-  it('toJson/fromJSON round-trips the node data', () => {
-    const node = buildNode('acid_dumping');
-    const [inputId] = Object.keys(node.inputs);
-    node.addImport(inputId, 'source-a', 1);
-
-    const restored = ProductionNode.fromJSON({ ...JSON.parse(node.toJson()), id: node.id });
-
-    expect(restored.recipe.id).toBe(node.recipe.id);
-    expect(restored.inputs).toEqual(node.inputs);
-    expect(restored.outputs).toEqual(node.outputs);
-    expect(restored.canImport).toBeInstanceOf(Function);
-  });
-
-  it('fromJSON throws on malformed data', () => {
-    expect(() => ProductionNode.fromJSON(null as any)).toThrow('Invalid persisted production node');
-    expect(() => ProductionNode.fromJSON({} as any)).toThrow('Invalid persisted production node');
-  });
-
-  it('nodeData/edgeData expose react-flow-shaped data derived from imports', () => {
-    const source = buildNode('acid_mixing');
-    const target = buildNode('acid_dumping');
-    const [inputId] = Object.keys(target.inputs);
-
-    target.addImport(inputId, source.id, 1);
-
-    expect(target.nodeData).toEqual([
-      { id: target.id, type: 'RecipeNode', data: target, position: { x: 0, y: 0 } },
-    ]);
-
-    expect(target.edgeData).toHaveLength(1);
-    expect(target.edgeData[0]).toMatchObject({
-      id: `${source.id}-${target.id}`,
-      source: source.id,
-      target: target.id,
-      sourceHandle: `${source.id}-${inputId}-output`,
-      targetHandle: `${target.id}-${inputId}-input`,
+      expect(node.addImportLink('sulfur', 'source-1')).toBe(true);
+      // Quantities belong to the solver, not to the link.
+      expect(node.inputs['sulfur'].imports).toEqual([{ source: 'source-1', quantity: 0 }]);
     });
+
+    it('refuses a link for a product the recipe does not use', () => {
+      const node = buildNode('acid_mixing');
+
+      expect(node.addImportLink('not_an_input', 'source-1')).toBe(false);
+      expect(node.addExportLink('not_an_output', 'target-1')).toBe(false);
+    });
+
+    it('ignores a duplicate link to the same node', () => {
+      const node = buildNode('acid_mixing');
+
+      node.addImportLink('sulfur', 'source-1');
+      expect(node.addImportLink('sulfur', 'source-1')).toBe(false);
+      expect(node.inputs['sulfur'].imports).toHaveLength(1);
+    });
+
+    it('removes links in both directions for a given node', () => {
+      const node = buildNode('acid_mixing');
+      node.addImportLink('sulfur', 'other');
+      node.addExportLink('acid', 'other');
+
+      node.removeLinksTo('other');
+
+      expect(node.inputs['sulfur'].imports).toEqual([]);
+      expect(node.outputs['acid'].exports).toEqual([]);
+    });
+  });
+
+  it('classifies mines as infinite and storage as pass-through', () => {
+    // Mining recipes carry a zero output quantity, so there is no rate to scale.
+    expect(buildNode('iron_mining').kind).toBe('infinite');
+    expect(buildNode('acid_storage').kind).toBe('passthrough');
+    expect(buildNode('acid_mixing').kind).toBe('normal');
+  });
+
+  it('rounds fractional counts up to whole buildings to construct', () => {
+    const node = buildNode('acid_mixing');
+
+    node.machinesCount = 2.08;
+    expect(node.buildingsRequired).toBe(3);
+
+    node.machinesCount = 3;
+    expect(node.buildingsRequired).toBe(3);
+  });
+
+  it('serialises only the choices, not the derived rates', () => {
+    const node = buildNode('acid_mixing');
+    node.pinnedMachinesCount = 4;
+    node.addImportLink('sulfur', 'source-1');
+
+    expect(node.toSerialized()).toEqual({
+      id: node.id,
+      recipeId: 'acid_mixing',
+      pinnedMachinesCount: 4,
+      imports: { sulfur: ['source-1'] },
+    });
+  });
+
+  it('exposes react-flow data derived from its links', () => {
+    const node = buildNode('acid_mixing');
+    node.addImportLink('sulfur', 'source-1');
+
+    const [flowNode] = node.nodeData;
+    expect(flowNode.id).toBe(node.id);
+    expect(flowNode.type).toBe('RecipeNode');
+
+    const [edge] = node.edgeData;
+    // The id format is a consumed contract: EditorWrapper derives each edge's
+    // colour from it.
+    expect(edge.id).toBe(`source-1-${node.id}-sulfur`);
+    expect(edge.source).toBe('source-1');
+    expect(edge.target).toBe(node.id);
+    expect(edge.sourceHandle).toBe('source-1-sulfur-output');
+    expect(edge.targetHandle).toBe(`${node.id}-sulfur-input`);
   });
 });

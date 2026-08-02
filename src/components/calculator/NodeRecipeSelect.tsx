@@ -3,7 +3,7 @@ import { Text, Alert } from '@mantine/core';
 import { useActions, useAppState } from 'state';
 import { Recipe, RecipeId } from 'state/app/effects';
 import RecipeListCard from './RecipeListCard';
-import {
+import ProductionNode, {
   RecipeIOExport,
   RecipeIOExportProduct,
   RecipeIOImport,
@@ -30,7 +30,6 @@ export const NodeRecipeLink: React.FC<RecipeSelectProps> = ({
   const allNodes = useAppState((state) => state.recipes.nodesList);
   const linkRecipe = useActions().recipes.linkRecipe;
   const linkExistingRecipe = useActions().recipes.linkExistingRecipe;
-  const saveGraphState = useActions().recipes.saveGraphState;
 
   // const checkIfAvailable = (recipe: Recipe): boolean => {
   //     if (direction === 'output') {
@@ -58,14 +57,13 @@ export const NodeRecipeLink: React.FC<RecipeSelectProps> = ({
     onSelect();
   };
 
-  const handleLinkExistingNode = async (existingNodeId: string) => {
-    await linkExistingRecipe({
+  const handleLinkExistingNode = (existingNodeId: string) => {
+    linkExistingRecipe({
       currentNodeId,
       existingNodeId,
       direction,
       productId: product.id,
     });
-    saveGraphState();
     onSelect();
   };
 
@@ -76,6 +74,12 @@ export const NodeRecipeLink: React.FC<RecipeSelectProps> = ({
       </Alert>
     );
   }
+
+  // True when the graph already runs one of these recipes, which `linkRecipe`
+  // reuses instead of adding a second building for.
+  let hasExistingRecipe = recipes.some((recipe) =>
+    allNodes.some((node: ProductionNode) => node.recipe.id === recipe.id),
+  );
 
   let existingNodes = allNodes.filter((node) => {
     let isNotCurrentNode = node.id !== currentNodeId;
@@ -97,7 +101,7 @@ export const NodeRecipeLink: React.FC<RecipeSelectProps> = ({
           isNotAlreadyLinked = false;
         }
       });
-      if (nodeProduct.maxed) {
+      if (nodeProduct.satisfied) {
         isNotMaxedOut = false;
       }
     }
@@ -113,7 +117,7 @@ export const NodeRecipeLink: React.FC<RecipeSelectProps> = ({
           isNotAlreadyLinked = false;
         }
       });
-      if (nodeProduct.maxed) {
+      if (nodeProduct.satisfied) {
         isNotMaxedOut = false;
       }
     }
@@ -136,6 +140,12 @@ export const NodeRecipeLink: React.FC<RecipeSelectProps> = ({
         );
       })}
       <Text>New Target</Text>
+      {hasExistingRecipe ? (
+        <Text size="xs" color="dimmed">
+          Recipes already in your chain are reused rather than duplicated, so their demand is
+          combined.
+        </Text>
+      ) : null}
       {recipes.map((item, key) => {
         return (
           <RecipeListCard

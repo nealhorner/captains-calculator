@@ -1,86 +1,107 @@
-import { describe, expect, it } from 'vitest';
+import { describe, it, expect } from 'vitest';
 
-import {
-  buildExportedGraph,
-  EXPORT_FORMAT,
-  EXPORT_FORMAT_VERSION,
-  isExportedGraph,
-} from './importExport';
-import { buildTestWorld } from './testFixtures';
+import { buildTestWorld, makeChainTarget } from './testFixtures';
+import { buildTestContext } from './testContext';
+import { isExportedGraph, EXPORT_FORMAT, EXPORT_FORMAT_VERSION } from './importExport';
 
-describe('buildExportedGraph', () => {
-  it('returns an empty node list for an empty graph', () => {
-    const graph = buildExportedGraph([]);
+const setup = () => buildTestContext(buildTestWorld());
+
+/** Builds a two-node chain with a target, the shape a user would actually save. */
+const buildChain = async () => {
+  const ctx = setup();
+  const caster = ctx.actions.createProductionNode({ recipeId: 'cast_steel' });
+
+  await ctx.actions.linkRecipe({
+    currentNodeId: caster.id,
+    newNodeId: 'smelt_steel',
+    productId: 'molten_steel',
+    direction: 'input',
+  });
+
+  ctx.state.recipes.targets['t1'] = makeChainTarget({
+    id: 't1',
+    productId: 'steel',
+    machineId: 'caster',
+    recipeId: 'cast_steel',
+    quantity: 36,
+    nodeId: caster.id,
+  });
+  ctx.actions.recalculate();
+
+  return { ...ctx, caster };
+};
+
+describe('graph export', () => {
+  it('writes a recognisable, self-describing file', async () => {
+    const { actions } = await buildChain();
+    const graph = actions.exportGraph();
+
     expect(graph.format).toBe(EXPORT_FORMAT);
     expect(graph.version).toBe(EXPORT_FORMAT_VERSION);
-    expect(graph.nodes).toEqual([]);
-    expect(typeof graph.exportedAt).toBe('string');
+    expect(isExportedGraph(graph)).toBe(true);
   });
 
-  it('serializes each node with the fields needed to reconstruct it', () => {
-    const { smelterNode, casterNode } = buildTestWorld();
-
-    const graph = buildExportedGraph([smelterNode, casterNode]);
+  it('stores the targets, not just the nodes', async () => {
+    const { actions } = await buildChain();
+    const graph = actions.exportGraph();
 
     expect(graph.nodes).toHaveLength(2);
-
-    const exportedCaster = graph.nodes.find((n) => n.id === casterNode.id);
-    expect(exportedCaster).toBeDefined();
-    expect(exportedCaster?.recipeId).toBe(casterNode.recipe.id);
-    expect(exportedCaster?.machinesCount).toBe(casterNode.machinesCount);
-    expect(exportedCaster?.duration).toBe(casterNode.duration);
-    expect(exportedCaster?.inputs).toEqual(casterNode.inputs);
-    expect(exportedCaster?.outputs).toEqual(casterNode.outputs);
+    expect(graph.targets).toHaveLength(1);
+    expect(graph.targets[0]).toMatchObject({ productId: 'steel', quantity: 36 });
   });
 
-  it('preserves import/export linkage between nodes', () => {
-    const { smelterNode, casterNode } = buildTestWorld();
+  it('stores only what the user chose, leaving derived rates out', async () => {
+    const { actions } = await buildChain();
+    const [node] = actions.exportGraph().nodes;
 
-    const graph = buildExportedGraph([smelterNode, casterNode]);
+    expect(Object.keys(node).sort()).toEqual(['id', 'imports', 'pinnedMachinesCount', 'recipeId']);
+  });
 
-    const exportedSmelter = graph.nodes.find((n) => n.id === smelterNode.id)!;
-    const exportedCaster = graph.nodes.find((n) => n.id === casterNode.id)!;
+  it('omits a half-finished target that has no node yet', async () => {
+    const { state, actions } = await buildChain();
+    state.recipes.targets['draft'] = {
+      id: 'draft',
+      productId: null,
+      machineId: null,
+      recipeId: null,
+      quantity: 0,
+      nodeId: null,
+    };
 
-    expect(exportedSmelter.outputs.molten_steel.exports).toEqual([
-      { target: casterNode.id, quantity: 12 },
-    ]);
-    expect(exportedCaster.inputs.molten_steel.imports).toEqual([
-      { source: smelterNode.id, quantity: 12 },
-    ]);
+    expect(actions.exportGraph().targets).toHaveLength(1);
   });
 });
 
 describe('isExportedGraph', () => {
-  it('accepts a well-formed exported graph', () => {
-    const graph = buildExportedGraph([]);
-    expect(isExportedGraph(graph)).toBe(true);
+  it('rejects data that is not an export file', () => {
+    expect(isExportedGraph(null)).toBe(false);
+    expect(isExportedGraph({})).toBe(false);
+    expect(isExportedGraph({ format: 'something-else', version: 1, nodes: [], targets: [] })).toBe(
+      false,
+    );
   });
 
-  it.each([
-    ['null', null],
-    ['undefined', undefined],
-    ['a string', 'hello'],
-    ['a number', 42],
-    ['an array', []],
-    ['an object missing format', { version: 1, nodes: [] }],
-    ['an object with the wrong format', { format: 'some-other-app', version: 1, nodes: [] }],
-    ['an object whose nodes is not an array', { format: EXPORT_FORMAT, version: 1, nodes: 'nope' }],
-    ['an object with an unsupported version', { format: EXPORT_FORMAT, version: 999, nodes: [] }],
-    [
-      'a node missing required fields',
-      { format: EXPORT_FORMAT, version: EXPORT_FORMAT_VERSION, nodes: [{ id: 'a' }] },
-    ],
-    [
-      'a node with a non-numeric machinesCount',
-      {
+  it('rejects a file from a different format version', () => {
+    expect(
+      isExportedGraph({
+        format: EXPORT_FORMAT,
+        version: EXPORT_FORMAT_VERSION + 1,
+        exportedAt: '',
+        nodes: [],
+        targets: [],
+      }),
+    ).toBe(false);
+  });
+
+  it('rejects a file whose nodes are malformed', () => {
+    expect(
+      isExportedGraph({
         format: EXPORT_FORMAT,
         version: EXPORT_FORMAT_VERSION,
-        nodes: [
-          { id: 'a', recipeId: 'r', machinesCount: 'lots', duration: 60, inputs: {}, outputs: {} },
-        ],
-      },
-    ],
-  ])('rejects %s', (_label, value) => {
-    expect(isExportedGraph(value)).toBe(false);
+        exportedAt: '',
+        nodes: [{ id: 'a' }],
+        targets: [],
+      }),
+    ).toBe(false);
   });
 });

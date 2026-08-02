@@ -1,184 +1,177 @@
-import { describe, expect, it, vi } from 'vitest';
+import { describe, it, expect } from 'vitest';
 
-import { importGraph } from './importGraph';
-import { buildExportedGraph } from '../importExport';
-import { buildTestWorld } from '../testFixtures';
-import ProductionNode from '../ProductionNode';
+import { buildTestWorld, makeChainTarget } from '../testFixtures';
+import { buildTestContext } from '../testContext';
+import { EXPORT_FORMAT, EXPORT_FORMAT_VERSION, ExportedNode } from '../importExport';
 
-const buildContext = (world: ReturnType<typeof buildTestWorld>) =>
-  ({
-    state: {
-      recipes: {
-        items: world.recipes,
-        nodes: {} as { [key: string]: ProductionNode },
-        currentNodeId: 'something-stale',
-      },
-      machines: { items: world.machines },
-      categories: { items: world.categories },
-      products: { items: world.products },
-    },
-    actions: {
-      recipes: {
-        getInputSources: vi.fn().mockReturnValue({}),
-        getOutputTargets: vi.fn().mockReturnValue({}),
-        saveGraphState: vi.fn(),
-      },
-    },
-  }) as any;
+const setup = () => buildTestContext(buildTestWorld());
 
-describe('importGraph action', () => {
-  it('rejects data that is not a valid exported graph', () => {
-    const world = buildTestWorld();
-    const context = buildContext(world);
+/** A two-node chain with a target, then exported. */
+const buildAndExport = async () => {
+  const ctx = setup();
+  const caster = ctx.actions.createProductionNode({ recipeId: 'cast_steel' });
 
-    const result = importGraph(context, { not: 'a graph' });
-
-    expect(result).toEqual({ imported: 0, skipped: 0, errors: [expect.any(String)] });
-    expect(context.state.recipes.nodes).toEqual({});
-    expect(context.actions.recipes.saveGraphState).not.toHaveBeenCalled();
+  await ctx.actions.linkRecipe({
+    currentNodeId: caster.id,
+    newNodeId: 'smelt_steel',
+    productId: 'molten_steel',
+    direction: 'input',
   });
 
-  it('round-trips a linked two-node graph exactly', () => {
-    const world = buildTestWorld();
-    const { smelterNode, casterNode } = world;
-
-    const exported = buildExportedGraph([smelterNode, casterNode]);
-
-    const context = buildContext(world);
-    const result = importGraph(context, exported);
-
-    expect(result).toEqual({ imported: 2, skipped: 0, errors: [] });
-    expect(context.state.recipes.currentNodeId).toBeNull();
-    expect(context.actions.recipes.saveGraphState).toHaveBeenCalledTimes(1);
-
-    const importedNodes = context.state.recipes.nodes;
-    expect(Object.keys(importedNodes).sort()).toEqual([casterNode.id, smelterNode.id].sort());
-
-    const rebuiltSmelter = importedNodes[smelterNode.id];
-    const rebuiltCaster = importedNodes[casterNode.id];
-
-    // Real ProductionNode instances, not plain objects, so instance
-    // methods (addImport/canExport/etc, used elsewhere in the app)
-    // keep working after import.
-    expect(rebuiltSmelter).toBeInstanceOf(ProductionNode);
-    expect(rebuiltCaster).toBeInstanceOf(ProductionNode);
-
-    expect(rebuiltSmelter.machinesCount).toBe(smelterNode.machinesCount);
-    expect(rebuiltSmelter.duration).toBe(smelterNode.duration);
-    expect(rebuiltSmelter.outputs).toEqual(smelterNode.outputs);
-
-    expect(rebuiltCaster.inputs.molten_steel.imported).toBe(12);
-    expect(rebuiltCaster.inputs.molten_steel.maxed).toBe(true);
-    expect(rebuiltCaster.inputs.molten_steel.imports).toEqual([
-      { source: smelterNode.id, quantity: 12 },
-    ]);
-    expect(rebuiltSmelter.outputs.molten_steel.exports).toEqual([
-      { target: casterNode.id, quantity: 12 },
-    ]);
+  ctx.state.recipes.targets['t1'] = makeChainTarget({
+    id: 't1',
+    productId: 'steel',
+    machineId: 'caster',
+    recipeId: 'cast_steel',
+    quantity: 36,
+    nodeId: caster.id,
   });
+  ctx.actions.recalculate();
 
-  it('skips nodes whose recipe no longer exists and reports it', () => {
-    const world = buildTestWorld();
-    const { smelterNode, casterNode } = world;
+  return { file: ctx.actions.exportGraph(), casterId: caster.id };
+};
 
-    const exported = buildExportedGraph([smelterNode, casterNode]);
-    exported.nodes[0].recipeId = 'deleted_recipe' as any;
+describe('importGraph', () => {
+  it('rejects a file that is not an export', () => {
+    const { actions, state } = setup();
+    actions.createProductionNode({ recipeId: 'cast_steel' });
 
-    const context = buildContext(world);
-    const result = importGraph(context, exported);
+    const result = actions.importGraph({ nope: true });
 
-    expect(result.imported).toBe(1);
-    expect(result.skipped).toBe(1);
+    expect(result.imported).toBe(0);
     expect(result.errors).toHaveLength(1);
-    expect(result.errors[0]).toContain('deleted_recipe');
-
-    expect(Object.keys(context.state.recipes.nodes)).toEqual([exported.nodes[1].id]);
-
-    // The surviving caster node imported molten_steel from the now-skipped
-    // smelter — that dangling link must be stripped, not left pointing at
-    // a node id that no longer exists in the graph.
-    const survivingCaster = context.state.recipes.nodes[casterNode.id];
-    expect(survivingCaster.inputs.molten_steel.imports).toEqual([]);
-    expect(survivingCaster.inputs.molten_steel.imported).toBe(0);
-    expect(survivingCaster.inputs.molten_steel.maxed).toBe(false);
+    // The existing chain is left alone.
+    expect(Object.keys(state.recipes.nodes)).toHaveLength(1);
   });
 
-  it('does not wipe the existing graph when every node is skipped', () => {
-    const world = buildTestWorld();
-    const context = buildContext(world);
-    context.state.recipes.nodes = { [world.smelterNode.id]: world.smelterNode };
+  it('round-trips a chain, restoring nodes, links and targets', async () => {
+    const { file, casterId } = await buildAndExport();
+    const { actions, state } = setup();
 
-    const exported = buildExportedGraph([world.casterNode]);
-    exported.nodes[0].recipeId = 'deleted_recipe' as any;
+    const result = actions.importGraph(file);
 
-    const result = importGraph(context, exported);
+    expect(result.imported).toBe(2);
+    expect(result.errors).toEqual([]);
+    expect(Object.keys(state.recipes.nodes)).toHaveLength(2);
+    expect(Object.keys(state.recipes.targets)).toHaveLength(1);
 
-    expect(result).toEqual({ imported: 0, skipped: 1, errors: [expect.any(String)] });
-    expect(context.state.recipes.nodes).toEqual({ [world.smelterNode.id]: world.smelterNode });
-    expect(context.actions.recipes.saveGraphState).not.toHaveBeenCalled();
+    const caster = state.recipes.nodes[casterId];
+    expect(caster.inputs['molten_steel'].imports).toHaveLength(1);
   });
 
-  it('skips duplicate node ids instead of silently overwriting', () => {
-    const world = buildTestWorld();
-    const context = buildContext(world);
+  it('re-solves an imported chain so it arrives correctly sized', async () => {
+    const { file, casterId } = await buildAndExport();
+    const { actions, state } = setup();
 
-    const exported = buildExportedGraph([world.smelterNode]);
-    exported.nodes.push({ ...exported.nodes[0] });
+    actions.importGraph(file);
 
-    const result = importGraph(context, exported);
+    const caster = state.recipes.nodes[casterId];
+    const smelter = Object.values(state.recipes.nodes).find((n) => n.id !== casterId)!;
+
+    // 36 steel needs 3 casters, needing 36 molten steel, needing 3 smelters.
+    expect(caster.machinesCount).toBeCloseTo(3, 6);
+    expect(smelter.machinesCount).toBeCloseTo(3, 6);
+    expect(caster.inputs['molten_steel'].satisfied).toBe(true);
+  });
+
+  it('keeps a pinned building count across a round trip', async () => {
+    const ctx = setup();
+    const caster = ctx.actions.createProductionNode({ recipeId: 'cast_steel' });
+    ctx.actions.setNodeMachinesCount({ nodeId: caster.id, count: 4 });
+
+    const file = ctx.actions.exportGraph();
+
+    const fresh = setup();
+    fresh.actions.importGraph(file);
+
+    expect(fresh.state.recipes.nodes[caster.id].pinnedMachinesCount).toBe(4);
+    expect(fresh.state.recipes.nodes[caster.id].machinesCount).toBe(4);
+  });
+
+  it('skips a node whose recipe no longer exists and drops links to it', async () => {
+    const { file } = await buildAndExport();
+    const smelterNode = file.nodes.find((n: { recipeId: string }) => n.recipeId === 'smelt_steel')!;
+    smelterNode.recipeId = 'recipe_that_was_removed' as any;
+
+    const { actions, state } = setup();
+    const result = actions.importGraph(file);
 
     expect(result.imported).toBe(1);
     expect(result.skipped).toBe(1);
-    expect(result.errors[0]).toContain('duplicate');
-    expect(Object.keys(context.state.recipes.nodes)).toEqual([world.smelterNode.id]);
+    expect(result.errors.join(' ')).toContain('no longer exists');
+
+    const caster = Object.values(state.recipes.nodes)[0];
+    // The dangling link to the dropped smelter is gone, leaving a raw input.
+    expect(caster.inputs['molten_steel'].imports).toEqual([]);
+    expect(caster.inputs['molten_steel'].deficit).toBeGreaterThan(0);
   });
 
-  it('does not mistake a node id for an inherited Object property', () => {
-    const world = buildTestWorld();
-    const context = buildContext(world);
+  it('drops a target whose node could not be restored', async () => {
+    const { file } = await buildAndExport();
+    file.nodes = file.nodes.filter((n: { recipeId: string }) => n.recipeId !== 'cast_steel');
 
-    const exported = buildExportedGraph([world.smelterNode]);
-    exported.nodes[0].id = 'constructor';
+    const { actions, state } = setup();
+    const result = actions.importGraph(file);
 
-    const result = importGraph(context, exported);
-
-    expect(result).toEqual({ imported: 1, skipped: 0, errors: [] });
-    expect(context.state.recipes.nodes['constructor']).toBeInstanceOf(ProductionNode);
+    expect(Object.keys(state.recipes.targets)).toHaveLength(0);
+    expect(result.errors.join(' ')).toContain('target');
   });
 
-  it('treats a link to a non-existent inherited-property-named node as dangling', () => {
-    const world = buildTestWorld();
-    const context = buildContext(world);
+  it('leaves the current chain untouched when nothing can be imported', () => {
+    const { actions, state } = setup();
+    actions.createProductionNode({ recipeId: 'cast_steel' });
 
-    const exported = buildExportedGraph([world.casterNode]);
-    // The export claims molten_steel was imported from a node called
-    // "constructor" — a node that was never actually included in the
-    // export. A naive `newNodes["constructor"]` lookup would be truthy
-    // (inherited from Object.prototype) even though no such node exists.
-    exported.nodes[0].inputs.molten_steel.imports = [{ source: 'constructor', quantity: 12 }];
-    exported.nodes[0].inputs.molten_steel.imported = 12;
-    exported.nodes[0].inputs.molten_steel.maxed = true;
+    const result = actions.importGraph({
+      format: EXPORT_FORMAT,
+      version: EXPORT_FORMAT_VERSION,
+      exportedAt: '',
+      nodes: [
+        // Typed so a stale fixture field would fail the build; only the recipe
+        // id is cast, since naming one that no longer exists is the point here.
+        {
+          id: 'x',
+          recipeId: 'gone' as ExportedNode['recipeId'],
+          pinnedMachinesCount: null,
+          imports: {},
+        } satisfies ExportedNode,
+      ],
+      targets: [],
+    });
 
-    const result = importGraph(context, exported);
-
-    expect(result).toEqual({ imported: 1, skipped: 0, errors: [] });
-
-    const rebuiltCaster = context.state.recipes.nodes[world.casterNode.id];
-    expect(rebuiltCaster.inputs.molten_steel.imports).toEqual([]);
-    expect(rebuiltCaster.inputs.molten_steel.imported).toBe(0);
-    expect(rebuiltCaster.inputs.molten_steel.maxed).toBe(false);
+    expect(result.imported).toBe(0);
+    expect(Object.keys(state.recipes.nodes)).toHaveLength(1);
   });
 
-  it('replaces the existing graph rather than merging into it', () => {
-    const world = buildTestWorld();
-    const context = buildContext(world);
+  it('does not let a newly added target overwrite a restored one', async () => {
+    const { file } = await buildAndExport();
+    const { actions, state } = setup();
 
-    context.state.recipes.nodes = { 'stale-node-id': {} as ProductionNode };
+    actions.importGraph(file);
+    const restoredId = Object.keys(state.recipes.targets)[0];
 
-    const exported = buildExportedGraph([world.smelterNode]);
-    importGraph(context, exported);
+    // The id counter must resume past what was restored.
+    actions.createTarget();
 
-    expect(context.state.recipes.nodes['stale-node-id']).toBeUndefined();
-    expect(Object.keys(context.state.recipes.nodes)).toEqual([world.smelterNode.id]);
+    expect(Object.keys(state.recipes.targets)).toHaveLength(2);
+    expect(state.recipes.targets[restoredId]).toBeDefined();
+    expect(state.recipes.targets[restoredId].nodeId).not.toBeNull();
+  });
+
+  it('rejects a file carrying a NaN or negative quantity', async () => {
+    const { file } = await buildAndExport();
+    const { actions } = setup();
+
+    expect(
+      actions.importGraph({ ...file, targets: [{ ...file.targets[0], quantity: NaN }] }).imported,
+    ).toBe(0);
+    expect(
+      actions.importGraph({ ...file, targets: [{ ...file.targets[0], quantity: -5 }] }).imported,
+    ).toBe(0);
+    expect(
+      actions.importGraph({
+        ...file,
+        nodes: file.nodes.map((n: any) => ({ ...n, pinnedMachinesCount: Infinity })),
+      }).imported,
+    ).toBe(0);
   });
 });

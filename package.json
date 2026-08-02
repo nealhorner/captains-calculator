@@ -12,7 +12,6 @@
     "@xyflow/react": "^12",
     "dagre": "^0.8.5",
     "dayjs": "^1.10.7",
-    "elkjs": "^0.7.1",
     "formik": "^2.2.9",
     "framer-motion": "3.10.6",
     "overmind": "^28.0.1",

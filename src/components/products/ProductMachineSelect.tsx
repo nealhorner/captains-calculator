@@ -26,11 +26,11 @@ export const ProductMachineSelect = () => {
   const currentProduct = useAppState((state) => state.products.currentItem);
   const { itemsList, currentItemId } = useAppState((state) => state.machines);
   const selectMachine = useActions().machines.selectMachine;
-  const selectRecipe = useActions().recipes.selectRecipe;
-  const delectRecipesItem = useActions().recipes.delectRecipesItem;
+  const setCurrentRecipe = useActions().recipes.setCurrentRecipe;
+  const deSelectRecipesItem = useActions().recipes.deSelectRecipesItem;
   const onChange = (machineId: MachineId) => {
-    selectRecipe(null);
-    delectRecipesItem(null);
+    setCurrentRecipe(null);
+    deSelectRecipesItem(null);
     selectMachine(machineId);
   };
   if (!currentProduct) return null;

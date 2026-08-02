@@ -1,113 +1,166 @@
 import { describe, it, expect } from 'vitest';
 
-import { linkRecipe } from './linkRecipe';
-import ProductionNode from 'state/recipes/ProductionNode';
-import {
-  loadMachineData,
-  loadProductData,
-  loadRecipeData,
-  loadCategoryData,
-} from 'state/app/effects/loadJsonData';
-import { RecipeId } from 'state/app/effects';
+import { buildTestWorld, makeChainTarget } from '../testFixtures';
+import { buildTestContext } from '../testContext';
 
-const recipeData = loadRecipeData();
-const machineData = loadMachineData();
-const productData = loadProductData();
-const categoryData = loadCategoryData();
-
-type LinkRecipeContext = Parameters<typeof linkRecipe>[0];
-
-const buildContext = (): LinkRecipeContext => {
-  const state = {
-    recipes: { items: recipeData, nodes: {} as { [id: string]: ProductionNode } },
-    machines: { items: machineData },
-    categories: { items: categoryData },
-    products: { items: productData },
-  };
-
-  const actions = {
-    recipes: {
-      getInputSources: () => ({}),
-      getOutputTargets: () => ({}),
-      saveGraphState: () => {},
-    },
-  };
-
-  // linkRecipe only touches state.{recipes,machines,categories,products} and
-  // actions.recipes.{getInputSources,getOutputTargets}; the full Overmind
-  // context (effects/reaction/etc) is irrelevant here.
-  return { state, actions } as unknown as LinkRecipeContext;
-};
-
-const buildNode = (recipeId: RecipeId): ProductionNode => {
-  const recipe = recipeData[recipeId];
-  const machine = machineData[recipe.machine];
-  const category = categoryData[machine.category_id];
-  const inputs = recipe.inputs.map(({ id, quantity }) => ({ ...productData[id], quantity }));
-  const outputs = recipe.outputs.map(({ id, quantity }) => ({ ...productData[id], quantity }));
-  return new ProductionNode({
-    recipe,
-    machine,
-    category,
-    inputs,
-    outputs,
-    sources: {},
-    targets: {},
-  });
-};
+const setup = () => buildTestContext(buildTestWorld());
 
 describe('linkRecipe', () => {
-  it('creates a new node and links it as an input source to the current node', async () => {
-    const context = buildContext();
+  it('creates a new node and links it as an input source', async () => {
+    const { state, actions } = setup();
 
-    // acid_dumping needs 200 acid/min, acid_mixing produces 72 acid/min
-    const currentNode = buildNode('acid_dumping');
-    context.state.recipes.nodes[currentNode.id] = currentNode;
+    const caster = actions.createProductionNode({ recipeId: 'cast_steel' });
 
-    await linkRecipe(context, {
-      currentNodeId: currentNode.id,
-      newNodeId: 'acid_mixing',
-      productId: 'acid',
+    await actions.linkRecipe({
+      currentNodeId: caster.id,
+      newNodeId: 'smelt_steel',
+      productId: 'molten_steel',
       direction: 'input',
     });
 
-    const nodes = Object.values(context.state.recipes.nodes);
+    const nodes = Object.values(state.recipes.nodes);
     expect(nodes).toHaveLength(2);
 
-    const newNode = nodes.find((n) => n.id !== currentNode.id)!;
-    expect(newNode).toBeDefined();
-    expect(newNode.recipe.id).toBe('acid_mixing');
+    const smelter = nodes.find((n) => n.id !== caster.id)!;
+    expect(smelter.recipe.id).toBe('smelt_steel');
 
-    // Current node imports as much acid as the new node can export (72, since neither is a mine/storage)
-    expect(currentNode.inputs['acid'].imported).toBe(72);
-    expect(currentNode.inputs['acid'].imports).toEqual([{ source: newNode.id, quantity: 72 }]);
-
-    // New node exports that same quantity back to the current node
-    expect(newNode.outputs['acid'].exported).toBe(72);
-    expect(newNode.outputs['acid'].exports).toEqual([{ target: currentNode.id, quantity: 72 }]);
+    // The link records topology only; the solver owns the quantities.
+    expect(caster.inputs['molten_steel'].imports.map((i: { source: string }) => i.source)).toEqual([
+      smelter.id,
+    ]);
+    expect(
+      smelter.outputs['molten_steel'].exports.map((e: { target: string }) => e.target),
+    ).toEqual([caster.id]);
   });
 
-  it('creates a new node and links it as an output target for the current node', async () => {
-    const context = buildContext();
+  it('creates a new node and links it as an output target', async () => {
+    const { state, actions } = setup();
 
-    const currentNode = buildNode('acid_mixing');
-    context.state.recipes.nodes[currentNode.id] = currentNode;
+    const smelter = actions.createProductionNode({ recipeId: 'smelt_steel' });
 
-    await linkRecipe(context, {
-      currentNodeId: currentNode.id,
-      newNodeId: 'acid_dumping',
-      productId: 'acid',
+    await actions.linkRecipe({
+      currentNodeId: smelter.id,
+      newNodeId: 'cast_steel',
+      productId: 'molten_steel',
       direction: 'output',
     });
 
-    const nodes = Object.values(context.state.recipes.nodes);
-    const newNode = nodes.find((n) => n.id !== currentNode.id)!;
-    expect(newNode.recipe.id).toBe('acid_dumping');
+    const caster = Object.values(state.recipes.nodes).find((n) => n.id !== smelter.id)!;
+    expect(caster.recipe.id).toBe('cast_steel');
 
-    expect(currentNode.outputs['acid'].exported).toBe(72);
-    expect(currentNode.outputs['acid'].exports).toEqual([{ target: newNode.id, quantity: 72 }]);
+    expect(
+      smelter.outputs['molten_steel'].exports.map((e: { target: string }) => e.target),
+    ).toEqual([caster.id]);
+    expect(caster.inputs['molten_steel'].imports.map((i: { source: string }) => i.source)).toEqual([
+      smelter.id,
+    ]);
+  });
 
-    expect(newNode.inputs['acid'].imported).toBe(72);
-    expect(newNode.inputs['acid'].imports).toEqual([{ source: currentNode.id, quantity: 72 }]);
+  it('reuses an existing node for the same recipe instead of duplicating it', async () => {
+    const { state, actions } = setup();
+
+    const caster = actions.createProductionNode({ recipeId: 'cast_steel' });
+    const smelter = actions.createProductionNode({ recipeId: 'smelt_steel' });
+
+    await actions.linkRecipe({
+      currentNodeId: caster.id,
+      newNodeId: 'smelt_steel',
+      productId: 'molten_steel',
+      direction: 'input',
+    });
+
+    expect(Object.keys(state.recipes.nodes)).toHaveLength(2);
+    expect(caster.inputs['molten_steel'].imports.map((i: { source: string }) => i.source)).toEqual([
+      smelter.id,
+    ]);
+  });
+
+  it('solves the flow between linked nodes once a target sets demand', async () => {
+    const { state, actions } = setup();
+
+    const caster = actions.createProductionNode({ recipeId: 'cast_steel' });
+
+    await actions.linkRecipe({
+      currentNodeId: caster.id,
+      newNodeId: 'smelt_steel',
+      productId: 'molten_steel',
+      direction: 'input',
+    });
+
+    const smelter = Object.values(state.recipes.nodes).find((n) => n.id !== caster.id)!;
+
+    state.recipes.targets['t1'] = makeChainTarget({
+      id: 't1',
+      productId: 'steel',
+      machineId: 'caster',
+      recipeId: 'cast_steel',
+      quantity: 24,
+      nodeId: caster.id,
+    });
+    actions.recalculate();
+
+    // 24 steel needs 2 casters, needing 24 molten steel, needing 2 smelters.
+    expect(caster.machinesCount).toBeCloseTo(2, 6);
+    expect(smelter.machinesCount).toBeCloseTo(2, 6);
+    expect(caster.inputs['molten_steel'].imported).toBeCloseTo(24, 6);
+    expect(caster.inputs['molten_steel'].satisfied).toBe(true);
+  });
+});
+
+describe('findReusableNode cycle guard', () => {
+  it('rejects a candidate that already supplies the anchor when linking an output', async () => {
+    const { state, actions } = setup();
+
+    // smelter -> caster.
+    const caster = actions.createProductionNode({ recipeId: 'cast_steel' });
+    await actions.linkRecipe({
+      currentNodeId: caster.id,
+      newNodeId: 'smelt_steel',
+      productId: 'molten_steel',
+      direction: 'input',
+    });
+    const smelter = Object.values(state.recipes.nodes).find((n) => n.id !== caster.id)!;
+
+    // Reusing the smelter as something the caster feeds would close the loop
+    // caster -> smelter -> caster, so it must be rejected.
+    const reusable = actions.findReusableNode({
+      recipeId: 'smelt_steel',
+      anchorNodeId: caster.id,
+      direction: 'output',
+    });
+
+    expect(reusable).toBeNull();
+    // The same candidate is fine in the other direction: it already supplies it.
+    expect(
+      actions.findReusableNode({
+        recipeId: 'smelt_steel',
+        anchorNodeId: caster.id,
+        direction: 'input',
+      }),
+    ).toBe(smelter.id);
+  });
+
+  it('leaves an existing link intact when the same link is requested twice', async () => {
+    const { state, actions } = setup();
+    const caster = actions.createProductionNode({ recipeId: 'cast_steel' });
+    const smelter = actions.createProductionNode({ recipeId: 'smelt_steel' });
+
+    await actions.linkExistingRecipe({
+      currentNodeId: caster.id,
+      existingNodeId: smelter.id,
+      productId: 'molten_steel',
+      direction: 'input',
+    });
+    // A repeat must not roll back the link that already exists.
+    await actions.linkExistingRecipe({
+      currentNodeId: caster.id,
+      existingNodeId: smelter.id,
+      productId: 'molten_steel',
+      direction: 'input',
+    });
+
+    expect(caster.inputs['molten_steel'].imports).toHaveLength(1);
+    expect(smelter.outputs['molten_steel'].exports).toHaveLength(1);
+    expect(Object.keys(state.recipes.nodes)).toHaveLength(2);
   });
 });
