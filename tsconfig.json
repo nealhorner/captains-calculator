@@ -1,8 +1,7 @@
 {
   "compilerOptions": {
     "paths": {
-      "*": ["./src/*"],
-      "framer-motion/internal-types": ["./node_modules/framer-motion/types/index"]
+      "*": ["./src/*"]
     },
     "target": "es2020",
     "types": ["vite/client"],

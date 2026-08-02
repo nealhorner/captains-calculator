@@ -107,7 +107,7 @@ export const recipeDatasetSchema = yup.array().of(recipeSchema).required();
 
 export const validateDataset = (
   datasetName: string,
-  schema: yup.ArraySchema<any>,
+  schema: yup.Schema<any>,
   data: Record<string, { id?: string }>,
 ): void => {
   const entries = Object.entries(data);
