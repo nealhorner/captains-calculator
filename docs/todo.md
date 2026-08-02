@@ -23,6 +23,10 @@
 
 - [ ] Migrate off `yarn` to `pnpm` (or `npm`) — regenerate lockfile, update `package.json` scripts/engines, update CI workflow (`.github/workflows/`), and update any docs/README referencing `yarn` commands
 
+### Runtime Upgrade
+
+- [ ] Migrate to Node 26 — update `engines` in `package.json`, `.nvmrc`/Dockerfile pins, and `node-version: 20` in **both** `.github/workflows/ci.yml` job blocks (`checks` and `e2e` each pin it separately)
+
 ### CRA to Vite Migration
 
 - [x] Replace `react-scripts` with `vite` + `@vitejs/plugin-react`
@@ -103,6 +107,7 @@ This is a large migration. Mantine v7 is a near-full rewrite.
 - [x] `@testing-library/react` 12 -> 16+ (done in Phase 3, was blocking React 19 DOM tests)
 - [ ] `dagre` 0.8.5 — check if still maintained, consider `@dagrejs/dagre` or `elkjs` exclusively
 - [ ] `dayjs` 1.10 -> 1.11+ (minor)
+- [ ] Audit all dependencies for necessity and currency — check `package.json` for unused packages (beyond Phase 1's dead-weight pass) and compare installed vs. latest versions across the full dependency tree (known-CVE scanning is covered separately by the security audit item in Phase 8)
 
 ---
 
@@ -192,6 +197,7 @@ This is a large migration. Mantine v7 is a near-full rewrite.
 - [ ] Add error-tracking/monitoring (e.g. Sentry) for production crash visibility — today `console.error` is the only mechanism
 - [ ] Evaluate i18n needs — all UI strings are hardcoded English with no i18n framework in place
 - [ ] Evaluate mobile/responsive support for the three-panel Editor layout — `useMediaQuery` is used in `FieldRenderer.tsx` only; the core editor has no mobile adaptation
+- [ ] Run a security audit — `yarn audit`/`npm audit` for known CVEs in dependencies, review localStorage-persisted data for sensitive content, check for XSS vectors in user-provided graph data (import/export)
 
 ---
 
