@@ -152,9 +152,11 @@ export const Editor: React.FC<EditorProps> = ({ nodesData, edgesData }) => {
   /** Re-runs the automatic arrangement, discarding manual positioning. */
   const handleRelayout = React.useCallback(() => {
     setNodes((current) => layoutAll(current, edges));
-    window.setTimeout(() => {
+    // Frame on the next paint: fitView in the same tick would measure the
+    // positions the layout just replaced.
+    window.requestAnimationFrame(() => {
       instanceRef.current?.fitView({ padding: 0.2, includeHiddenNodes: false, duration: 200 });
-    }, 0);
+    });
   }, [edges, setNodes]);
 
   const onConnect = async (params: Connection) => {

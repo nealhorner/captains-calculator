@@ -1,4 +1,14 @@
-import { Category, Machine, Product, Recipe, RecipeProduct } from 'state/app/effects';
+import {
+  Category,
+  Machine,
+  MachineId,
+  Product,
+  ProductId,
+  Recipe,
+  RecipeId,
+  RecipeProduct,
+} from 'state/app/effects';
+import { ChainTarget } from 'state/_types';
 import ProductionNode from './ProductionNode';
 
 export const makeProduct = (id: string, name = id): Product => ({
@@ -127,3 +137,23 @@ export const buildTestWorld = () => {
     casterNode,
   };
 };
+
+/**
+ * A fully-specified production target. Keeps the branded-id casts in one place
+ * rather than repeating them in every test that needs a target.
+ */
+export const makeChainTarget = (target: {
+  id: string;
+  productId: string;
+  machineId: string;
+  recipeId: string;
+  quantity: number;
+  nodeId: string;
+}): ChainTarget => ({
+  id: target.id,
+  productId: target.productId as ProductId,
+  machineId: target.machineId as MachineId,
+  recipeId: target.recipeId as RecipeId,
+  quantity: target.quantity,
+  nodeId: target.nodeId,
+});

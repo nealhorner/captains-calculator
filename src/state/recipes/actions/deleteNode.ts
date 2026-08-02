@@ -28,11 +28,14 @@ export const deleteNode: AsyncAction<string> = async ({ state, actions }, nodeId
   state.recipes.nodes = remainingNodes;
 
   // A target whose root node has just been deleted no longer describes anything.
+  // Dropped inline rather than via removeTarget, which would prune, solve and
+  // persist once per target on top of the single recalculate below.
+  let remainingTargets: { [key: string]: ChainTarget } = {};
   dictValues<ChainTarget>(state.recipes.targets).forEach((target) => {
-    if (target.nodeId === nodeId) {
-      actions.recipes.removeTarget(target.id);
-    }
+    if (target.nodeId !== nodeId) remainingTargets[target.id] = target;
   });
+  state.recipes.targets = remainingTargets;
 
+  actions.recipes.pruneOrphanNodes();
   actions.recipes.recalculate();
 };

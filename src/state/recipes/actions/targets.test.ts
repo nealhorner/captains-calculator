@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 
-import { buildTestWorld } from '../testFixtures';
+import { buildTestWorld, makeChainTarget } from '../testFixtures';
 import { buildTestContext } from '../testContext';
 
 const setup = () => buildTestContext(buildTestWorld());
@@ -55,22 +55,22 @@ describe('targets', () => {
       direction: 'input',
     });
 
-    ctx.state.recipes.targets['t1'] = {
+    ctx.state.recipes.targets['t1'] = makeChainTarget({
       id: 't1',
-      productId: 'steel' as any,
-      machineId: 'caster' as any,
-      recipeId: 'cast_steel' as any,
+      productId: 'steel',
+      machineId: 'caster',
+      recipeId: 'cast_steel',
       quantity: 12,
       nodeId: caster.id,
-    };
-    ctx.state.recipes.targets['t2'] = {
+    });
+    ctx.state.recipes.targets['t2'] = makeChainTarget({
       id: 't2',
-      productId: 'molten_steel' as any,
-      machineId: 'smelter' as any,
-      recipeId: 'smelt_steel' as any,
+      productId: 'molten_steel',
+      machineId: 'smelter',
+      recipeId: 'smelt_steel',
       quantity: 12,
       nodeId: Object.values(ctx.state.recipes.nodes).find((n) => n.id !== caster.id)!.id,
-    };
+    });
     ctx.actions.recalculate();
 
     ctx.actions.removeTarget('t2');

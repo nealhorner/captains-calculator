@@ -386,5 +386,8 @@ export const solveChain = (nodes: SolverNode[], demands: SolverDemand[]): Solver
 
 /** True when `supplied` covers `needed`, tolerant of accumulated float error. */
 export const meetsRate = (supplied: number, needed: number): boolean => {
-  return supplied >= needed - EPSILON;
+  // Relative, not absolute: rates run into the thousands several levels down a
+  // chain, and the float error from splitting and scaling grows with them, so a
+  // fixed 1e-6 would report a perfectly balanced chain as unsatisfied.
+  return supplied >= needed - EPSILON * Math.max(1, Math.abs(needed));
 };

@@ -17,7 +17,7 @@ import { Handle, Position, NodeProps } from '@xyflow/react';
 import { Icon } from '@iconify/react';
 
 import { sortArray } from 'utils/objects';
-import { formatRate } from 'utils/numbers';
+import { EPSILON, formatRate } from 'utils/numbers';
 
 import { ProductId, MAINTENANCE_I, MAINTENANCE_II } from 'state/app/effects';
 import {
@@ -288,7 +288,7 @@ export const RecipeNodeType = ({
                   {pinnedMachinesCount !== null ? 'Pinned' : 'Auto'}
                 </Button>
               </Tooltip>
-              {buildingsRequired !== machinesCount && (
+              {Math.abs(buildingsRequired - machinesCount) > EPSILON && (
                 <Tooltip label="Whole buildings you need to construct" withArrow withinPortal>
                   <Text size="xs" color="dimmed" pb={6}>{`build ${buildingsRequired}`}</Text>
                 </Tooltip>

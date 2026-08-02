@@ -75,12 +75,10 @@ export const NodeRecipeLink: React.FC<RecipeSelectProps> = ({
     );
   }
 
-  // Recipes the graph already runs, which `linkRecipe` will reuse instead of
-  // adding a second building for.
-  let existingRecipeIds = new Set(
-    recipes
-      .filter((recipe) => allNodes.some((node: ProductionNode) => node.recipe.id === recipe.id))
-      .map((recipe) => recipe.id),
+  // True when the graph already runs one of these recipes, which `linkRecipe`
+  // reuses instead of adding a second building for.
+  let hasExistingRecipe = recipes.some((recipe) =>
+    allNodes.some((node: ProductionNode) => node.recipe.id === recipe.id),
   );
 
   let existingNodes = allNodes.filter((node) => {
@@ -142,7 +140,7 @@ export const NodeRecipeLink: React.FC<RecipeSelectProps> = ({
         );
       })}
       <Text>New Target</Text>
-      {existingRecipeIds.size ? (
+      {hasExistingRecipe ? (
         <Text size="xs" color="dimmed">
           Recipes already in your chain are reused rather than duplicated, so their demand is
           combined.

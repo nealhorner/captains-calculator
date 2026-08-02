@@ -27,9 +27,7 @@ export const SetupBar = () => {
 
   const isEditing = !!activeTarget;
   // Reading `targets` keeps this component subscribed to additions and removals.
-  const currentTargets = Object.keys(targets)
-    .map((id) => targetsList.find((t: ChainTarget) => t.id === id)!)
-    .filter(Boolean);
+  const currentTargets = targetsList.filter((target: ChainTarget) => !!targets[target.id]);
   const otherTargets = currentTargets.filter(
     (target: ChainTarget) => target.id !== activeTarget?.id,
   );

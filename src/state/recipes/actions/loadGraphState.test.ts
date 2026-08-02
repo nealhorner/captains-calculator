@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 
-import { buildTestWorld } from '../testFixtures';
+import { buildTestWorld, makeChainTarget } from '../testFixtures';
 import { buildTestContext } from '../testContext';
 
 const setup = () => buildTestContext(buildTestWorld());
@@ -15,14 +15,14 @@ describe('loadGraphState', () => {
       productId: 'molten_steel',
       direction: 'input',
     });
-    first.state.recipes.targets['t1'] = {
+    first.state.recipes.targets['t1'] = makeChainTarget({
       id: 't1',
-      productId: 'steel' as any,
-      machineId: 'caster' as any,
-      recipeId: 'cast_steel' as any,
+      productId: 'steel',
+      machineId: 'caster',
+      recipeId: 'cast_steel',
       quantity: 24,
       nodeId: caster.id,
-    };
+    });
     first.actions.recalculate();
 
     // A fresh session pointed at the same stored graph.

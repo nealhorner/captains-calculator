@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 
-import { buildTestWorld } from '../testFixtures';
+import { buildTestWorld, makeChainTarget } from '../testFixtures';
 import { buildTestContext } from '../testContext';
 import { EXPORT_FORMAT, EXPORT_FORMAT_VERSION } from '../importExport';
 
@@ -18,14 +18,14 @@ const buildAndExport = async () => {
     direction: 'input',
   });
 
-  ctx.state.recipes.targets['t1'] = {
+  ctx.state.recipes.targets['t1'] = makeChainTarget({
     id: 't1',
-    productId: 'steel' as any,
-    machineId: 'caster' as any,
-    recipeId: 'cast_steel' as any,
+    productId: 'steel',
+    machineId: 'caster',
+    recipeId: 'cast_steel',
     quantity: 36,
     nodeId: caster.id,
-  };
+  });
   ctx.actions.recalculate();
 
   return { file: ctx.actions.exportGraph(), casterId: caster.id };

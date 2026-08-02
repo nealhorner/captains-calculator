@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 
-import { buildTestWorld } from '../testFixtures';
+import { buildTestWorld, makeChainTarget } from '../testFixtures';
 import { buildTestContext } from '../testContext';
 
 const setup = () => buildTestContext(buildTestWorld());
@@ -44,14 +44,14 @@ describe('deleteNode', () => {
     });
     const smelter = Object.values(state.recipes.nodes).find((n) => n.id !== caster.id)!;
 
-    state.recipes.targets['t1'] = {
+    state.recipes.targets['t1'] = makeChainTarget({
       id: 't1',
-      productId: 'steel' as any,
-      machineId: 'caster' as any,
-      recipeId: 'cast_steel' as any,
+      productId: 'steel',
+      machineId: 'caster',
+      recipeId: 'cast_steel',
       quantity: 12,
       nodeId: caster.id,
-    };
+    });
     actions.recalculate();
     expect(caster.inputs['molten_steel'].satisfied).toBe(true);
 
@@ -66,14 +66,14 @@ describe('deleteNode', () => {
   it('removes the target when its own node is deleted', async () => {
     const { state, actions } = setup();
     const caster = actions.createProductionNode({ recipeId: 'cast_steel' });
-    state.recipes.targets['t1'] = {
+    state.recipes.targets['t1'] = makeChainTarget({
       id: 't1',
-      productId: 'steel' as any,
-      machineId: 'caster' as any,
-      recipeId: 'cast_steel' as any,
+      productId: 'steel',
+      machineId: 'caster',
+      recipeId: 'cast_steel',
       quantity: 12,
       nodeId: caster.id,
-    };
+    });
 
     await actions.deleteNode(caster.id);
 

@@ -1,6 +1,6 @@
 import { Action, AsyncAction, ChainTarget } from 'state/_types';
 import { MachineId, ProductId, RecipeId } from 'state/app/effects/loadJsonData';
-import ProductionNode, { RecipeIOExportProduct, RecipeIOImportProduct } from '../ProductionNode';
+import { RecipeIOExportProduct, RecipeIOImportProduct } from '../ProductionNode';
 import { dictValues } from 'utils/objects';
 import { RecipeProduct } from 'state/app/effects/loadJsonData';
 
@@ -102,7 +102,9 @@ export const setTargetRecipe: AsyncAction<RecipeId> = async ({ state, actions },
   target.nodeId = reusable ?? actions.recipes.createProductionNode({ recipeId }).id;
 
   if (previousNodeId && previousNodeId !== target.nodeId) {
-    actions.recipes.releaseTargetNode();
+    // Prune directly rather than via releaseTargetNode, which would solve and
+    // persist a second time on top of the recalculate below.
+    actions.recipes.pruneOrphanNodes();
   }
 
   actions.recipes.recalculate();
@@ -194,13 +196,9 @@ export const pruneOrphanNodes: Action = ({ state }) => {
   let orphans = Object.keys(state.recipes.nodes).filter((id) => !reachable.has(id));
   if (!orphans.length) return;
 
-  orphans.forEach((orphanId) => {
-    dictValues<ProductionNode>(state.recipes.nodes).forEach((node) => {
-      if (node.id === orphanId) return;
-      node.removeLinksTo(orphanId);
-    });
-  });
-
+  // No need to strip links to the orphans first: the walk above follows imports
+  // and exports alike, so anything linked to a surviving node is itself
+  // reachable. An orphan can only be linked to another orphan, and both go.
   let remaining: typeof state.recipes.nodes = {};
   Object.keys(state.recipes.nodes).forEach((id) => {
     if (reachable.has(id)) remaining[id] = state.recipes.nodes[id];
