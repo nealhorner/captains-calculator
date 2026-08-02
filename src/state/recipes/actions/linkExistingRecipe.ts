@@ -25,13 +25,15 @@ export const linkExistingRecipe: AsyncAction<LinkExistingRecipeParams> = async (
   let consumer = direction === 'input' ? currentNode : existingNode;
   let supplier = direction === 'input' ? existingNode : currentNode;
 
-  let linked =
-    consumer.addImportLink(productId, supplier.id) &&
-    supplier.addExportLink(productId, consumer.id);
+  // Roll back only what this call created. A failed add can simply mean the
+  // link already existed, and removing it then would destroy a link the graph
+  // legitimately had.
+  let addedImport = consumer.addImportLink(productId, supplier.id);
+  let addedExport = addedImport && supplier.addExportLink(productId, consumer.id);
 
-  if (!linked) {
-    consumer.removeImportLink(productId, supplier.id);
-    supplier.removeExportLink(productId, consumer.id);
+  if (!addedImport || !addedExport) {
+    if (addedImport) consumer.removeImportLink(productId, supplier.id);
+    if (addedExport) supplier.removeExportLink(productId, consumer.id);
   }
 
   actions.recipes.recalculate();

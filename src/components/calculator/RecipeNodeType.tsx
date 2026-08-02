@@ -262,7 +262,10 @@ export const RecipeNodeType = ({
               <NumberInput
                 size="xs"
                 value={Math.round(machinesCount * 100) / 100}
-                onChange={(value) => setNodeMachinesCount({ nodeId: id, count: value ?? 0 })}
+                // Mantine hands back undefined for an empty field; that means "back to auto", not zero.
+                onChange={(value) =>
+                  setNodeMachinesCount({ nodeId: id, count: value === undefined ? null : value })
+                }
                 min={0}
                 step={0.25}
                 precision={2}

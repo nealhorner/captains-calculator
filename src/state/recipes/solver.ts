@@ -325,8 +325,22 @@ export const solveChain = (nodes: SolverNode[], demands: SolverDemand[]): Solver
         allocations.push({ source, quantity: taken });
       });
 
-      // Anything a capped supplier could not cover is offered to the suppliers
-      // that can still grow; whatever is left over is a genuine shortfall.
+      // Anything a capped supplier could not cover is offered around: first to
+      // capped suppliers that still have room, then to the ones that can grow
+      // without limit. Whatever nobody can take is a genuine shortfall.
+      if (unallocated > EPSILON) {
+        allocations.forEach((allocation) => {
+          if (unallocated <= EPSILON) return;
+          if (unbounded.includes(allocation.source)) return;
+          const spare = remainingCapacity(allocation.source, productId);
+          if (spare === null || spare <= 0) return;
+          const taken = Math.min(unallocated, spare);
+          consumeCapacity(allocation.source, productId, taken);
+          allocation.quantity += taken;
+          unallocated -= taken;
+        });
+      }
+
       if (unallocated > EPSILON && unbounded.length) {
         const extra = unallocated / unbounded.length;
         allocations.forEach((allocation) => {
@@ -348,6 +362,15 @@ export const solveChain = (nodes: SolverNode[], demands: SolverDemand[]): Solver
         addDemand(source, productId, quantity);
       });
     });
+  });
+
+  // 5a. A target is a consumer too. Counting its demand here stops every root
+  //     node reporting its entire output as unused, and lets a node shared by
+  //     several targets show their combined draw.
+  demands.forEach(({ nodeId, productId, quantity }) => {
+    const solution = solutions[nodeId];
+    if (!solution || quantity <= 0) return;
+    solution.exportedRates[productId] = (solution.exportedRates[productId] ?? 0) + quantity;
   });
 
   // 5. Roll each node's draw on its suppliers back up as their exported rate.

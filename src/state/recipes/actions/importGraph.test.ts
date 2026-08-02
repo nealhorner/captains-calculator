@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest';
 
 import { buildTestWorld, makeChainTarget } from '../testFixtures';
 import { buildTestContext } from '../testContext';
-import { EXPORT_FORMAT, EXPORT_FORMAT_VERSION } from '../importExport';
+import { EXPORT_FORMAT, EXPORT_FORMAT_VERSION, ExportedNode } from '../importExport';
 
 const setup = () => buildTestContext(buildTestWorld());
 
@@ -125,7 +125,16 @@ describe('importGraph', () => {
       format: EXPORT_FORMAT,
       version: EXPORT_FORMAT_VERSION,
       exportedAt: '',
-      nodes: [{ id: 'x', recipeId: 'gone', pinnedMachinesCount: null, imports: {} }],
+      nodes: [
+        // Typed so a stale fixture field would fail the build; only the recipe
+        // id is cast, since naming one that no longer exists is the point here.
+        {
+          id: 'x',
+          recipeId: 'gone' as ExportedNode['recipeId'],
+          pinnedMachinesCount: null,
+          imports: {},
+        } satisfies ExportedNode,
+      ],
       targets: [],
     });
 

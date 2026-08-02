@@ -294,6 +294,47 @@ describe('solveChain', () => {
     expect(solved.consumer.importedRates.iron).toBeCloseTo(100, 6);
   });
 
+  it('fills demand from a pinned supplier with spare capacity before reporting a shortfall', () => {
+    // Even split would give each 50, capping the second at 0 and calling the
+    // remaining 50 a deficit — even though the first can cover all of it.
+    const nodes = [
+      node({
+        id: 'consumer',
+        inputs: { iron: 100 },
+        outputs: { plate: 50 },
+        imports: { iron: [{ source: 'big' }, { source: 'empty' }] },
+      }),
+      node({ id: 'big', outputs: { iron: 100 }, pinned: 1 }),
+      node({ id: 'empty', outputs: { iron: 0 }, pinned: 1 }),
+    ];
+    const { nodes: solved } = solveChain(nodes, [
+      { nodeId: 'consumer', productId: 'plate', quantity: 50 },
+    ]);
+
+    expect(solved.consumer.importedRates.iron).toBeCloseTo(100, 6);
+    expect(solved.big.outputRates.iron).toBeCloseTo(100, 6);
+  });
+
+  it('counts a target as consuming its node output', () => {
+    const nodes = [node({ id: 'root', outputs: { steel: 45 } })];
+    const { nodes: solved } = solveChain(nodes, [
+      { nodeId: 'root', productId: 'steel', quantity: 45 },
+    ]);
+
+    // Without this a root node reports its entire output as unused.
+    expect(solved.root.exportedRates.steel).toBeCloseTo(45, 6);
+  });
+
+  it('sums two targets drawing on the same node', () => {
+    const nodes = [node({ id: 'root', outputs: { steel: 45 }, pinned: 1 })];
+    const { nodes: solved } = solveChain(nodes, [
+      { nodeId: 'root', productId: 'steel', quantity: 8 },
+      { nodeId: 'root', productId: 'steel', quantity: 8 },
+    ]);
+
+    expect(solved.root.exportedRates.steel).toBeCloseTo(16, 6);
+  });
+
   it('terminates on a cyclic supplier graph without diverging', () => {
     // A water loop: the electrolyser needs water, and the condenser that
     // supplies it needs steam from the electrolyser.

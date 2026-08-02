@@ -8,9 +8,7 @@ import {
   NodeTypes,
   useNodesState,
   useEdgesState,
-  addEdge,
   ReactFlowInstance,
-  Connection,
   EdgeTypes,
   Edge,
   Node,
@@ -21,7 +19,7 @@ import dagre from 'dagre';
 import { useAppState } from 'state';
 import ProductionNode from 'state/recipes/ProductionNode';
 
-import { colorFromKey, generateDarkColorHex } from 'utils/colors';
+import { colorFromKey } from 'utils/colors';
 
 import { RecipeNodeType } from './RecipeNodeType';
 import { RecipeEdgeType } from './RecipeEdgeType';
@@ -159,12 +157,6 @@ export const Editor: React.FC<EditorProps> = ({ nodesData, edgesData }) => {
     });
   }, [edges, setNodes]);
 
-  const onConnect = async (params: Connection) => {
-    // @ts-ignore
-    params.style.stroke = generateDarkColorHex();
-    setEdges((eds) => addEdge(params, eds));
-  };
-
   const onInit = async (reactFlowInstance: ReactFlowInstance<RecipeNode, Edge<any>>) => {
     instanceRef.current = reactFlowInstance;
     reactFlowInstance.setCenter(0, 0);
@@ -218,12 +210,15 @@ export const Editor: React.FC<EditorProps> = ({ nodesData, edgesData }) => {
           </motion.div>
         )}
       </AnimatePresence>
+      {/* Connections are made from the node's own "+" controls, which go through
+          Overmind. Dragging between handles bypassed that: it threw on the
+          undefined `style` of a Connection, and any edge that survived lived
+          only in React Flow's state and vanished on the next recalculate. */}
       <ReactFlow
         nodes={nodes}
         edges={edges}
         onNodesChange={onNodesChange}
         onEdgesChange={onEdgesChange}
-        onConnect={onConnect}
         onInit={onInit}
         nodeTypes={nodeTypes}
         edgeTypes={edgeTypes}
@@ -235,7 +230,7 @@ export const Editor: React.FC<EditorProps> = ({ nodesData, edgesData }) => {
         snapToGrid
         maxZoom={1}
         minZoom={0.1}
-        nodesConnectable={true}
+        nodesConnectable={false}
       >
         <MiniMap />
         <Controls>

@@ -27,7 +27,8 @@ export const linkRecipe: AsyncAction<LinkRecipeParams> = async (
 
   let reusable = actions.recipes.findReusableNode({
     recipeId: newNodeId,
-    consumerNodeId: currentNodeId,
+    anchorNodeId: currentNodeId,
+    direction,
   });
 
   if (reusable) {
@@ -49,13 +50,15 @@ export const linkRecipe: AsyncAction<LinkRecipeParams> = async (
   let consumer = direction === 'input' ? currentNode : newNode;
   let supplier = direction === 'input' ? newNode : currentNode;
 
-  let linked =
-    consumer.addImportLink(productId, supplier.id) &&
-    supplier.addExportLink(productId, consumer.id);
+  // Both sides or neither. Roll back only what this call created: a failed add
+  // can mean the link already existed, and removing it would destroy a link the
+  // graph legitimately had.
+  let addedImport = consumer.addImportLink(productId, supplier.id);
+  let addedExport = addedImport && supplier.addExportLink(productId, consumer.id);
 
-  if (!linked) {
-    consumer.removeImportLink(productId, supplier.id);
-    supplier.removeExportLink(productId, consumer.id);
+  if (!addedImport || !addedExport) {
+    if (addedImport) consumer.removeImportLink(productId, supplier.id);
+    if (addedExport) supplier.removeExportLink(productId, consumer.id);
     actions.recipes.pruneOrphanNodes();
     actions.recipes.recalculate();
     return;

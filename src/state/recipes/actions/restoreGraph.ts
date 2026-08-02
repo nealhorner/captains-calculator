@@ -103,15 +103,26 @@ export const restoreGraph: Action<RestoreGraphParams, RestoreGraphResult> = (
 
   const restoredTargets: { [key: string]: ChainTarget } = {};
   targets.forEach((target) => {
-    if (!rebuilt.has(target.nodeId)) {
+    const node = rebuilt.get(target.nodeId);
+    if (!node) {
       errors.push(`Dropped the target for "${target.productId}" — its node could not be restored.`);
+      return;
+    }
+    // The node is rebuilt from current game data, which may have moved on since
+    // the file was written. A target naming a product its recipe no longer makes
+    // would otherwise place demand the node can never meet.
+    if (!node.outputs[target.productId]) {
+      errors.push(
+        `Dropped the target for "${target.productId}" — its recipe no longer produces it.`,
+      );
       return;
     }
     restoredTargets[target.id] = {
       id: target.id,
       productId: target.productId,
-      machineId: target.machineId,
-      recipeId: target.recipeId,
+      machineId: node.machine.id,
+      // Trust the rebuilt node's recipe over the file's, which may be stale.
+      recipeId: node.recipe.id,
       quantity: target.quantity,
       nodeId: target.nodeId,
     };
